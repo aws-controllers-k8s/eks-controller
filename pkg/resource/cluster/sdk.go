@@ -66,7 +66,7 @@ func (rm *resourceManager) sdkFind(
 	resp, err = rm.sdkapi.DescribeClusterWithContext(ctx, input)
 	rm.metrics.RecordAPICall("READ_ONE", "DescribeCluster", err)
 	if err != nil {
-		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "ResourceNotFoundException" {
+		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "ResourceNotFoundException" && strings.HasPrefix(awsErr.Message(), "No cluster found") {
 			return nil, ackerr.NotFound
 		}
 		return nil, err
@@ -134,17 +134,17 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.Endpoint = nil
 	}
 	if resp.Cluster.Identity != nil {
-		f6 := &svcapitypes.IDentity{}
+		f6 := &svcapitypes.Identity{}
 		if resp.Cluster.Identity.Oidc != nil {
 			f6f0 := &svcapitypes.OIDC{}
 			if resp.Cluster.Identity.Oidc.Issuer != nil {
 				f6f0.Issuer = resp.Cluster.Identity.Oidc.Issuer
 			}
-			f6.Oidc = f6f0
+			f6.OIDC = f6f0
 		}
-		ko.Status.IDentity = f6
+		ko.Status.Identity = f6
 	} else {
-		ko.Status.IDentity = nil
+		ko.Status.Identity = nil
 	}
 	if resp.Cluster.KubernetesNetworkConfig != nil {
 		f7 := &svcapitypes.KubernetesNetworkConfigRequest{}
@@ -338,17 +338,17 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.Endpoint = nil
 	}
 	if resp.Cluster.Identity != nil {
-		f6 := &svcapitypes.IDentity{}
+		f6 := &svcapitypes.Identity{}
 		if resp.Cluster.Identity.Oidc != nil {
 			f6f0 := &svcapitypes.OIDC{}
 			if resp.Cluster.Identity.Oidc.Issuer != nil {
 				f6f0.Issuer = resp.Cluster.Identity.Oidc.Issuer
 			}
-			f6.Oidc = f6f0
+			f6.OIDC = f6f0
 		}
-		ko.Status.IDentity = f6
+		ko.Status.Identity = f6
 	} else {
-		ko.Status.IDentity = nil
+		ko.Status.Identity = nil
 	}
 	if resp.Cluster.PlatformVersion != nil {
 		ko.Status.PlatformVersion = resp.Cluster.PlatformVersion
@@ -552,6 +552,7 @@ func (rm *resourceManager) setStatusDefaults(
 // else it returns nil, false
 func (rm *resourceManager) updateConditions(
 	r *resource,
+	onSuccess bool,
 	err error,
 ) (*resource, bool) {
 	ko := r.ko.DeepCopy()
@@ -560,12 +561,16 @@ func (rm *resourceManager) updateConditions(
 	// Terminal condition
 	var terminalCondition *ackv1alpha1.Condition = nil
 	var recoverableCondition *ackv1alpha1.Condition = nil
+	var syncCondition *ackv1alpha1.Condition = nil
 	for _, condition := range ko.Status.Conditions {
 		if condition.Type == ackv1alpha1.ConditionTypeTerminal {
 			terminalCondition = condition
 		}
 		if condition.Type == ackv1alpha1.ConditionTypeRecoverable {
 			recoverableCondition = condition
+		}
+		if condition.Type == ackv1alpha1.ConditionTypeResourceSynced {
+			syncCondition = condition
 		}
 	}
 
@@ -607,7 +612,9 @@ func (rm *resourceManager) updateConditions(
 			recoverableCondition.Message = nil
 		}
 	}
-	if terminalCondition != nil || recoverableCondition != nil {
+	// Required to avoid the "declared but not used" error in the default case
+	_ = syncCondition
+	if terminalCondition != nil || recoverableCondition != nil || syncCondition != nil {
 		return &resource{ko}, true // updated
 	}
 	return nil, false // not updated
@@ -617,6 +624,28 @@ func (rm *resourceManager) updateConditions(
 // and if the exception indicates that it is a Terminal exception
 // 'Terminal' exception are specified in generator configuration
 func (rm *resourceManager) terminalAWSError(err error) bool {
-	// No terminal_errors specified for this resource in generator config
-	return false
+	if err == nil {
+		return false
+	}
+	awsErr, ok := ackerr.AWSError(err)
+	if !ok {
+		return false
+	}
+	switch awsErr.Code() {
+	case "ResourceLimitExceeded",
+		"ResourceNotFound",
+		"ResourceInUse",
+		"OptInRequired",
+		"InvalidParameterCombination",
+		"InvalidParameterValue",
+		"InvalidParameterException",
+		"InvalidQueryParameter",
+		"MalformedQueryString",
+		"MissingAction",
+		"MissingParameter",
+		"ValidationError":
+		return true
+	default:
+		return false
+	}
 }

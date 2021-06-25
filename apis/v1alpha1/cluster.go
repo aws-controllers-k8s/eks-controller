@@ -85,7 +85,7 @@ type ClusterStatus struct {
 	// The endpoint for your Kubernetes API server.
 	Endpoint *string `json:"endpoint,omitempty"`
 	// The identity provider information for the cluster.
-	IDentity *IDentity `json:"identity,omitempty"`
+	Identity *Identity `json:"identity,omitempty"`
 	// The platform version of your Amazon EKS cluster. For more information, see
 	// Platform Versions (https://docs.aws.amazon.com/eks/latest/userguide/platform-versions.html)
 	// in the Amazon EKS User Guide .

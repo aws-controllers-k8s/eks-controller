@@ -91,11 +91,5 @@ func (r *resource) SetIdentifiers(identifier *ackv1alpha1.AWSIdentifiers) error 
 		return ackerrors.MissingNameIdentifier
 	}
 	r.ko.Spec.AddonName = identifier.NameOrID
-
-	f0, f0ok := identifier.AdditionalKeys["clusterName"]
-	if f0ok {
-		r.ko.Spec.ClusterName = f0
-	}
-
 	return nil
 }

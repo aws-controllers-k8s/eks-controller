@@ -88,7 +88,7 @@ type Cluster_SDK struct {
 	EncryptionConfig     []*EncryptionConfig `json:"encryptionConfig,omitempty"`
 	Endpoint             *string             `json:"endpoint,omitempty"`
 	// An object representing an identity provider.
-	IDentity *IDentity `json:"identity,omitempty"`
+	Identity *Identity `json:"identity,omitempty"`
 	// The Kubernetes network configuration for the cluster.
 	KubernetesNetworkConfig *KubernetesNetworkConfigResponse `json:"kubernetesNetworkConfig,omitempty"`
 	// An object representing the logging configuration for resources in your cluster.
@@ -145,14 +145,14 @@ type FargateProfile_SDK struct {
 }
 
 // An object representing an identity provider.
-type IDentity struct {
+type Identity struct {
 	// An object representing the OpenID Connect (https://openid.net/connect/) (OIDC)
 	// identity provider information for the cluster.
-	Oidc *OIDC `json:"oidc,omitempty"`
+	OIDC *OIDC `json:"oidc,omitempty"`
 }
 
 // An object representing an identity provider configuration.
-type IDentityProviderConfig struct {
+type IdentityProviderConfig struct {
 	Name *string `json:"name,omitempty"`
 	Type *string `json:"type_,omitempty"`
 }
@@ -289,13 +289,13 @@ type OIDC struct {
 
 // An object that represents the configuration for an OpenID Connect (OIDC)
 // identity provider.
-type OidcIDentityProviderConfig struct {
+type OIDCIdentityProviderConfig struct {
 	ClientID                   *string            `json:"clientID,omitempty"`
 	ClusterName                *string            `json:"clusterName,omitempty"`
 	GroupsClaim                *string            `json:"groupsClaim,omitempty"`
 	GroupsPrefix               *string            `json:"groupsPrefix,omitempty"`
-	IDentityProviderConfigARN  *string            `json:"identityProviderConfigARN,omitempty"`
-	IDentityProviderConfigName *string            `json:"identityProviderConfigName,omitempty"`
+	IdentityProviderConfigARN  *string            `json:"identityProviderConfigARN,omitempty"`
+	IdentityProviderConfigName *string            `json:"identityProviderConfigName,omitempty"`
 	IssuerURL                  *string            `json:"issuerURL,omitempty"`
 	Tags                       map[string]*string `json:"tags,omitempty"`
 	UsernameClaim              *string            `json:"usernameClaim,omitempty"`
@@ -306,11 +306,11 @@ type OidcIDentityProviderConfig struct {
 // an OIDC identity provider to your cluster, review the considerations in Authenticating
 // users for your cluster from an OpenID Connect identity provider (https://docs.aws.amazon.com/eks/latest/userguide/authenticate-oidc-identity-provider.html)
 // in the Amazon EKS User Guide.
-type OidcIDentityProviderConfigRequest struct {
+type OIDCIdentityProviderConfigRequest struct {
 	ClientID                   *string `json:"clientID,omitempty"`
 	GroupsClaim                *string `json:"groupsClaim,omitempty"`
 	GroupsPrefix               *string `json:"groupsPrefix,omitempty"`
-	IDentityProviderConfigName *string `json:"identityProviderConfigName,omitempty"`
+	IdentityProviderConfigName *string `json:"identityProviderConfigName,omitempty"`
 	IssuerURL                  *string `json:"issuerURL,omitempty"`
 	UsernameClaim              *string `json:"usernameClaim,omitempty"`
 	UsernamePrefix             *string `json:"usernamePrefix,omitempty"`

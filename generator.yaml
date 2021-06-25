@@ -1,0 +1,20 @@
+resources:
+  Cluster:
+    exceptions:
+      errors:
+        404:
+          code: ResourceNotFoundException
+          message_prefix: No cluster found
+      terminal_codes:
+        - ResourceLimitExceeded
+        - ResourceNotFound
+        - ResourceInUse
+        - OptInRequired
+        - InvalidParameterCombination
+        - InvalidParameterValue
+        - InvalidParameterException
+        - InvalidQueryParameter
+        - MalformedQueryString
+        - MissingAction
+        - MissingParameter
+        - ValidationError
