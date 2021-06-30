@@ -32,13 +32,6 @@ func newResourceDelta(
 		return delta
 	}
 
-	if ackcompare.HasNilDifference(a.ko.Spec.AddonName, b.ko.Spec.AddonName) {
-		delta.Add("Spec.AddonName", a.ko.Spec.AddonName, b.ko.Spec.AddonName)
-	} else if a.ko.Spec.AddonName != nil && b.ko.Spec.AddonName != nil {
-		if *a.ko.Spec.AddonName != *b.ko.Spec.AddonName {
-			delta.Add("Spec.AddonName", a.ko.Spec.AddonName, b.ko.Spec.AddonName)
-		}
-	}
 	if ackcompare.HasNilDifference(a.ko.Spec.AddonVersion, b.ko.Spec.AddonVersion) {
 		delta.Add("Spec.AddonVersion", a.ko.Spec.AddonVersion, b.ko.Spec.AddonVersion)
 	} else if a.ko.Spec.AddonVersion != nil && b.ko.Spec.AddonVersion != nil {
@@ -58,6 +51,13 @@ func newResourceDelta(
 	} else if a.ko.Spec.ClusterName != nil && b.ko.Spec.ClusterName != nil {
 		if *a.ko.Spec.ClusterName != *b.ko.Spec.ClusterName {
 			delta.Add("Spec.ClusterName", a.ko.Spec.ClusterName, b.ko.Spec.ClusterName)
+		}
+	}
+	if ackcompare.HasNilDifference(a.ko.Spec.Name, b.ko.Spec.Name) {
+		delta.Add("Spec.Name", a.ko.Spec.Name, b.ko.Spec.Name)
+	} else if a.ko.Spec.Name != nil && b.ko.Spec.Name != nil {
+		if *a.ko.Spec.Name != *b.ko.Spec.Name {
+			delta.Add("Spec.Name", a.ko.Spec.Name, b.ko.Spec.Name)
 		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.ResolveConflicts, b.ko.Spec.ResolveConflicts) {

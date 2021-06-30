@@ -37,10 +37,6 @@ spec:
             description: "AddonSpec defines the desired state of Addon. \n An Amazon
               EKS add-on."
             properties:
-              addonName:
-                description: The name of the add-on. The name must match one of the
-                  names returned by ListAddons (https://docs.aws.amazon.com/eks/latest/APIReference/API_ListAddons.html).
-                type: string
               addonVersion:
                 description: The version of the add-on. The version must match one
                   of the versions returned by DescribeAddonVersions (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonVersions.html).
@@ -51,6 +47,10 @@ spec:
                 type: string
               clusterName:
                 description: The name of the cluster to create the add-on for.
+                type: string
+              name:
+                description: The name of the add-on. The name must match one of the
+                  names returned by ListAddons (https://docs.aws.amazon.com/eks/latest/APIReference/API_ListAddons.html).
                 type: string
               resolveConflicts:
                 description: How to resolve parameter value conflicts when migrating
@@ -77,8 +77,8 @@ spec:
                   both of which you define.
                 type: object
             required:
-            - addonName
             - clusterName
+            - name
             type: object
           status:
             description: AddonStatus defines the observed state of Addon

@@ -94,9 +94,9 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.ACKResourceMetadata.ARN = &arn
 	}
 	if resp.FargateProfile.FargateProfileName != nil {
-		ko.Spec.FargateProfileName = resp.FargateProfile.FargateProfileName
+		ko.Spec.Name = resp.FargateProfile.FargateProfileName
 	} else {
-		ko.Spec.FargateProfileName = nil
+		ko.Spec.Name = nil
 	}
 	if resp.FargateProfile.PodExecutionRoleArn != nil {
 		ko.Spec.PodExecutionRoleARN = resp.FargateProfile.PodExecutionRoleArn
@@ -163,7 +163,7 @@ func (rm *resourceManager) sdkFind(
 func (rm *resourceManager) requiredFieldsMissingFromReadOneInput(
 	r *resource,
 ) bool {
-	return r.ko.Spec.ClusterName == nil || r.ko.Spec.FargateProfileName == nil
+	return r.ko.Spec.ClusterName == nil || r.ko.Spec.Name == nil
 
 }
 
@@ -177,8 +177,8 @@ func (rm *resourceManager) newDescribeRequestPayload(
 	if r.ko.Spec.ClusterName != nil {
 		res.SetClusterName(*r.ko.Spec.ClusterName)
 	}
-	if r.ko.Spec.FargateProfileName != nil {
-		res.SetFargateProfileName(*r.ko.Spec.FargateProfileName)
+	if r.ko.Spec.Name != nil {
+		res.SetFargateProfileName(*r.ko.Spec.Name)
 	}
 
 	return res, nil
@@ -246,8 +246,8 @@ func (rm *resourceManager) newCreateRequestPayload(
 	if r.ko.Spec.ClusterName != nil {
 		res.SetClusterName(*r.ko.Spec.ClusterName)
 	}
-	if r.ko.Spec.FargateProfileName != nil {
-		res.SetFargateProfileName(*r.ko.Spec.FargateProfileName)
+	if r.ko.Spec.Name != nil {
+		res.SetFargateProfileName(*r.ko.Spec.Name)
 	}
 	if r.ko.Spec.PodExecutionRoleARN != nil {
 		res.SetPodExecutionRoleArn(*r.ko.Spec.PodExecutionRoleARN)
@@ -333,8 +333,8 @@ func (rm *resourceManager) newDeleteRequestPayload(
 	if r.ko.Spec.ClusterName != nil {
 		res.SetClusterName(*r.ko.Spec.ClusterName)
 	}
-	if r.ko.Spec.FargateProfileName != nil {
-		res.SetFargateProfileName(*r.ko.Spec.FargateProfileName)
+	if r.ko.Spec.Name != nil {
+		res.SetFargateProfileName(*r.ko.Spec.Name)
 	}
 
 	return res, nil
@@ -431,6 +431,28 @@ func (rm *resourceManager) updateConditions(
 // and if the exception indicates that it is a Terminal exception
 // 'Terminal' exception are specified in generator configuration
 func (rm *resourceManager) terminalAWSError(err error) bool {
-	// No terminal_errors specified for this resource in generator config
-	return false
+	if err == nil {
+		return false
+	}
+	awsErr, ok := ackerr.AWSError(err)
+	if !ok {
+		return false
+	}
+	switch awsErr.Code() {
+	case "ResourceLimitExceeded",
+		"ResourceNotFound",
+		"ResourceInUse",
+		"OptInRequired",
+		"InvalidParameterCombination",
+		"InvalidParameterValue",
+		"InvalidParameterException",
+		"InvalidQueryParameter",
+		"MalformedQueryString",
+		"MissingAction",
+		"MissingParameter",
+		"ValidationError":
+		return true
+	default:
+		return false
+	}
 }

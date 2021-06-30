@@ -66,7 +66,7 @@ func (rm *resourceManager) sdkFind(
 	resp, err = rm.sdkapi.DescribeClusterWithContext(ctx, input)
 	rm.metrics.RecordAPICall("READ_ONE", "DescribeCluster", err)
 	if err != nil {
-		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "ResourceNotFoundException" && strings.HasPrefix(awsErr.Message(), "No cluster found") {
+		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "ResourceNotFoundException" {
 			return nil, ackerr.NotFound
 		}
 		return nil, err

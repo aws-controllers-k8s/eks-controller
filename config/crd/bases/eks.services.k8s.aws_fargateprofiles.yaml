@@ -45,7 +45,7 @@ spec:
                 description: The name of the Amazon EKS cluster to apply the Fargate
                   profile to.
                 type: string
-              fargateProfileName:
+              name:
                 description: The name of the Fargate profile.
                 type: string
               podExecutionRoleARN:
@@ -92,7 +92,7 @@ spec:
                 type: object
             required:
             - clusterName
-            - fargateProfileName
+            - name
             - podExecutionRoleARN
             type: object
           status:

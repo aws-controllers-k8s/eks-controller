@@ -67,6 +67,9 @@ type NodegroupSpec struct {
 	// then do not specify instanceTypes, diskSize, or remoteAccess and make sure
 	// that the launch template meets the requirements in launchTemplateSpecification.
 	LaunchTemplate *LaunchTemplateSpecification `json:"launchTemplate,omitempty"`
+	// The unique name to give your node group.
+	// +kubebuilder:validation:Required
+	Name *string `json:"name"`
 	// The Amazon Resource Name (ARN) of the IAM role to associate with your node
 	// group. The Amazon EKS worker node kubelet daemon makes calls to AWS APIs
 	// on your behalf. Nodes receive permissions for these API calls through an
@@ -82,9 +85,6 @@ type NodegroupSpec struct {
 	// in the Amazon EKS User Guide.
 	// +kubebuilder:validation:Required
 	NodeRole *string `json:"nodeRole"`
-	// The unique name to give your node group.
-	// +kubebuilder:validation:Required
-	NodegroupName *string `json:"nodegroupName"`
 	// The AMI version of the Amazon EKS optimized AMI to use with your node group.
 	// By default, the latest available AMI version for the node group's current
 	// Kubernetes version is used. For more information, see Amazon EKS optimized

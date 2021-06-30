@@ -32,7 +32,7 @@ type FargateProfileSpec struct {
 	ClusterName *string `json:"clusterName"`
 	// The name of the Fargate profile.
 	// +kubebuilder:validation:Required
-	FargateProfileName *string `json:"fargateProfileName"`
+	Name *string `json:"name"`
 	// The Amazon Resource Name (ARN) of the pod execution role to use for pods
 	// that match the selectors in the Fargate profile. The pod execution role allows
 	// Fargate infrastructure to register with your cluster as a node, and it provides

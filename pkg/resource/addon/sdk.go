@@ -84,9 +84,9 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.ACKResourceMetadata.ARN = &arn
 	}
 	if resp.Addon.AddonName != nil {
-		ko.Spec.AddonName = resp.Addon.AddonName
+		ko.Spec.Name = resp.Addon.AddonName
 	} else {
-		ko.Spec.AddonName = nil
+		ko.Spec.Name = nil
 	}
 	if resp.Addon.AddonVersion != nil {
 		ko.Spec.AddonVersion = resp.Addon.AddonVersion
@@ -169,7 +169,7 @@ func (rm *resourceManager) sdkFind(
 func (rm *resourceManager) requiredFieldsMissingFromReadOneInput(
 	r *resource,
 ) bool {
-	return r.ko.Spec.ClusterName == nil || r.ko.Spec.AddonName == nil
+	return r.ko.Spec.ClusterName == nil || r.ko.Spec.Name == nil
 
 }
 
@@ -180,8 +180,8 @@ func (rm *resourceManager) newDescribeRequestPayload(
 ) (*svcsdk.DescribeAddonInput, error) {
 	res := &svcsdk.DescribeAddonInput{}
 
-	if r.ko.Spec.AddonName != nil {
-		res.SetAddonName(*r.ko.Spec.AddonName)
+	if r.ko.Spec.Name != nil {
+		res.SetAddonName(*r.ko.Spec.Name)
 	}
 	if r.ko.Spec.ClusterName != nil {
 		res.SetClusterName(*r.ko.Spec.ClusterName)
@@ -280,8 +280,8 @@ func (rm *resourceManager) newCreateRequestPayload(
 ) (*svcsdk.CreateAddonInput, error) {
 	res := &svcsdk.CreateAddonInput{}
 
-	if r.ko.Spec.AddonName != nil {
-		res.SetAddonName(*r.ko.Spec.AddonName)
+	if r.ko.Spec.Name != nil {
+		res.SetAddonName(*r.ko.Spec.Name)
 	}
 	if r.ko.Spec.AddonVersion != nil {
 		res.SetAddonVersion(*r.ko.Spec.AddonVersion)
@@ -361,9 +361,6 @@ func (rm *resourceManager) newUpdateRequestPayload(
 ) (*svcsdk.UpdateAddonInput, error) {
 	res := &svcsdk.UpdateAddonInput{}
 
-	if r.ko.Spec.AddonName != nil {
-		res.SetAddonName(*r.ko.Spec.AddonName)
-	}
 	if r.ko.Spec.AddonVersion != nil {
 		res.SetAddonVersion(*r.ko.Spec.AddonVersion)
 	}
@@ -407,8 +404,8 @@ func (rm *resourceManager) newDeleteRequestPayload(
 ) (*svcsdk.DeleteAddonInput, error) {
 	res := &svcsdk.DeleteAddonInput{}
 
-	if r.ko.Spec.AddonName != nil {
-		res.SetAddonName(*r.ko.Spec.AddonName)
+	if r.ko.Spec.Name != nil {
+		res.SetAddonName(*r.ko.Spec.Name)
 	}
 	if r.ko.Spec.ClusterName != nil {
 		res.SetClusterName(*r.ko.Spec.ClusterName)
@@ -508,6 +505,28 @@ func (rm *resourceManager) updateConditions(
 // and if the exception indicates that it is a Terminal exception
 // 'Terminal' exception are specified in generator configuration
 func (rm *resourceManager) terminalAWSError(err error) bool {
-	// No terminal_errors specified for this resource in generator config
-	return false
+	if err == nil {
+		return false
+	}
+	awsErr, ok := ackerr.AWSError(err)
+	if !ok {
+		return false
+	}
+	switch awsErr.Code() {
+	case "ResourceLimitExceeded",
+		"ResourceNotFound",
+		"ResourceInUse",
+		"OptInRequired",
+		"InvalidParameterCombination",
+		"InvalidParameterValue",
+		"InvalidParameterException",
+		"InvalidQueryParameter",
+		"MalformedQueryString",
+		"MissingAction",
+		"MissingParameter",
+		"ValidationError":
+		return true
+	default:
+		return false
+	}
 }

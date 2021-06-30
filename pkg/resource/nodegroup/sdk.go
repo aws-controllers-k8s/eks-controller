@@ -185,9 +185,9 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.ACKResourceMetadata.ARN = &arn
 	}
 	if resp.Nodegroup.NodegroupName != nil {
-		ko.Spec.NodegroupName = resp.Nodegroup.NodegroupName
+		ko.Spec.Name = resp.Nodegroup.NodegroupName
 	} else {
-		ko.Spec.NodegroupName = nil
+		ko.Spec.Name = nil
 	}
 	if resp.Nodegroup.ReleaseVersion != nil {
 		ko.Spec.ReleaseVersion = resp.Nodegroup.ReleaseVersion
@@ -321,7 +321,7 @@ func (rm *resourceManager) sdkFind(
 func (rm *resourceManager) requiredFieldsMissingFromReadOneInput(
 	r *resource,
 ) bool {
-	return r.ko.Spec.ClusterName == nil || r.ko.Spec.NodegroupName == nil
+	return r.ko.Spec.ClusterName == nil || r.ko.Spec.Name == nil
 
 }
 
@@ -335,8 +335,8 @@ func (rm *resourceManager) newDescribeRequestPayload(
 	if r.ko.Spec.ClusterName != nil {
 		res.SetClusterName(*r.ko.Spec.ClusterName)
 	}
-	if r.ko.Spec.NodegroupName != nil {
-		res.SetNodegroupName(*r.ko.Spec.NodegroupName)
+	if r.ko.Spec.Name != nil {
+		res.SetNodegroupName(*r.ko.Spec.Name)
 	}
 
 	return res, nil
@@ -501,8 +501,8 @@ func (rm *resourceManager) newCreateRequestPayload(
 	if r.ko.Spec.NodeRole != nil {
 		res.SetNodeRole(*r.ko.Spec.NodeRole)
 	}
-	if r.ko.Spec.NodegroupName != nil {
-		res.SetNodegroupName(*r.ko.Spec.NodegroupName)
+	if r.ko.Spec.Name != nil {
+		res.SetNodegroupName(*r.ko.Spec.Name)
 	}
 	if r.ko.Spec.ReleaseVersion != nil {
 		res.SetReleaseVersion(*r.ko.Spec.ReleaseVersion)
@@ -627,8 +627,8 @@ func (rm *resourceManager) newDeleteRequestPayload(
 	if r.ko.Spec.ClusterName != nil {
 		res.SetClusterName(*r.ko.Spec.ClusterName)
 	}
-	if r.ko.Spec.NodegroupName != nil {
-		res.SetNodegroupName(*r.ko.Spec.NodegroupName)
+	if r.ko.Spec.Name != nil {
+		res.SetNodegroupName(*r.ko.Spec.Name)
 	}
 
 	return res, nil
@@ -725,6 +725,28 @@ func (rm *resourceManager) updateConditions(
 // and if the exception indicates that it is a Terminal exception
 // 'Terminal' exception are specified in generator configuration
 func (rm *resourceManager) terminalAWSError(err error) bool {
-	// No terminal_errors specified for this resource in generator config
-	return false
+	if err == nil {
+		return false
+	}
+	awsErr, ok := ackerr.AWSError(err)
+	if !ok {
+		return false
+	}
+	switch awsErr.Code() {
+	case "ResourceLimitExceeded",
+		"ResourceNotFound",
+		"ResourceInUse",
+		"OptInRequired",
+		"InvalidParameterCombination",
+		"InvalidParameterValue",
+		"InvalidParameterException",
+		"InvalidQueryParameter",
+		"MalformedQueryString",
+		"MissingAction",
+		"MissingParameter",
+		"ValidationError":
+		return true
+	default:
+		return false
+	}
 }

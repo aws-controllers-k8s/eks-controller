@@ -46,11 +46,11 @@ func newResourceDelta(
 			delta.Add("Spec.ClusterName", a.ko.Spec.ClusterName, b.ko.Spec.ClusterName)
 		}
 	}
-	if ackcompare.HasNilDifference(a.ko.Spec.FargateProfileName, b.ko.Spec.FargateProfileName) {
-		delta.Add("Spec.FargateProfileName", a.ko.Spec.FargateProfileName, b.ko.Spec.FargateProfileName)
-	} else if a.ko.Spec.FargateProfileName != nil && b.ko.Spec.FargateProfileName != nil {
-		if *a.ko.Spec.FargateProfileName != *b.ko.Spec.FargateProfileName {
-			delta.Add("Spec.FargateProfileName", a.ko.Spec.FargateProfileName, b.ko.Spec.FargateProfileName)
+	if ackcompare.HasNilDifference(a.ko.Spec.Name, b.ko.Spec.Name) {
+		delta.Add("Spec.Name", a.ko.Spec.Name, b.ko.Spec.Name)
+	} else if a.ko.Spec.Name != nil && b.ko.Spec.Name != nil {
+		if *a.ko.Spec.Name != *b.ko.Spec.Name {
+			delta.Add("Spec.Name", a.ko.Spec.Name, b.ko.Spec.Name)
 		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.PodExecutionRoleARN, b.ko.Spec.PodExecutionRoleARN) {

@@ -103,18 +103,18 @@ func newResourceDelta(
 			}
 		}
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.Name, b.ko.Spec.Name) {
+		delta.Add("Spec.Name", a.ko.Spec.Name, b.ko.Spec.Name)
+	} else if a.ko.Spec.Name != nil && b.ko.Spec.Name != nil {
+		if *a.ko.Spec.Name != *b.ko.Spec.Name {
+			delta.Add("Spec.Name", a.ko.Spec.Name, b.ko.Spec.Name)
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.NodeRole, b.ko.Spec.NodeRole) {
 		delta.Add("Spec.NodeRole", a.ko.Spec.NodeRole, b.ko.Spec.NodeRole)
 	} else if a.ko.Spec.NodeRole != nil && b.ko.Spec.NodeRole != nil {
 		if *a.ko.Spec.NodeRole != *b.ko.Spec.NodeRole {
 			delta.Add("Spec.NodeRole", a.ko.Spec.NodeRole, b.ko.Spec.NodeRole)
-		}
-	}
-	if ackcompare.HasNilDifference(a.ko.Spec.NodegroupName, b.ko.Spec.NodegroupName) {
-		delta.Add("Spec.NodegroupName", a.ko.Spec.NodegroupName, b.ko.Spec.NodegroupName)
-	} else if a.ko.Spec.NodegroupName != nil && b.ko.Spec.NodegroupName != nil {
-		if *a.ko.Spec.NodegroupName != *b.ko.Spec.NodegroupName {
-			delta.Add("Spec.NodegroupName", a.ko.Spec.NodegroupName, b.ko.Spec.NodegroupName)
 		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.ReleaseVersion, b.ko.Spec.ReleaseVersion) {

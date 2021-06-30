@@ -24,10 +24,6 @@ import (
 //
 // An Amazon EKS add-on.
 type AddonSpec struct {
-	// The name of the add-on. The name must match one of the names returned by
-	// ListAddons (https://docs.aws.amazon.com/eks/latest/APIReference/API_ListAddons.html).
-	// +kubebuilder:validation:Required
-	AddonName *string `json:"addonName"`
 	// The version of the add-on. The version must match one of the versions returned
 	// by DescribeAddonVersions (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonVersions.html).
 	AddonVersion *string `json:"addonVersion,omitempty"`
@@ -37,6 +33,10 @@ type AddonSpec struct {
 	// The name of the cluster to create the add-on for.
 	// +kubebuilder:validation:Required
 	ClusterName *string `json:"clusterName"`
+	// The name of the add-on. The name must match one of the names returned by
+	// ListAddons (https://docs.aws.amazon.com/eks/latest/APIReference/API_ListAddons.html).
+	// +kubebuilder:validation:Required
+	Name *string `json:"name"`
 	// How to resolve parameter value conflicts when migrating an existing add-on
 	// to an Amazon EKS add-on.
 	ResolveConflicts *string `json:"resolveConflicts,omitempty"`
