@@ -12,25 +12,28 @@
 # permissions and limitations under the License.
 """Bootstraps the resources required to run the EKS integration tests.
 """
-
-import boto3
 import logging
-import time
 
-from acktest import resources
-from acktest.aws.identity import get_region
+from acktest.bootstrapping import ServiceBootstrapResources
+from acktest.bootstrapping.iam import Role
 from e2e import bootstrap_directory
 from e2e.bootstrap_resources import (
     TestBootstrapResources,
 )
 
-def service_bootstrap() -> dict:
+def service_bootstrap() -> ServiceBootstrapResources:
     logging.getLogger().setLevel(logging.INFO)
+    
+    resources = TestBootstrapResources(
+        ClusterRole=Role("cluster-role", "eks.amazonaws.com", ["arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"]),
+        FargatePodRole=Role("fargate-pod-role", "eks-fargate-pods.amazonaws.com", ["arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy"])
+    )
 
-    return TestBootstrapResources(
-    ).__dict__
+    resources.bootstrap()
+
+    return resources
 
 if __name__ == "__main__":
     config = service_bootstrap()
     # Write config to current directory by default
-    resources.write_bootstrap_config(config, bootstrap_directory)
+    config.serialize(bootstrap_directory)

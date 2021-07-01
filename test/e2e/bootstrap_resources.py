@@ -16,19 +16,19 @@ for them.
 """
 
 from dataclasses import dataclass
-from acktest.resources import read_bootstrap_config
+from acktest.bootstrapping import ServiceBootstrapResources
+from acktest.bootstrapping.iam import Role
 from e2e import bootstrap_directory
 
 @dataclass
-class TestBootstrapResources:
-    pass
+class TestBootstrapResources(ServiceBootstrapResources):
+    ClusterRole: Role
+    FargatePodRole: Role
 
 _bootstrap_resources = None
 
-def get_bootstrap_resources(bootstrap_file_name: str = "bootstrap.yaml"):
+def get_bootstrap_resources(bootstrap_file_name: str = "bootstrap.pkl") -> TestBootstrapResources:
     global _bootstrap_resources
     if _bootstrap_resources is None:
-        _bootstrap_resources = TestBootstrapResources(
-            **read_bootstrap_config(bootstrap_directory, bootstrap_file_name=bootstrap_file_name),
-        )
+        _bootstrap_resources = TestBootstrapResources.deseralize(bootstrap_directory, bootstrap_file_name=bootstrap_file_name)
     return _bootstrap_resources
