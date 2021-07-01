@@ -48,4 +48,4 @@ def k8s_client():
 
 @pytest.fixture(scope='module')
 def eks_client():
-    return boto3.client('eks') 
+    return boto3.client('eks')

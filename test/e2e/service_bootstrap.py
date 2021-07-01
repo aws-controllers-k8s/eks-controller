@@ -16,6 +16,7 @@ import logging
 
 from acktest.bootstrapping import ServiceBootstrapResources
 from acktest.bootstrapping.iam import Role
+from acktest.bootstrapping.vpc import VPC
 from e2e import bootstrap_directory
 from e2e.bootstrap_resources import (
     TestBootstrapResources,
@@ -26,7 +27,8 @@ def service_bootstrap() -> ServiceBootstrapResources:
     
     resources = TestBootstrapResources(
         ClusterRole=Role("cluster-role", "eks.amazonaws.com", ["arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"]),
-        FargatePodRole=Role("fargate-pod-role", "eks-fargate-pods.amazonaws.com", ["arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy"])
+        FargatePodRole=Role("fargate-pod-role", "eks-fargate-pods.amazonaws.com", ["arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy"]),
+        ClusterVPC=VPC(name_prefix="cluster-vpc", public_subnets=2, private_subnets=2)
     )
 
     resources.bootstrap()

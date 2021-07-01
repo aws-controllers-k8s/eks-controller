@@ -18,10 +18,12 @@ for them.
 from dataclasses import dataclass
 from acktest.bootstrapping import ServiceBootstrapResources
 from acktest.bootstrapping.iam import Role
+from acktest.bootstrapping.vpc import VPC
 from e2e import bootstrap_directory
 
 @dataclass
 class TestBootstrapResources(ServiceBootstrapResources):
+    ClusterVPC: VPC
     ClusterRole: Role
     FargatePodRole: Role
 

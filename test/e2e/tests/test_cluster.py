@@ -25,10 +25,8 @@ import pytest
 from acktest.k8s import resource as k8s
 from acktest.resources import random_suffix_name
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_eks_resource
+from e2e.common.types import CLUSTER_RESOURCE_PLURAL
 from e2e.replacement_values import REPLACEMENT_VALUES
-from e2e.bootstrap_resources import get_bootstrap_resources
-
-RESOURCE_PLURAL = 'clusters'
 
 DELETE_WAIT_AFTER_SECONDS = 10
 
@@ -40,9 +38,6 @@ class TestCluster:
         
         replacements = REPLACEMENT_VALUES.copy()
         replacements["CLUSTER_NAME"] = cluster_name
-        replacements["CLUSTER_ROLE"] = ...
-        replacements["SUBNET_1"] = ...
-        replacements["SUBNET_2"] = ...
 
         resource_data = load_eks_resource(
             "cluster_simple",
@@ -52,7 +47,7 @@ class TestCluster:
 
         # Create the k8s resource
         ref = k8s.CustomResourceReference(
-            CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+            CRD_GROUP, CRD_VERSION, CLUSTER_RESOURCE_PLURAL,
             cluster_name, namespace="default",
         )
         k8s.create_custom_resource(ref, resource_data)

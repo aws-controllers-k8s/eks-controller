@@ -9,5 +9,5 @@ spec:
     endpointPrivateAccess: true
     endpointPublicAccess: true
     subnetIDs:
-      - "$SUBNET_1"
-      - "$SUBNET_2"
+      - "$PUBLIC_SUBNET_1"
+      - "$PUBLIC_SUBNET_2"
