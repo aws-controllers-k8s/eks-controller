@@ -1,0 +1,106 @@
+resources:
+  Addon:
+    renames:
+      operations:
+        CreateAddon:
+          input_fields:
+            AddonName: Name
+        DescribeAddon:
+          input_fields:
+            AddonName: Name
+        DeleteAddon:
+          input_fields:
+            AddonName: Name
+    exceptions:
+      errors:
+        404:
+          code: ResourceNotFoundException
+      terminal_codes:
+        - ResourceLimitExceeded
+        - ResourceNotFound
+        - ResourceInUse
+        - OptInRequired
+        - InvalidParameterCombination
+        - InvalidParameterValue
+        - InvalidParameterException
+        - InvalidQueryParameter
+        - MalformedQueryString
+        - MissingAction
+        - MissingParameter
+        - ValidationError
+  Cluster:
+    exceptions:
+      errors:
+        404:
+          code: ResourceNotFoundException
+      terminal_codes:
+        - ResourceLimitExceeded
+        - ResourceNotFound
+        - ResourceInUse
+        - OptInRequired
+        - InvalidParameterCombination
+        - InvalidParameterValue
+        - InvalidParameterException
+        - InvalidQueryParameter
+        - MalformedQueryString
+        - MissingAction
+        - MissingParameter
+        - ValidationError
+  FargateProfile:
+    renames:
+      operations:
+        CreateFargateProfile:
+          input_fields:
+            FargateProfileName: Name
+        DescribeFargateProfile:
+          input_fields:
+            FargateProfileName: Name
+        DeleteFargateProfile:
+          input_fields:
+            FargateProfileName: Name
+    exceptions:
+      errors:
+        404:
+          code: ResourceNotFoundException
+      terminal_codes:
+        - ResourceLimitExceeded
+        - ResourceNotFound
+        - ResourceInUse
+        - OptInRequired
+        - InvalidParameterCombination
+        - InvalidParameterValue
+        - InvalidParameterException
+        - InvalidQueryParameter
+        - MalformedQueryString
+        - MissingAction
+        - MissingParameter
+        - ValidationError
+  Nodegroup:
+    renames:
+      operations:
+        CreateNodegroup:
+          input_fields:
+            NodegroupName: Name
+        DescribeNodegroup:
+          input_fields:
+            NodegroupName: Name
+        DeleteNodegroup:
+          input_fields:
+            NodegroupName: Name
+    exceptions:
+      errors:
+        404:
+          code: ResourceNotFoundException
+      terminal_codes:
+        - ResourceLimitExceeded
+        - ResourceNotFound
+        - ResourceInUse
+        - OptInRequired
+        - InvalidParameterCombination
+        - InvalidParameterValue
+        - InvalidParameterException
+        - InvalidQueryParameter
+        - MalformedQueryString
+        - MissingAction
+        - MissingParameter
+        - ValidationError
