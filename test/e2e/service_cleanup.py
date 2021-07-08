@@ -16,14 +16,14 @@
 
 import logging
 
-from acktest.bootstrapping import ServiceBootstrapResources
+from acktest.bootstrapping import Resources
 
 from e2e import bootstrap_directory
 
 def service_cleanup():
     logging.getLogger().setLevel(logging.INFO)
 
-    resources = ServiceBootstrapResources.deseralize(bootstrap_directory)
+    resources = Resources.deseralize(bootstrap_directory)
     resources.cleanup()
 
 if __name__ == "__main__":   
