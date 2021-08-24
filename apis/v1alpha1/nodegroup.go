@@ -136,24 +136,31 @@ type NodegroupStatus struct {
 	// All CRs managed by ACK have a common `Status.ACKResourceMetadata` member
 	// that is used to contain resource sync state, account ownership,
 	// constructed ARN for the resource
+	// +kubebuilder:validation:Optional
 	ACKResourceMetadata *ackv1alpha1.ResourceMetadata `json:"ackResourceMetadata"`
 	// All CRS managed by ACK have a common `Status.Conditions` member that
 	// contains a collection of `ackv1alpha1.Condition` objects that describe
 	// the various terminal states of the CR and its backend AWS service API
 	// resource
+	// +kubebuilder:validation:Optional
 	Conditions []*ackv1alpha1.Condition `json:"conditions"`
 	// The Unix epoch timestamp in seconds for when the managed node group was created.
+	// +kubebuilder:validation:Optional
 	CreatedAt *metav1.Time `json:"createdAt,omitempty"`
 	// The health status of the node group. If there are issues with your node group's
 	// health, they are listed here.
+	// +kubebuilder:validation:Optional
 	Health *NodegroupHealth `json:"health,omitempty"`
 	// The Unix epoch timestamp in seconds for when the managed node group was last
 	// modified.
+	// +kubebuilder:validation:Optional
 	ModifiedAt *metav1.Time `json:"modifiedAt,omitempty"`
 	// The resources associated with the node group, such as Auto Scaling groups
 	// and security groups for remote access.
+	// +kubebuilder:validation:Optional
 	Resources *NodegroupResources `json:"resources,omitempty"`
 	// The current status of the managed node group.
+	// +kubebuilder:validation:Optional
 	Status *string `json:"status,omitempty"`
 }
 

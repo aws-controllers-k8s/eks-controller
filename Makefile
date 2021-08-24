@@ -13,7 +13,7 @@ GO_LDFLAGS=-ldflags "-X main.version=$(VERSION) \
 
 AUTHENTICATED_ACCOUNT_ID=$(shell aws sts get-caller-identity --output text --query "Account")
 
-.PHONY: all test
+.PHONY: all test local-test
 
 all: test
 
@@ -26,6 +26,9 @@ local-run-controller: ## Run a controller image locally for SERVICE
 
 test: 				## Run code tests
 	go test -v ./...
+
+local-test: 		## Run code tests using go.local.mod file
+	go test -modfile=go.local.mod -v ./...
 
 help:           	## Show this help.
 	@grep -F -h "##" $(MAKEFILE_LIST) | grep -F -v grep | sed -e 's/\\$$//' \

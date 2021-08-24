@@ -16,7 +16,14 @@
 package cluster
 
 import (
+	"reflect"
+
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
+)
+
+// Hack to avoid import errors during build...
+var (
+	_ = &reflect.Method{}
 )
 
 // newResourceDelta returns a new `ackcompare.Delta` used to compare two
@@ -39,7 +46,9 @@ func newResourceDelta(
 			delta.Add("Spec.ClientRequestToken", a.ko.Spec.ClientRequestToken, b.ko.Spec.ClientRequestToken)
 		}
 	}
-
+	if !reflect.DeepEqual(a.ko.Spec.EncryptionConfig, b.ko.Spec.EncryptionConfig) {
+		delta.Add("Spec.EncryptionConfig", a.ko.Spec.EncryptionConfig, b.ko.Spec.EncryptionConfig)
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.KubernetesNetworkConfig, b.ko.Spec.KubernetesNetworkConfig) {
 		delta.Add("Spec.KubernetesNetworkConfig", a.ko.Spec.KubernetesNetworkConfig, b.ko.Spec.KubernetesNetworkConfig)
 	} else if a.ko.Spec.KubernetesNetworkConfig != nil && b.ko.Spec.KubernetesNetworkConfig != nil {
@@ -54,7 +63,9 @@ func newResourceDelta(
 	if ackcompare.HasNilDifference(a.ko.Spec.Logging, b.ko.Spec.Logging) {
 		delta.Add("Spec.Logging", a.ko.Spec.Logging, b.ko.Spec.Logging)
 	} else if a.ko.Spec.Logging != nil && b.ko.Spec.Logging != nil {
-
+		if !reflect.DeepEqual(a.ko.Spec.Logging.ClusterLogging, b.ko.Spec.Logging.ClusterLogging) {
+			delta.Add("Spec.Logging.ClusterLogging", a.ko.Spec.Logging.ClusterLogging, b.ko.Spec.Logging.ClusterLogging)
+		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Name, b.ko.Spec.Name) {
 		delta.Add("Spec.Name", a.ko.Spec.Name, b.ko.Spec.Name)
@@ -80,15 +91,12 @@ func newResourceDelta(
 				delta.Add("Spec.ResourcesVPCConfig.EndpointPublicAccess", a.ko.Spec.ResourcesVPCConfig.EndpointPublicAccess, b.ko.Spec.ResourcesVPCConfig.EndpointPublicAccess)
 			}
 		}
-
 		if !ackcompare.SliceStringPEqual(a.ko.Spec.ResourcesVPCConfig.PublicAccessCIDRs, b.ko.Spec.ResourcesVPCConfig.PublicAccessCIDRs) {
 			delta.Add("Spec.ResourcesVPCConfig.PublicAccessCIDRs", a.ko.Spec.ResourcesVPCConfig.PublicAccessCIDRs, b.ko.Spec.ResourcesVPCConfig.PublicAccessCIDRs)
 		}
-
 		if !ackcompare.SliceStringPEqual(a.ko.Spec.ResourcesVPCConfig.SecurityGroupIDs, b.ko.Spec.ResourcesVPCConfig.SecurityGroupIDs) {
 			delta.Add("Spec.ResourcesVPCConfig.SecurityGroupIDs", a.ko.Spec.ResourcesVPCConfig.SecurityGroupIDs, b.ko.Spec.ResourcesVPCConfig.SecurityGroupIDs)
 		}
-
 		if !ackcompare.SliceStringPEqual(a.ko.Spec.ResourcesVPCConfig.SubnetIDs, b.ko.Spec.ResourcesVPCConfig.SubnetIDs) {
 			delta.Add("Spec.ResourcesVPCConfig.SubnetIDs", a.ko.Spec.ResourcesVPCConfig.SubnetIDs, b.ko.Spec.ResourcesVPCConfig.SubnetIDs)
 		}

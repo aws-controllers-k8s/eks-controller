@@ -1,0 +1,8 @@
+service:
+  full_name: "Amazon Elastic Kubernetes Service"
+  short_name: "EKS"
+  link: "https://aws.amazon.com/eks/"
+  documentation: "https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html"
+api_versions:
+  - api_version: v1alpha1
+    status: available

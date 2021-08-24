@@ -223,6 +223,21 @@ func (rm *resourceManager) sdkCreate(
 		arn := ackv1alpha1.AWSResourceName(*resp.Addon.AddonArn)
 		ko.Status.ACKResourceMetadata.ARN = &arn
 	}
+	if resp.Addon.AddonName != nil {
+		ko.Spec.Name = resp.Addon.AddonName
+	} else {
+		ko.Spec.Name = nil
+	}
+	if resp.Addon.AddonVersion != nil {
+		ko.Spec.AddonVersion = resp.Addon.AddonVersion
+	} else {
+		ko.Spec.AddonVersion = nil
+	}
+	if resp.Addon.ClusterName != nil {
+		ko.Spec.ClusterName = resp.Addon.ClusterName
+	} else {
+		ko.Spec.ClusterName = nil
+	}
 	if resp.Addon.CreatedAt != nil {
 		ko.Status.CreatedAt = &metav1.Time{*resp.Addon.CreatedAt}
 	} else {
@@ -262,10 +277,26 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Status.ModifiedAt = nil
 	}
+	if resp.Addon.ServiceAccountRoleArn != nil {
+		ko.Spec.ServiceAccountRoleARN = resp.Addon.ServiceAccountRoleArn
+	} else {
+		ko.Spec.ServiceAccountRoleARN = nil
+	}
 	if resp.Addon.Status != nil {
 		ko.Status.Status = resp.Addon.Status
 	} else {
 		ko.Status.Status = nil
+	}
+	if resp.Addon.Tags != nil {
+		f9 := map[string]*string{}
+		for f9key, f9valiter := range resp.Addon.Tags {
+			var f9val string
+			f9val = *f9valiter
+			f9[f9key] = &f9val
+		}
+		ko.Spec.Tags = f9
+	} else {
+		ko.Spec.Tags = nil
 	}
 
 	rm.setStatusDefaults(ko)
@@ -457,16 +488,21 @@ func (rm *resourceManager) updateConditions(
 		}
 	}
 
-	if rm.terminalAWSError(err) {
+	if rm.terminalAWSError(err) || err == ackerr.SecretTypeNotSupported || err == ackerr.SecretNotFound {
 		if terminalCondition == nil {
 			terminalCondition = &ackv1alpha1.Condition{
 				Type: ackv1alpha1.ConditionTypeTerminal,
 			}
 			ko.Status.Conditions = append(ko.Status.Conditions, terminalCondition)
 		}
+		var errorMessage = ""
+		if err == ackerr.SecretTypeNotSupported || err == ackerr.SecretNotFound {
+			errorMessage = err.Error()
+		} else {
+			awsErr, _ := ackerr.AWSError(err)
+			errorMessage = awsErr.Message()
+		}
 		terminalCondition.Status = corev1.ConditionTrue
-		awsErr, _ := ackerr.AWSError(err)
-		errorMessage := awsErr.Message()
 		terminalCondition.Message = &errorMessage
 	} else {
 		// Clear the terminal condition if no longer present
