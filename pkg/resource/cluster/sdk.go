@@ -327,10 +327,41 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Status.CertificateAuthority = nil
 	}
+	if resp.Cluster.ClientRequestToken != nil {
+		ko.Spec.ClientRequestToken = resp.Cluster.ClientRequestToken
+	} else {
+		ko.Spec.ClientRequestToken = nil
+	}
 	if resp.Cluster.CreatedAt != nil {
 		ko.Status.CreatedAt = &metav1.Time{*resp.Cluster.CreatedAt}
 	} else {
 		ko.Status.CreatedAt = nil
+	}
+	if resp.Cluster.EncryptionConfig != nil {
+		f4 := []*svcapitypes.EncryptionConfig{}
+		for _, f4iter := range resp.Cluster.EncryptionConfig {
+			f4elem := &svcapitypes.EncryptionConfig{}
+			if f4iter.Provider != nil {
+				f4elemf0 := &svcapitypes.Provider{}
+				if f4iter.Provider.KeyArn != nil {
+					f4elemf0.KeyARN = f4iter.Provider.KeyArn
+				}
+				f4elem.Provider = f4elemf0
+			}
+			if f4iter.Resources != nil {
+				f4elemf1 := []*string{}
+				for _, f4elemf1iter := range f4iter.Resources {
+					var f4elemf1elem string
+					f4elemf1elem = *f4elemf1iter
+					f4elemf1 = append(f4elemf1, &f4elemf1elem)
+				}
+				f4elem.Resources = f4elemf1
+			}
+			f4 = append(f4, f4elem)
+		}
+		ko.Spec.EncryptionConfig = f4
+	} else {
+		ko.Spec.EncryptionConfig = nil
 	}
 	if resp.Cluster.Endpoint != nil {
 		ko.Status.Endpoint = resp.Cluster.Endpoint
@@ -350,15 +381,115 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Status.Identity = nil
 	}
+	if resp.Cluster.KubernetesNetworkConfig != nil {
+		f7 := &svcapitypes.KubernetesNetworkConfigRequest{}
+		if resp.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr != nil {
+			f7.ServiceIPv4CIDR = resp.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr
+		}
+		ko.Spec.KubernetesNetworkConfig = f7
+	} else {
+		ko.Spec.KubernetesNetworkConfig = nil
+	}
+	if resp.Cluster.Logging != nil {
+		f8 := &svcapitypes.Logging{}
+		if resp.Cluster.Logging.ClusterLogging != nil {
+			f8f0 := []*svcapitypes.LogSetup{}
+			for _, f8f0iter := range resp.Cluster.Logging.ClusterLogging {
+				f8f0elem := &svcapitypes.LogSetup{}
+				if f8f0iter.Enabled != nil {
+					f8f0elem.Enabled = f8f0iter.Enabled
+				}
+				if f8f0iter.Types != nil {
+					f8f0elemf1 := []*string{}
+					for _, f8f0elemf1iter := range f8f0iter.Types {
+						var f8f0elemf1elem string
+						f8f0elemf1elem = *f8f0elemf1iter
+						f8f0elemf1 = append(f8f0elemf1, &f8f0elemf1elem)
+					}
+					f8f0elem.Types = f8f0elemf1
+				}
+				f8f0 = append(f8f0, f8f0elem)
+			}
+			f8.ClusterLogging = f8f0
+		}
+		ko.Spec.Logging = f8
+	} else {
+		ko.Spec.Logging = nil
+	}
+	if resp.Cluster.Name != nil {
+		ko.Spec.Name = resp.Cluster.Name
+	} else {
+		ko.Spec.Name = nil
+	}
 	if resp.Cluster.PlatformVersion != nil {
 		ko.Status.PlatformVersion = resp.Cluster.PlatformVersion
 	} else {
 		ko.Status.PlatformVersion = nil
 	}
+	if resp.Cluster.ResourcesVpcConfig != nil {
+		f11 := &svcapitypes.VPCConfigRequest{}
+		if resp.Cluster.ResourcesVpcConfig.EndpointPrivateAccess != nil {
+			f11.EndpointPrivateAccess = resp.Cluster.ResourcesVpcConfig.EndpointPrivateAccess
+		}
+		if resp.Cluster.ResourcesVpcConfig.EndpointPublicAccess != nil {
+			f11.EndpointPublicAccess = resp.Cluster.ResourcesVpcConfig.EndpointPublicAccess
+		}
+		if resp.Cluster.ResourcesVpcConfig.PublicAccessCidrs != nil {
+			f11f3 := []*string{}
+			for _, f11f3iter := range resp.Cluster.ResourcesVpcConfig.PublicAccessCidrs {
+				var f11f3elem string
+				f11f3elem = *f11f3iter
+				f11f3 = append(f11f3, &f11f3elem)
+			}
+			f11.PublicAccessCIDRs = f11f3
+		}
+		if resp.Cluster.ResourcesVpcConfig.SecurityGroupIds != nil {
+			f11f4 := []*string{}
+			for _, f11f4iter := range resp.Cluster.ResourcesVpcConfig.SecurityGroupIds {
+				var f11f4elem string
+				f11f4elem = *f11f4iter
+				f11f4 = append(f11f4, &f11f4elem)
+			}
+			f11.SecurityGroupIDs = f11f4
+		}
+		if resp.Cluster.ResourcesVpcConfig.SubnetIds != nil {
+			f11f5 := []*string{}
+			for _, f11f5iter := range resp.Cluster.ResourcesVpcConfig.SubnetIds {
+				var f11f5elem string
+				f11f5elem = *f11f5iter
+				f11f5 = append(f11f5, &f11f5elem)
+			}
+			f11.SubnetIDs = f11f5
+		}
+		ko.Spec.ResourcesVPCConfig = f11
+	} else {
+		ko.Spec.ResourcesVPCConfig = nil
+	}
+	if resp.Cluster.RoleArn != nil {
+		ko.Spec.RoleARN = resp.Cluster.RoleArn
+	} else {
+		ko.Spec.RoleARN = nil
+	}
 	if resp.Cluster.Status != nil {
 		ko.Status.Status = resp.Cluster.Status
 	} else {
 		ko.Status.Status = nil
+	}
+	if resp.Cluster.Tags != nil {
+		f14 := map[string]*string{}
+		for f14key, f14valiter := range resp.Cluster.Tags {
+			var f14val string
+			f14val = *f14valiter
+			f14[f14key] = &f14val
+		}
+		ko.Spec.Tags = f14
+	} else {
+		ko.Spec.Tags = nil
+	}
+	if resp.Cluster.Version != nil {
+		ko.Spec.Version = resp.Cluster.Version
+	} else {
+		ko.Spec.Version = nil
 	}
 
 	rm.setStatusDefaults(ko)
@@ -576,16 +707,21 @@ func (rm *resourceManager) updateConditions(
 		}
 	}
 
-	if rm.terminalAWSError(err) {
+	if rm.terminalAWSError(err) || err == ackerr.SecretTypeNotSupported || err == ackerr.SecretNotFound {
 		if terminalCondition == nil {
 			terminalCondition = &ackv1alpha1.Condition{
 				Type: ackv1alpha1.ConditionTypeTerminal,
 			}
 			ko.Status.Conditions = append(ko.Status.Conditions, terminalCondition)
 		}
+		var errorMessage = ""
+		if err == ackerr.SecretTypeNotSupported || err == ackerr.SecretNotFound {
+			errorMessage = err.Error()
+		} else {
+			awsErr, _ := ackerr.AWSError(err)
+			errorMessage = awsErr.Message()
+		}
 		terminalCondition.Status = corev1.ConditionTrue
-		awsErr, _ := ackerr.AWSError(err)
-		errorMessage := awsErr.Message()
 		terminalCondition.Message = &errorMessage
 	} else {
 		// Clear the terminal condition if no longer present

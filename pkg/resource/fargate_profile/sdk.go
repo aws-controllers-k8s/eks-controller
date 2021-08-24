@@ -210,6 +210,11 @@ func (rm *resourceManager) sdkCreate(
 	// the original Kubernetes object we passed to the function
 	ko := desired.ko.DeepCopy()
 
+	if resp.FargateProfile.ClusterName != nil {
+		ko.Spec.ClusterName = resp.FargateProfile.ClusterName
+	} else {
+		ko.Spec.ClusterName = nil
+	}
 	if resp.FargateProfile.CreatedAt != nil {
 		ko.Status.CreatedAt = &metav1.Time{*resp.FargateProfile.CreatedAt}
 	} else {
@@ -222,10 +227,64 @@ func (rm *resourceManager) sdkCreate(
 		arn := ackv1alpha1.AWSResourceName(*resp.FargateProfile.FargateProfileArn)
 		ko.Status.ACKResourceMetadata.ARN = &arn
 	}
+	if resp.FargateProfile.FargateProfileName != nil {
+		ko.Spec.Name = resp.FargateProfile.FargateProfileName
+	} else {
+		ko.Spec.Name = nil
+	}
+	if resp.FargateProfile.PodExecutionRoleArn != nil {
+		ko.Spec.PodExecutionRoleARN = resp.FargateProfile.PodExecutionRoleArn
+	} else {
+		ko.Spec.PodExecutionRoleARN = nil
+	}
+	if resp.FargateProfile.Selectors != nil {
+		f5 := []*svcapitypes.FargateProfileSelector{}
+		for _, f5iter := range resp.FargateProfile.Selectors {
+			f5elem := &svcapitypes.FargateProfileSelector{}
+			if f5iter.Labels != nil {
+				f5elemf0 := map[string]*string{}
+				for f5elemf0key, f5elemf0valiter := range f5iter.Labels {
+					var f5elemf0val string
+					f5elemf0val = *f5elemf0valiter
+					f5elemf0[f5elemf0key] = &f5elemf0val
+				}
+				f5elem.Labels = f5elemf0
+			}
+			if f5iter.Namespace != nil {
+				f5elem.Namespace = f5iter.Namespace
+			}
+			f5 = append(f5, f5elem)
+		}
+		ko.Spec.Selectors = f5
+	} else {
+		ko.Spec.Selectors = nil
+	}
 	if resp.FargateProfile.Status != nil {
 		ko.Status.Status = resp.FargateProfile.Status
 	} else {
 		ko.Status.Status = nil
+	}
+	if resp.FargateProfile.Subnets != nil {
+		f7 := []*string{}
+		for _, f7iter := range resp.FargateProfile.Subnets {
+			var f7elem string
+			f7elem = *f7iter
+			f7 = append(f7, &f7elem)
+		}
+		ko.Spec.Subnets = f7
+	} else {
+		ko.Spec.Subnets = nil
+	}
+	if resp.FargateProfile.Tags != nil {
+		f8 := map[string]*string{}
+		for f8key, f8valiter := range resp.FargateProfile.Tags {
+			var f8val string
+			f8val = *f8valiter
+			f8[f8key] = &f8val
+		}
+		ko.Spec.Tags = f8
+	} else {
+		ko.Spec.Tags = nil
 	}
 
 	rm.setStatusDefaults(ko)
@@ -383,16 +442,21 @@ func (rm *resourceManager) updateConditions(
 		}
 	}
 
-	if rm.terminalAWSError(err) {
+	if rm.terminalAWSError(err) || err == ackerr.SecretTypeNotSupported || err == ackerr.SecretNotFound {
 		if terminalCondition == nil {
 			terminalCondition = &ackv1alpha1.Condition{
 				Type: ackv1alpha1.ConditionTypeTerminal,
 			}
 			ko.Status.Conditions = append(ko.Status.Conditions, terminalCondition)
 		}
+		var errorMessage = ""
+		if err == ackerr.SecretTypeNotSupported || err == ackerr.SecretNotFound {
+			errorMessage = err.Error()
+		} else {
+			awsErr, _ := ackerr.AWSError(err)
+			errorMessage = awsErr.Message()
+		}
 		terminalCondition.Status = corev1.ConditionTrue
-		awsErr, _ := ackerr.AWSError(err)
-		errorMessage := awsErr.Message()
 		terminalCondition.Message = &errorMessage
 	} else {
 		// Clear the terminal condition if no longer present

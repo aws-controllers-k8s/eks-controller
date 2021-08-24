@@ -16,7 +16,14 @@
 package fargate_profile
 
 import (
+	"reflect"
+
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
+)
+
+// Hack to avoid import errors during build...
+var (
+	_ = &reflect.Method{}
 )
 
 // newResourceDelta returns a new `ackcompare.Delta` used to compare two
@@ -60,7 +67,9 @@ func newResourceDelta(
 			delta.Add("Spec.PodExecutionRoleARN", a.ko.Spec.PodExecutionRoleARN, b.ko.Spec.PodExecutionRoleARN)
 		}
 	}
-
+	if !reflect.DeepEqual(a.ko.Spec.Selectors, b.ko.Spec.Selectors) {
+		delta.Add("Spec.Selectors", a.ko.Spec.Selectors, b.ko.Spec.Selectors)
+	}
 	if !ackcompare.SliceStringPEqual(a.ko.Spec.Subnets, b.ko.Spec.Subnets) {
 		delta.Add("Spec.Subnets", a.ko.Spec.Subnets, b.ko.Spec.Subnets)
 	}

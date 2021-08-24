@@ -16,7 +16,14 @@
 package nodegroup
 
 import (
+	"reflect"
+
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
+)
+
+// Hack to avoid import errors during build...
+var (
+	_ = &reflect.Method{}
 )
 
 // newResourceDelta returns a new `ackcompare.Delta` used to compare two
@@ -67,7 +74,6 @@ func newResourceDelta(
 			delta.Add("Spec.DiskSize", a.ko.Spec.DiskSize, b.ko.Spec.DiskSize)
 		}
 	}
-
 	if !ackcompare.SliceStringPEqual(a.ko.Spec.InstanceTypes, b.ko.Spec.InstanceTypes) {
 		delta.Add("Spec.InstanceTypes", a.ko.Spec.InstanceTypes, b.ko.Spec.InstanceTypes)
 	}
@@ -134,7 +140,6 @@ func newResourceDelta(
 				delta.Add("Spec.RemoteAccess.EC2SshKey", a.ko.Spec.RemoteAccess.EC2SshKey, b.ko.Spec.RemoteAccess.EC2SshKey)
 			}
 		}
-
 		if !ackcompare.SliceStringPEqual(a.ko.Spec.RemoteAccess.SourceSecurityGroups, b.ko.Spec.RemoteAccess.SourceSecurityGroups) {
 			delta.Add("Spec.RemoteAccess.SourceSecurityGroups", a.ko.Spec.RemoteAccess.SourceSecurityGroups, b.ko.Spec.RemoteAccess.SourceSecurityGroups)
 		}
@@ -164,7 +169,6 @@ func newResourceDelta(
 			}
 		}
 	}
-
 	if !ackcompare.SliceStringPEqual(a.ko.Spec.Subnets, b.ko.Spec.Subnets) {
 		delta.Add("Spec.Subnets", a.ko.Spec.Subnets, b.ko.Spec.Subnets)
 	}
@@ -175,7 +179,9 @@ func newResourceDelta(
 			delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
 		}
 	}
-
+	if !reflect.DeepEqual(a.ko.Spec.Taints, b.ko.Spec.Taints) {
+		delta.Add("Spec.Taints", a.ko.Spec.Taints, b.ko.Spec.Taints)
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.UpdateConfig, b.ko.Spec.UpdateConfig) {
 		delta.Add("Spec.UpdateConfig", a.ko.Spec.UpdateConfig, b.ko.Spec.UpdateConfig)
 	} else if a.ko.Spec.UpdateConfig != nil && b.ko.Spec.UpdateConfig != nil {

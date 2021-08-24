@@ -368,10 +368,30 @@ func (rm *resourceManager) sdkCreate(
 	// the original Kubernetes object we passed to the function
 	ko := desired.ko.DeepCopy()
 
+	if resp.Nodegroup.AmiType != nil {
+		ko.Spec.AmiType = resp.Nodegroup.AmiType
+	} else {
+		ko.Spec.AmiType = nil
+	}
+	if resp.Nodegroup.CapacityType != nil {
+		ko.Spec.CapacityType = resp.Nodegroup.CapacityType
+	} else {
+		ko.Spec.CapacityType = nil
+	}
+	if resp.Nodegroup.ClusterName != nil {
+		ko.Spec.ClusterName = resp.Nodegroup.ClusterName
+	} else {
+		ko.Spec.ClusterName = nil
+	}
 	if resp.Nodegroup.CreatedAt != nil {
 		ko.Status.CreatedAt = &metav1.Time{*resp.Nodegroup.CreatedAt}
 	} else {
 		ko.Status.CreatedAt = nil
+	}
+	if resp.Nodegroup.DiskSize != nil {
+		ko.Spec.DiskSize = resp.Nodegroup.DiskSize
+	} else {
+		ko.Spec.DiskSize = nil
 	}
 	if resp.Nodegroup.Health != nil {
 		f5 := &svcapitypes.NodegroupHealth{}
@@ -402,10 +422,52 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Status.Health = nil
 	}
+	if resp.Nodegroup.InstanceTypes != nil {
+		f6 := []*string{}
+		for _, f6iter := range resp.Nodegroup.InstanceTypes {
+			var f6elem string
+			f6elem = *f6iter
+			f6 = append(f6, &f6elem)
+		}
+		ko.Spec.InstanceTypes = f6
+	} else {
+		ko.Spec.InstanceTypes = nil
+	}
+	if resp.Nodegroup.Labels != nil {
+		f7 := map[string]*string{}
+		for f7key, f7valiter := range resp.Nodegroup.Labels {
+			var f7val string
+			f7val = *f7valiter
+			f7[f7key] = &f7val
+		}
+		ko.Spec.Labels = f7
+	} else {
+		ko.Spec.Labels = nil
+	}
+	if resp.Nodegroup.LaunchTemplate != nil {
+		f8 := &svcapitypes.LaunchTemplateSpecification{}
+		if resp.Nodegroup.LaunchTemplate.Id != nil {
+			f8.ID = resp.Nodegroup.LaunchTemplate.Id
+		}
+		if resp.Nodegroup.LaunchTemplate.Name != nil {
+			f8.Name = resp.Nodegroup.LaunchTemplate.Name
+		}
+		if resp.Nodegroup.LaunchTemplate.Version != nil {
+			f8.Version = resp.Nodegroup.LaunchTemplate.Version
+		}
+		ko.Spec.LaunchTemplate = f8
+	} else {
+		ko.Spec.LaunchTemplate = nil
+	}
 	if resp.Nodegroup.ModifiedAt != nil {
 		ko.Status.ModifiedAt = &metav1.Time{*resp.Nodegroup.ModifiedAt}
 	} else {
 		ko.Status.ModifiedAt = nil
+	}
+	if resp.Nodegroup.NodeRole != nil {
+		ko.Spec.NodeRole = resp.Nodegroup.NodeRole
+	} else {
+		ko.Spec.NodeRole = nil
 	}
 	if ko.Status.ACKResourceMetadata == nil {
 		ko.Status.ACKResourceMetadata = &ackv1alpha1.ResourceMetadata{}
@@ -413,6 +475,34 @@ func (rm *resourceManager) sdkCreate(
 	if resp.Nodegroup.NodegroupArn != nil {
 		arn := ackv1alpha1.AWSResourceName(*resp.Nodegroup.NodegroupArn)
 		ko.Status.ACKResourceMetadata.ARN = &arn
+	}
+	if resp.Nodegroup.NodegroupName != nil {
+		ko.Spec.Name = resp.Nodegroup.NodegroupName
+	} else {
+		ko.Spec.Name = nil
+	}
+	if resp.Nodegroup.ReleaseVersion != nil {
+		ko.Spec.ReleaseVersion = resp.Nodegroup.ReleaseVersion
+	} else {
+		ko.Spec.ReleaseVersion = nil
+	}
+	if resp.Nodegroup.RemoteAccess != nil {
+		f14 := &svcapitypes.RemoteAccessConfig{}
+		if resp.Nodegroup.RemoteAccess.Ec2SshKey != nil {
+			f14.EC2SshKey = resp.Nodegroup.RemoteAccess.Ec2SshKey
+		}
+		if resp.Nodegroup.RemoteAccess.SourceSecurityGroups != nil {
+			f14f1 := []*string{}
+			for _, f14f1iter := range resp.Nodegroup.RemoteAccess.SourceSecurityGroups {
+				var f14f1elem string
+				f14f1elem = *f14f1iter
+				f14f1 = append(f14f1, &f14f1elem)
+			}
+			f14.SourceSecurityGroups = f14f1
+		}
+		ko.Spec.RemoteAccess = f14
+	} else {
+		ko.Spec.RemoteAccess = nil
 	}
 	if resp.Nodegroup.Resources != nil {
 		f15 := &svcapitypes.NodegroupResources{}
@@ -434,10 +524,83 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Status.Resources = nil
 	}
+	if resp.Nodegroup.ScalingConfig != nil {
+		f16 := &svcapitypes.NodegroupScalingConfig{}
+		if resp.Nodegroup.ScalingConfig.DesiredSize != nil {
+			f16.DesiredSize = resp.Nodegroup.ScalingConfig.DesiredSize
+		}
+		if resp.Nodegroup.ScalingConfig.MaxSize != nil {
+			f16.MaxSize = resp.Nodegroup.ScalingConfig.MaxSize
+		}
+		if resp.Nodegroup.ScalingConfig.MinSize != nil {
+			f16.MinSize = resp.Nodegroup.ScalingConfig.MinSize
+		}
+		ko.Spec.ScalingConfig = f16
+	} else {
+		ko.Spec.ScalingConfig = nil
+	}
 	if resp.Nodegroup.Status != nil {
 		ko.Status.Status = resp.Nodegroup.Status
 	} else {
 		ko.Status.Status = nil
+	}
+	if resp.Nodegroup.Subnets != nil {
+		f18 := []*string{}
+		for _, f18iter := range resp.Nodegroup.Subnets {
+			var f18elem string
+			f18elem = *f18iter
+			f18 = append(f18, &f18elem)
+		}
+		ko.Spec.Subnets = f18
+	} else {
+		ko.Spec.Subnets = nil
+	}
+	if resp.Nodegroup.Tags != nil {
+		f19 := map[string]*string{}
+		for f19key, f19valiter := range resp.Nodegroup.Tags {
+			var f19val string
+			f19val = *f19valiter
+			f19[f19key] = &f19val
+		}
+		ko.Spec.Tags = f19
+	} else {
+		ko.Spec.Tags = nil
+	}
+	if resp.Nodegroup.Taints != nil {
+		f20 := []*svcapitypes.Taint{}
+		for _, f20iter := range resp.Nodegroup.Taints {
+			f20elem := &svcapitypes.Taint{}
+			if f20iter.Effect != nil {
+				f20elem.Effect = f20iter.Effect
+			}
+			if f20iter.Key != nil {
+				f20elem.Key = f20iter.Key
+			}
+			if f20iter.Value != nil {
+				f20elem.Value = f20iter.Value
+			}
+			f20 = append(f20, f20elem)
+		}
+		ko.Spec.Taints = f20
+	} else {
+		ko.Spec.Taints = nil
+	}
+	if resp.Nodegroup.UpdateConfig != nil {
+		f21 := &svcapitypes.NodegroupUpdateConfig{}
+		if resp.Nodegroup.UpdateConfig.MaxUnavailable != nil {
+			f21.MaxUnavailable = resp.Nodegroup.UpdateConfig.MaxUnavailable
+		}
+		if resp.Nodegroup.UpdateConfig.MaxUnavailablePercentage != nil {
+			f21.MaxUnavailablePercentage = resp.Nodegroup.UpdateConfig.MaxUnavailablePercentage
+		}
+		ko.Spec.UpdateConfig = f21
+	} else {
+		ko.Spec.UpdateConfig = nil
+	}
+	if resp.Nodegroup.Version != nil {
+		ko.Spec.Version = resp.Nodegroup.Version
+	} else {
+		ko.Spec.Version = nil
 	}
 
 	rm.setStatusDefaults(ko)
@@ -677,16 +840,21 @@ func (rm *resourceManager) updateConditions(
 		}
 	}
 
-	if rm.terminalAWSError(err) {
+	if rm.terminalAWSError(err) || err == ackerr.SecretTypeNotSupported || err == ackerr.SecretNotFound {
 		if terminalCondition == nil {
 			terminalCondition = &ackv1alpha1.Condition{
 				Type: ackv1alpha1.ConditionTypeTerminal,
 			}
 			ko.Status.Conditions = append(ko.Status.Conditions, terminalCondition)
 		}
+		var errorMessage = ""
+		if err == ackerr.SecretTypeNotSupported || err == ackerr.SecretNotFound {
+			errorMessage = err.Error()
+		} else {
+			awsErr, _ := ackerr.AWSError(err)
+			errorMessage = awsErr.Message()
+		}
 		terminalCondition.Status = corev1.ConditionTrue
-		awsErr, _ := ackerr.AWSError(err)
-		errorMessage := awsErr.Message()
 		terminalCondition.Message = &errorMessage
 	} else {
 		// Clear the terminal condition if no longer present
