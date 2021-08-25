@@ -21,8 +21,8 @@ REPLACEMENT_VALUES = {
     "CLUSTER_ROLE": get_bootstrap_resources().ClusterRole.arn,
     "FARGATE_POD_ROLE": get_bootstrap_resources().FargatePodRole.arn,
 
-    "PUBLIC_SUBNET_1": get_bootstrap_resources().ClusterVPC.public_subnet_ids[0],
-    "PUBLIC_SUBNET_2": get_bootstrap_resources().ClusterVPC.public_subnet_ids[1],
-    "PRIVATE_SUBNET_1": get_bootstrap_resources().ClusterVPC.private_subnet_ids[0],
-    "PRIVATE_SUBNET_2": get_bootstrap_resources().ClusterVPC.private_subnet_ids[1]
+    "PUBLIC_SUBNET_1": get_bootstrap_resources().ClusterVPC.public_subnets.subnet_ids[0],
+    "PUBLIC_SUBNET_2": get_bootstrap_resources().ClusterVPC.public_subnets.subnet_ids[1],
+    "PRIVATE_SUBNET_1": get_bootstrap_resources().ClusterVPC.private_subnets.subnet_ids[0],
+    "PRIVATE_SUBNET_2": get_bootstrap_resources().ClusterVPC.private_subnets.subnet_ids[1]
 }
