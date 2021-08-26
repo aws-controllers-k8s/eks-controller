@@ -1,0 +1,13 @@
+apiVersion: eks.services.k8s.aws/v1alpha1
+kind: FargateProfile
+metadata:
+  name: $PROFILE_NAME
+spec:
+  name: $PROFILE_NAME
+  clusterName: $CLUSTER_NAME
+  podExecutionRoleARN: $FARGATE_POD_ROLE
+  subnets:
+    - "$PRIVATE_SUBNET_1"
+    - "$PRIVATE_SUBNET_2"
+  selectors:
+    - namespace: default
