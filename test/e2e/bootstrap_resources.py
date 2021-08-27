@@ -22,15 +22,15 @@ from acktest.bootstrapping.vpc import VPC
 from e2e import bootstrap_directory
 
 @dataclass
-class TestBootstrapResources(Resources):
+class BootstrapResources(Resources):
     ClusterVPC: VPC
     ClusterRole: Role
     FargatePodRole: Role
 
 _bootstrap_resources = None
 
-def get_bootstrap_resources(bootstrap_file_name: str = "bootstrap.pkl") -> TestBootstrapResources:
+def get_bootstrap_resources(bootstrap_file_name: str = "bootstrap.pkl") -> BootstrapResources:
     global _bootstrap_resources
     if _bootstrap_resources is None:
-        _bootstrap_resources = TestBootstrapResources.deseralize(bootstrap_directory, bootstrap_file_name=bootstrap_file_name)
+        _bootstrap_resources = BootstrapResources.deserialize(bootstrap_directory, bootstrap_file_name=bootstrap_file_name)
     return _bootstrap_resources
