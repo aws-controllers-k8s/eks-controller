@@ -32,7 +32,7 @@ type NodegroupSpec struct {
 	// will fail. For more information about using launch templates with Amazon
 	// EKS, see Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
-	AmiType *string `json:"amiType,omitempty"`
+	AMIType *string `json:"amiType,omitempty"`
 	// The capacity type for your node group.
 	CapacityType *string `json:"capacityType,omitempty"`
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency

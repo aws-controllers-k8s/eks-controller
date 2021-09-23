@@ -234,7 +234,7 @@ type NodegroupUpdateConfig struct {
 
 // An object representing an Amazon EKS managed node group.
 type Nodegroup_SDK struct {
-	AmiType      *string      `json:"amiType,omitempty"`
+	AMIType      *string      `json:"amiType,omitempty"`
 	CapacityType *string      `json:"capacityType,omitempty"`
 	ClusterName  *string      `json:"clusterName,omitempty"`
 	CreatedAt    *metav1.Time `json:"createdAt,omitempty"`
