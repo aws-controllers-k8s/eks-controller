@@ -16,6 +16,7 @@
 package nodegroup
 
 import (
+	"bytes"
 	"reflect"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
@@ -23,6 +24,7 @@ import (
 
 // Hack to avoid import errors during build...
 var (
+	_ = &bytes.Buffer{}
 	_ = &reflect.Method{}
 )
 
@@ -39,11 +41,11 @@ func newResourceDelta(
 		return delta
 	}
 
-	if ackcompare.HasNilDifference(a.ko.Spec.AmiType, b.ko.Spec.AmiType) {
-		delta.Add("Spec.AmiType", a.ko.Spec.AmiType, b.ko.Spec.AmiType)
-	} else if a.ko.Spec.AmiType != nil && b.ko.Spec.AmiType != nil {
-		if *a.ko.Spec.AmiType != *b.ko.Spec.AmiType {
-			delta.Add("Spec.AmiType", a.ko.Spec.AmiType, b.ko.Spec.AmiType)
+	if ackcompare.HasNilDifference(a.ko.Spec.AMIType, b.ko.Spec.AMIType) {
+		delta.Add("Spec.AMIType", a.ko.Spec.AMIType, b.ko.Spec.AMIType)
+	} else if a.ko.Spec.AMIType != nil && b.ko.Spec.AMIType != nil {
+		if *a.ko.Spec.AMIType != *b.ko.Spec.AMIType {
+			delta.Add("Spec.AMIType", a.ko.Spec.AMIType, b.ko.Spec.AMIType)
 		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.CapacityType, b.ko.Spec.CapacityType) {

@@ -21,6 +21,7 @@ import (
 
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
+	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
 	"github.com/aws/aws-sdk-go/aws"
@@ -40,6 +41,7 @@ var (
 	_ = &svcapitypes.Nodegroup{}
 	_ = ackv1alpha1.AWSAccountID("")
 	_ = &ackerr.NotFound
+	_ = &ackcondition.NotManagedMessage
 )
 
 // sdkFind returns SDK-specific information about a supplied resource
@@ -77,9 +79,9 @@ func (rm *resourceManager) sdkFind(
 	ko := r.ko.DeepCopy()
 
 	if resp.Nodegroup.AmiType != nil {
-		ko.Spec.AmiType = resp.Nodegroup.AmiType
+		ko.Spec.AMIType = resp.Nodegroup.AmiType
 	} else {
-		ko.Spec.AmiType = nil
+		ko.Spec.AMIType = nil
 	}
 	if resp.Nodegroup.CapacityType != nil {
 		ko.Spec.CapacityType = resp.Nodegroup.CapacityType
@@ -369,9 +371,9 @@ func (rm *resourceManager) sdkCreate(
 	ko := desired.ko.DeepCopy()
 
 	if resp.Nodegroup.AmiType != nil {
-		ko.Spec.AmiType = resp.Nodegroup.AmiType
+		ko.Spec.AMIType = resp.Nodegroup.AmiType
 	} else {
-		ko.Spec.AmiType = nil
+		ko.Spec.AMIType = nil
 	}
 	if resp.Nodegroup.CapacityType != nil {
 		ko.Spec.CapacityType = resp.Nodegroup.CapacityType
@@ -615,8 +617,8 @@ func (rm *resourceManager) newCreateRequestPayload(
 ) (*svcsdk.CreateNodegroupInput, error) {
 	res := &svcsdk.CreateNodegroupInput{}
 
-	if r.ko.Spec.AmiType != nil {
-		res.SetAmiType(*r.ko.Spec.AmiType)
+	if r.ko.Spec.AMIType != nil {
+		res.SetAmiType(*r.ko.Spec.AMIType)
 	}
 	if r.ko.Spec.CapacityType != nil {
 		res.SetCapacityType(*r.ko.Spec.CapacityType)
@@ -852,7 +854,7 @@ func (rm *resourceManager) updateConditions(
 			errorMessage = err.Error()
 		} else {
 			awsErr, _ := ackerr.AWSError(err)
-			errorMessage = awsErr.Message()
+			errorMessage = awsErr.Error()
 		}
 		terminalCondition.Status = corev1.ConditionTrue
 		terminalCondition.Message = &errorMessage
@@ -875,7 +877,7 @@ func (rm *resourceManager) updateConditions(
 			awsErr, _ := ackerr.AWSError(err)
 			errorMessage := err.Error()
 			if awsErr != nil {
-				errorMessage = awsErr.Message()
+				errorMessage = awsErr.Error()
 			}
 			recoverableCondition.Message = &errorMessage
 		} else if recoverableCondition != nil {
