@@ -1,46 +1,42 @@
 ---
 annotations:
   capabilityLevel: Basic Install
-  shortDescription: AWS RDS controller is a service controller for managing RDS resources
+  shortDescription: AWS EKS controller is a service controller for managing EKS resources
     in Kubernetes
-displayName: AWS Controllers for Kubernetes - Amazon RDS
+displayName: AWS Controllers for Kubernetes - Amazon EKS
 description: |-
-  Manage Amazon Relational Database Service ("RDS") resources in AWS from within your Kubernetes cluster.
+  Manage Elastic Kubernetes Service (EKS) resources in AWS from within your Kubernetes cluster.
 
 
-  **About Amazon RDS**
+  **About Amazon EKS**
 
 
-  Amazon Relational Database Service (Amazon RDS) makes it easy to set up,
-  operate, and scale a relational database in the cloud. It provides
-  cost-efficient and resizable capacity while automating time-consuming
-  administration tasks such as hardware provisioning, database setup, patching
-  and backups. It frees you to focus on your applications so you can give them
-  the fast performance, high availability, security and compatibility they need.
-
-
-  Amazon RDS is available on several database instance types - optimized for
-  memory, performance or I/O -and provides you with six familiar database
-  engines to choose from, including Amazon Aurora, PostgreSQL, MySQL, MariaDB,
-  Oracle Database, and SQL Server. You can use the AWS Database Migration
-  Service to easily migrate or replicate your existing databases to Amazon RDS.
+  Amazon Elastic Kubernetes Service (Amazon EKS) is a managed service that you can use to run Kubernetes on AWS without needing to install, operate, and maintain your own Kubernetes control plane or nodes. Kubernetes is an open-source system for automating the deployment, scaling, and management of containerized applications.
 
 
   **About the AWS Controllers for Kubernetes**
 
 
   This controller is a component of the [AWS Controller for Kubernetes](https://github.com/aws/aws-controllers-k8s)
-  project. This project is currently in **developer preview**. 
+  project. This project is currently in **developer preview**.
+
+
+  **Pre-Installation Steps**
+
+
+  Please follow the following link: [Red Hat OpenShift](https://aws-controllers-k8s.github.io/community/docs/user-docs/openshift/)
 samples:
-- kind: DBParameterGroup
+- kind: Addon
   spec: '{}'
-- kind: DBSecurityGroup
+- kind: Cluster
   spec: '{}'
-- kind: DBSubnetGroup
+- kind: FargateProfile
+  spec: '{}'
+- kind: Nodegroup
   spec: '{}'
 maintainers:
-- name: "Your Team Name"
-  email: "your-team@example.com"
+- name: "eks maintainer team"
+  email: "ack-maintainers@amazon.com"
 links:
-- name: Amazon RDS Developer Resources
-  url: https://aws.amazon.com/rds/developer-resources/
+- name: Amazon EKS Developer Resources
+  url: https://aws.amazon.com/eks/getting-started/
