@@ -26,6 +26,7 @@ class BootstrapResources(Resources):
     ClusterVPC: VPC
     ClusterRole: Role
     FargatePodRole: Role
+    NodegroupRole: Role
 
 _bootstrap_resources = None
 

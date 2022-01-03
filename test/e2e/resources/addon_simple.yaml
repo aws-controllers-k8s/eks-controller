@@ -1,0 +1,8 @@
+apiVersion: eks.services.k8s.aws/v1alpha1
+kind: Addon
+metadata:
+  name: $CR_NAME
+spec:
+  name: $ADDON_NAME
+  addonVersion: $ADDON_VERSION
+  clusterName: $CLUSTER_NAME
