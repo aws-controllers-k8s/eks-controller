@@ -40,9 +40,9 @@ def wait_for_addon_deleted(eks_client, cluster_name, addon_name):
     waiter.wait(clusterName=cluster_name, addonName=addon_name)
 
 @pytest.fixture
-def vpc_cni_addon(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceReference, Dict]:
-    addon_name = "vpc-cni"
-    addon_version = "v1.10.1-eksbuild.1"
+def coredns_addon(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceReference, Dict]:
+    addon_name = "coredns"
+    addon_version = "v1.8.4-eksbuild.1"
 
     (ref, cr) = simple_cluster
     cluster_name = cr["spec"]["name"]
@@ -85,8 +85,8 @@ def vpc_cni_addon(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceReferen
 
 @service_marker
 class TestAddon:
-    def test_create_delete_addon(self, vpc_cni_addon, eks_client):
-        (ref, cr) = vpc_cni_addon
+    def test_create_delete_addon(self, coredns_addon, eks_client):
+        (ref, cr) = coredns_addon
 
         cluster_name = cr["spec"]["clusterName"]
         cr_name = ref.name
