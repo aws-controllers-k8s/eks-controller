@@ -99,5 +99,3 @@ class TestNodegroup:
             assert aws_res["nodegroup"]["nodegroupArn"] is not None
         except eks_client.exceptions.ResourceNotFoundException:
             pytest.fail(f"Could not find Nodegroup '{cr_name}' in EKS")
-
-        wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
