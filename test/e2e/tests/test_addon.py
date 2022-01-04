@@ -31,10 +31,6 @@ RESOURCE_PLURAL = 'addons'
 
 CREATE_WAIT_AFTER_SECONDS = 10
 
-def wait_for_addon_active(eks_client, cluster_name, addon_name):
-    waiter = eks_client.get_waiter('addon_active')
-    waiter.wait(clusterName=cluster_name, addonName=addon_name)
-
 def wait_for_addon_deleted(eks_client, cluster_name, addon_name):
     waiter = eks_client.get_waiter('addon_deleted')
     waiter.wait(clusterName=cluster_name, addonName=addon_name)
@@ -104,5 +100,3 @@ class TestAddon:
             assert aws_res["addon"]["addonArn"] is not None
         except eks_client.exceptions.ResourceNotFoundException:
             pytest.fail(f"Could not find Addon '{cr_name}' in EKS")
-
-        wait_for_addon_active(eks_client, cluster_name, addon_name)
