@@ -1,0 +1,15 @@
+apiVersion: eks.services.k8s.aws/v1alpha1
+kind: Nodegroup
+metadata:
+  name: $NODEGROUP_NAME
+spec:
+  name: $NODEGROUP_NAME
+  clusterName: $CLUSTER_NAME
+  subnets:
+    - "$PUBLIC_SUBNET_1"
+    - "$PUBLIC_SUBNET_2"
+  nodeRole: $NODEGROUP_ROLE
+  scalingConfig:
+    minSize: 1
+    maxSize: 1
+    desiredSize: 1
