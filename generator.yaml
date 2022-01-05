@@ -46,6 +46,11 @@ resources:
         - MissingAction
         - MissingParameter
         - ValidationError
+    hooks:
+      sdk_file_end: 
+        template_path: hooks/cluster/sdk_file_end.go.tpl
+    update_operation:
+      custom_method_name: customUpdateCluster
   FargateProfile:
     renames:
       operations:
