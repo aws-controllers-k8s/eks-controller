@@ -29,7 +29,6 @@ from e2e.common.types import CLUSTER_RESOURCE_PLURAL
 from e2e.replacement_values import REPLACEMENT_VALUES
 
 MODIFY_WAIT_AFTER_SECONDS = 50
-DELETE_WAIT_AFTER_SECONDS = 30
 CHECK_STATUS_WAIT_SECONDS = 30
 
 def wait_for_cluster_active(eks_client, cluster_name):
@@ -152,13 +151,3 @@ class TestCluster:
 
         # Delete the k8s resource on teardown of the module
         k8s.delete_custom_resource(ref)
-
-        time.sleep(DELETE_WAIT_AFTER_SECONDS)
-
-        # Cluster should no longer appear in EKS
-        try:
-            aws_res = eks_client.describe_cluster(name=cluster_name)
-            assert aws_res is not None
-            pytest.fail(f"Cluster '{cluster_name}' was not deleted from EKS")
-        except eks_client.exceptions.ResourceNotFoundException:
-            pass
