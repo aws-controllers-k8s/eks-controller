@@ -843,9 +843,9 @@ func (rm *resourceManager) newLogging(
 	return res
 }
 
-// newResourcesVpcConfig returns a ResourcesVpcConfig object
+// newVpcConfigRequest returns a VpcConfigRequest object
 // with each the field set by the resource's corresponding spec field.
-func (rm *resourceManager) newResourcesVpcConfig(
+func (rm *resourceManager) newVpcConfigRequest(
 	r *resource,
 ) *svcsdk.VpcConfigRequest {
 	res := &svcsdk.VpcConfigRequest{}

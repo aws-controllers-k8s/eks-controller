@@ -1,21 +1,20 @@
 {{ $CRD := .CRD }}
 {{ $SDKAPI := .SDKAPI }}
 
-{{- $updateClusterVersion := (index $SDKAPI.API.Operations "UpdateClusterConfig") -}}
-
 {{/* Find the structure field within the operation */}}
-{{- range $memberRefName, $memberRef := $updateClusterVersion.InputRef.Shape.MemberRefs -}}
-{{- if (or (eq $memberRefName "Logging") (eq $memberRefName "ResourcesVpcConfig")) }}
+{{- range $fieldName, $field := $CRD.SpecFields -}}
+{{- if (or (eq $field.Path "Logging") (eq $field.Path "ResourcesVPCConfig")) }}
 
-// new{{ $memberRefName }} returns a {{ $memberRefName }} object 
+{{- $shapeName := $field.ShapeRef.ShapeName }}
+
+// new{{ $shapeName }} returns a {{ $shapeName }} object 
 // with each the field set by the resource's corresponding spec field.
-func (rm *resourceManager) new{{ $memberRefName }}(
+func (rm *resourceManager) new{{ $shapeName }}(
     r *resource,
-) *svcsdk.{{ $memberRef.ShapeName }} {
-    res := &svcsdk.{{ $memberRef.ShapeName }}{}
+) *svcsdk.{{ $shapeName }} {
+    res := &svcsdk.{{ $shapeName }}{}
 
-{{ $names := (ToNames $memberRefName) -}}
-{{ GoCodeSetSDKForStruct $CRD "" "res" $memberRef "" (printf "r.ko.Spec.%s" $names.Camel) 1 }}
+{{ GoCodeSetSDKForStruct $CRD "" "res" $field.ShapeRef "" (printf "r.ko.Spec.%s" $field.Names.Camel) 1 }}
 
     return res
 }
