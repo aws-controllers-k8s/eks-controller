@@ -138,6 +138,15 @@ func clusterDeleting(r *resource) bool {
 	return cs == StatusDeleting
 }
 
+// returnClusterUpdating will set synced to false on the desired resource and
+// return an async requeue error to signify that the resource should be
+// forcefully requeued in order to pick up the 'UPDATING' status.
+func returnClusterUpdating(desired *resource, latest *resource) (*resource, error) {
+	msg := "Cluster is currently being updated"
+	ackcondition.SetSynced(desired, corev1.ConditionFalse, &msg, nil)
+	return desired, requeueAfterAsyncUpdate(latest)
+}
+
 func (rm *resourceManager) customUpdate(
 	ctx context.Context,
 	desired *resource,
@@ -171,7 +180,6 @@ func (rm *resourceManager) customUpdate(
 	// status as given by the ReadOne
 	ko.Status = latest.ko.Status
 
-	var wasUpdated bool
 	if delta.DifferentAt("Spec.Logging") {
 		if err := rm.updateConfigLogging(ctx, desired); err != nil {
 			awserr, ok := ackerr.AWSError(err)
@@ -181,25 +189,19 @@ func (rm *resourceManager) customUpdate(
 				return nil, err
 			}
 		}
-		wasUpdated = true
+		return returnClusterUpdating(desired, latest)
 	}
 	if delta.DifferentAt("Spec.ResourcesVPCConfig") {
 		if err := rm.updateConfigResourcesVPCConfig(ctx, desired); err != nil {
 			return nil, err
 		}
-		wasUpdated = true
+		return returnClusterUpdating(desired, latest)
 	}
 	if delta.DifferentAt("Spec.Version") {
 		if err := rm.updateVersion(ctx, desired); err != nil {
 			return nil, err
 		}
-		wasUpdated = true
-	}
-
-	if wasUpdated {
-		msg := "Cluster is currently being updated"
-		ackcondition.SetSynced(desired, corev1.ConditionFalse, &msg, nil)
-		return desired, requeueAfterAsyncUpdate(latest)
+		return returnClusterUpdating(desired, latest)
 	}
 
 	rm.setStatusDefaults(ko)
