@@ -47,10 +47,16 @@ resources:
         - MissingParameter
         - ValidationError
     hooks:
+      sdk_create_post_set_output:
+        template_path: hooks/cluster/sdk_create_post_set_output.go.tpl
+      sdk_read_one_post_set_output:
+        template_path: hooks/cluster/sdk_read_one_post_set_output.go.tpl
+      sdk_delete_pre_build_request:
+        template_path: hooks/cluster/sdk_delete_pre_build_request.go.tpl
       sdk_file_end: 
         template_path: hooks/cluster/sdk_file_end.go.tpl
     update_operation:
-      custom_method_name: customUpdateCluster
+      custom_method_name: customUpdate
   FargateProfile:
     renames:
       operations:

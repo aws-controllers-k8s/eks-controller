@@ -15,7 +15,6 @@
 """
 
 import boto3
-import datetime
 import logging
 import time
 from typing import Dict
@@ -23,16 +22,31 @@ from typing import Dict
 import pytest
 
 from acktest.k8s import resource as k8s
+from acktest.k8s import condition
 from acktest.resources import random_suffix_name
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_eks_resource
 from e2e.common.types import CLUSTER_RESOURCE_PLURAL
 from e2e.replacement_values import REPLACEMENT_VALUES
 
+MODIFY_WAIT_AFTER_SECONDS = 50
 DELETE_WAIT_AFTER_SECONDS = 30
+CHECK_STATUS_WAIT_SECONDS = 30
 
 def wait_for_cluster_active(eks_client, cluster_name):
     waiter = eks_client.get_waiter('cluster_active')
     waiter.wait(name=cluster_name)
+
+def get_and_assert_status(ref: k8s.CustomResourceReference, expected_status: str, expected_synced: bool):
+    cr = k8s.get_resource(ref)
+    assert cr is not None
+    assert 'status' in cr
+    assert 'status' in cr['status']
+    assert cr['status']['status'] == expected_status
+
+    if expected_synced:
+        condition.assert_synced(ref)
+    else:
+        condition.assert_not_synced(ref)
 
 @pytest.fixture(scope="module")
 def eks_client():
@@ -84,6 +98,57 @@ class TestCluster:
             assert aws_res is not None
         except eks_client.exceptions.ResourceNotFoundException:
             pytest.fail(f"Could not find cluster '{cluster_name}' in EKS")
+
+
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        # Update the logging and VPC config fields
+        updates = {
+            "spec": {
+                "resourcesVPCConfig": {
+                    "endpointPublicAccess": False
+                }
+            }
+        }
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        # Ensure status is updating properly and set as not synced
+        get_and_assert_status(ref, 'UPDATING', False)
+
+        # Wait for the updating to become active again
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        # Ensure status is updated properly once it has become active
+        time.sleep(CHECK_STATUS_WAIT_SECONDS)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        assert aws_res["cluster"]["resourcesVpcConfig"]["endpointPublicAccess"] == False
+
+        updates = {
+            "spec": {
+                "logging": {
+                    "clusterLogging": [{
+                        "enabled": True,
+                        "types": ["api"]
+                    }]
+                },
+            }
+        }
+
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        get_and_assert_status(ref, 'UPDATING', False)
+
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        assert len(aws_res["cluster"]["logging"]["clusterLogging"]) > 0
+        logging = aws_res["cluster"]["logging"]["clusterLogging"][0]
+        assert logging["enabled"] == True
+        assert logging["types"] == ["api"]
 
         # Delete the k8s resource on teardown of the module
         k8s.delete_custom_resource(ref)
