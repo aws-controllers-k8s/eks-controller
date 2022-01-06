@@ -259,7 +259,7 @@ func (rm *resourceManager) updateConfigResourcesVPCConfig(
 	defer exit(err)
 	input := &svcsdk.UpdateClusterConfigInput{
 		Name:               r.ko.Spec.Name,
-		ResourcesVpcConfig: rm.newResourcesVpcConfig(r),
+		ResourcesVpcConfig: rm.newVpcConfigRequest(r),
 	}
 
 	// From the EKS documentation:
