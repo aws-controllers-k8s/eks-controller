@@ -262,6 +262,14 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	rm.setStatusDefaults(ko)
+	if !clusterActive(&resource{ko}) {
+		// Setting resource synced condition to false will trigger a requeue of
+		// the resource. No need to return a requeue error here.
+		ackcondition.SetSynced(&resource{ko}, corev1.ConditionFalse, nil, nil)
+	} else {
+		ackcondition.SetSynced(&resource{ko}, corev1.ConditionTrue, nil, nil)
+	}
+
 	return &resource{ko}, nil
 }
 
@@ -497,6 +505,15 @@ func (rm *resourceManager) sdkCreate(
 	}
 
 	rm.setStatusDefaults(ko)
+	// We expect the cluster to be in 'CREATING' status since we just issued
+	// the call to create it, but I suppose it doesn't hurt to check here.
+	if clusterCreating(&resource{ko}) {
+		// Setting resource synced condition to false will trigger a requeue of
+		// the resource. No need to return a requeue error here.
+		ackcondition.SetSynced(&resource{ko}, corev1.ConditionFalse, nil, nil)
+		return &resource{ko}, nil
+	}
+
 	return &resource{ko}, nil
 }
 
@@ -633,8 +650,7 @@ func (rm *resourceManager) sdkUpdate(
 	latest *resource,
 	delta *ackcompare.Delta,
 ) (*resource, error) {
-	// TODO(jaypipes): Figure this out...
-	return nil, ackerr.NotImplemented
+	return rm.customUpdate(ctx, desired, latest, delta)
 }
 
 // sdkDelete deletes the supplied resource in the backend AWS service API
@@ -645,6 +661,10 @@ func (rm *resourceManager) sdkDelete(
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.sdkDelete")
 	defer exit(err)
+	if clusterDeleting(r) {
+		return r, requeueWaitWhileDeleting
+	}
+
 	input, err := rm.newDeleteRequestPayload(r)
 	if err != nil {
 		return nil, err
@@ -790,4 +810,79 @@ func (rm *resourceManager) terminalAWSError(err error) bool {
 	default:
 		return false
 	}
+}
+
+// newLogging returns a Logging object
+// with each the field set by the resource's corresponding spec field.
+func (rm *resourceManager) newLogging(
+	r *resource,
+) *svcsdk.Logging {
+	res := &svcsdk.Logging{}
+
+	if r.ko.Spec.Logging.ClusterLogging != nil {
+		resf0 := []*svcsdk.LogSetup{}
+		for _, resf0iter := range r.ko.Spec.Logging.ClusterLogging {
+			resf0elem := &svcsdk.LogSetup{}
+			if resf0iter.Enabled != nil {
+				resf0elem.SetEnabled(*resf0iter.Enabled)
+			}
+			if resf0iter.Types != nil {
+				resf0elemf1 := []*string{}
+				for _, resf0elemf1iter := range resf0iter.Types {
+					var resf0elemf1elem string
+					resf0elemf1elem = *resf0elemf1iter
+					resf0elemf1 = append(resf0elemf1, &resf0elemf1elem)
+				}
+				resf0elem.SetTypes(resf0elemf1)
+			}
+			resf0 = append(resf0, resf0elem)
+		}
+		res.SetClusterLogging(resf0)
+	}
+
+	return res
+}
+
+// newVpcConfigRequest returns a VpcConfigRequest object
+// with each the field set by the resource's corresponding spec field.
+func (rm *resourceManager) newVpcConfigRequest(
+	r *resource,
+) *svcsdk.VpcConfigRequest {
+	res := &svcsdk.VpcConfigRequest{}
+
+	if r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess != nil {
+		res.SetEndpointPrivateAccess(*r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess)
+	}
+	if r.ko.Spec.ResourcesVPCConfig.EndpointPublicAccess != nil {
+		res.SetEndpointPublicAccess(*r.ko.Spec.ResourcesVPCConfig.EndpointPublicAccess)
+	}
+	if r.ko.Spec.ResourcesVPCConfig.PublicAccessCIDRs != nil {
+		resf2 := []*string{}
+		for _, resf2iter := range r.ko.Spec.ResourcesVPCConfig.PublicAccessCIDRs {
+			var resf2elem string
+			resf2elem = *resf2iter
+			resf2 = append(resf2, &resf2elem)
+		}
+		res.SetPublicAccessCidrs(resf2)
+	}
+	if r.ko.Spec.ResourcesVPCConfig.SecurityGroupIDs != nil {
+		resf3 := []*string{}
+		for _, resf3iter := range r.ko.Spec.ResourcesVPCConfig.SecurityGroupIDs {
+			var resf3elem string
+			resf3elem = *resf3iter
+			resf3 = append(resf3, &resf3elem)
+		}
+		res.SetSecurityGroupIds(resf3)
+	}
+	if r.ko.Spec.ResourcesVPCConfig.SubnetIDs != nil {
+		resf4 := []*string{}
+		for _, resf4iter := range r.ko.Spec.ResourcesVPCConfig.SubnetIDs {
+			var resf4elem string
+			resf4elem = *resf4iter
+			resf4 = append(resf4, &resf4elem)
+		}
+		res.SetSubnetIds(resf4)
+	}
+
+	return res
 }
