@@ -83,7 +83,7 @@ func requeueWaitUntilCanModify(r *resource) *ackrequeue.RequeueNeededAfter {
 // explaining the cluster cannot be modified until after the asynchronous update
 // has (first, started and then) completed and the cluster reaches an active
 // status.
-func requeueAfterAsyncUpdate(r *resource) *ackrequeue.RequeueNeededAfter {
+func requeueAfterAsyncUpdate() *ackrequeue.RequeueNeededAfter {
 	msg := fmt.Sprintf(
 		"Cluster has started asynchronously updating, cannot be modified until '%s'.",
 		StatusActive,
@@ -138,13 +138,13 @@ func clusterDeleting(r *resource) bool {
 	return cs == StatusDeleting
 }
 
-// returnClusterUpdating will set synced to false on the desired resource and
+// returnClusterUpdating will set synced to false on the resource and
 // return an async requeue error to signify that the resource should be
 // forcefully requeued in order to pick up the 'UPDATING' status.
-func returnClusterUpdating(desired *resource, latest *resource) (*resource, error) {
+func returnClusterUpdating(r *resource) (*resource, error) {
 	msg := "Cluster is currently being updated"
-	ackcondition.SetSynced(desired, corev1.ConditionFalse, &msg, nil)
-	return desired, requeueAfterAsyncUpdate(latest)
+	ackcondition.SetSynced(r, corev1.ConditionFalse, &msg, nil)
+	return r, requeueAfterAsyncUpdate()
 }
 
 func (rm *resourceManager) customUpdate(
@@ -189,19 +189,19 @@ func (rm *resourceManager) customUpdate(
 				return nil, err
 			}
 		}
-		return returnClusterUpdating(desired, latest)
+		return returnClusterUpdating(desired)
 	}
 	if delta.DifferentAt("Spec.ResourcesVPCConfig") {
 		if err := rm.updateConfigResourcesVPCConfig(ctx, desired); err != nil {
 			return nil, err
 		}
-		return returnClusterUpdating(desired, latest)
+		return returnClusterUpdating(desired)
 	}
 	if delta.DifferentAt("Spec.Version") {
 		if err := rm.updateVersion(ctx, desired); err != nil {
 			return nil, err
 		}
-		return returnClusterUpdating(desired, latest)
+		return returnClusterUpdating(desired)
 	}
 
 	rm.setStatusDefaults(ko)
