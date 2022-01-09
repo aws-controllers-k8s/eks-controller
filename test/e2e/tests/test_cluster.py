@@ -28,7 +28,10 @@ from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_eks_resource
 from e2e.common.types import CLUSTER_RESOURCE_PLURAL
 from e2e.replacement_values import REPLACEMENT_VALUES
 
+# Time to wait after modifying the CR for the status to change
 MODIFY_WAIT_AFTER_SECONDS = 50
+
+# Time to wait after the cluster has changed status, for the CR to update
 CHECK_STATUS_WAIT_SECONDS = 30
 
 def wait_for_cluster_active(eks_client, cluster_name):
@@ -87,7 +90,7 @@ def simple_cluster():
 @service_marker
 @pytest.mark.canary
 class TestCluster:
-    def test_create_delete_cluster(self, eks_client, simple_cluster):
+    def test_create_update_delete_cluster(self, eks_client, simple_cluster):
         (ref, cr) = simple_cluster
 
         cluster_name = cr["spec"]["name"]

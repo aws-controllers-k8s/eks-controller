@@ -40,6 +40,7 @@ func newResourceDelta(
 		delta.Add("", a, b)
 		return delta
 	}
+	customPreCompare(a, b)
 
 	if ackcompare.HasNilDifference(a.ko.Spec.AMIType, b.ko.Spec.AMIType) {
 		delta.Add("Spec.AMIType", a.ko.Spec.AMIType, b.ko.Spec.AMIType)

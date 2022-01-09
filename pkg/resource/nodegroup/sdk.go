@@ -316,6 +316,14 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	rm.setStatusDefaults(ko)
+	if !nodegroupActive(&resource{ko}) {
+		// Setting resource synced condition to false will trigger a requeue of
+		// the resource. No need to return a requeue error here.
+		ackcondition.SetSynced(&resource{ko}, corev1.ConditionFalse, nil, nil)
+	} else {
+		ackcondition.SetSynced(&resource{ko}, corev1.ConditionTrue, nil, nil)
+	}
+
 	return &resource{ko}, nil
 }
 
@@ -608,6 +616,15 @@ func (rm *resourceManager) sdkCreate(
 	}
 
 	rm.setStatusDefaults(ko)
+	// We expect the nodegorup to be in 'CREATING' status since we just issued
+	// the call to create it, but I suppose it doesn't hurt to check here.
+	if nodegroupCreating(&resource{ko}) {
+		// Setting resource synced condition to false will trigger a requeue of
+		// the resource. No need to return a requeue error here.
+		ackcondition.SetSynced(&resource{ko}, corev1.ConditionFalse, nil, nil)
+		return &resource{ko}, nil
+	}
+
 	return &resource{ko}, nil
 }
 
@@ -763,8 +780,7 @@ func (rm *resourceManager) sdkUpdate(
 	latest *resource,
 	delta *ackcompare.Delta,
 ) (*resource, error) {
-	// TODO(jaypipes): Figure this out...
-	return nil, ackerr.NotImplemented
+	return rm.customUpdate(ctx, desired, latest, delta)
 }
 
 // sdkDelete deletes the supplied resource in the backend AWS service API
@@ -775,6 +791,10 @@ func (rm *resourceManager) sdkDelete(
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.sdkDelete")
 	defer exit(err)
+	if nodegroupDeleting(r) {
+		return r, requeueWaitWhileDeleting
+	}
+
 	input, err := rm.newDeleteRequestPayload(r)
 	if err != nil {
 		return nil, err
@@ -923,4 +943,41 @@ func (rm *resourceManager) terminalAWSError(err error) bool {
 	default:
 		return false
 	}
+}
+
+// newNodegroupScalingConfig returns a NodegroupScalingConfig object
+// with each the field set by the resource's corresponding spec field.
+func (rm *resourceManager) newNodegroupScalingConfig(
+	r *resource,
+) *svcsdk.NodegroupScalingConfig {
+	res := &svcsdk.NodegroupScalingConfig{}
+
+	if r.ko.Spec.ScalingConfig.DesiredSize != nil {
+		res.SetDesiredSize(*r.ko.Spec.ScalingConfig.DesiredSize)
+	}
+	if r.ko.Spec.ScalingConfig.MaxSize != nil {
+		res.SetMaxSize(*r.ko.Spec.ScalingConfig.MaxSize)
+	}
+	if r.ko.Spec.ScalingConfig.MinSize != nil {
+		res.SetMinSize(*r.ko.Spec.ScalingConfig.MinSize)
+	}
+
+	return res
+}
+
+// newNodegroupUpdateConfig returns a NodegroupUpdateConfig object
+// with each the field set by the resource's corresponding spec field.
+func (rm *resourceManager) newNodegroupUpdateConfig(
+	r *resource,
+) *svcsdk.NodegroupUpdateConfig {
+	res := &svcsdk.NodegroupUpdateConfig{}
+
+	if r.ko.Spec.UpdateConfig.MaxUnavailable != nil {
+		res.SetMaxUnavailable(*r.ko.Spec.UpdateConfig.MaxUnavailable)
+	}
+	if r.ko.Spec.UpdateConfig.MaxUnavailablePercentage != nil {
+		res.SetMaxUnavailablePercentage(*r.ko.Spec.UpdateConfig.MaxUnavailablePercentage)
+	}
+
+	return res
 }

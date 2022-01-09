@@ -25,11 +25,18 @@ from acktest.resources import random_suffix_name
 from e2e import CRD_VERSION, service_marker, CRD_GROUP, load_eks_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
 
-from .test_cluster import simple_cluster, wait_for_cluster_active
+from .test_cluster import simple_cluster, wait_for_cluster_active, get_and_assert_status
 
 RESOURCE_PLURAL = 'nodegroups'
 
+# Time to wait after creating the CR for the status to be populated
 CREATE_WAIT_AFTER_SECONDS = 10
+
+# Time to wait after modifying the CR for the status to change
+MODIFY_WAIT_AFTER_SECONDS = 5
+
+# Time to wait after the nodegroup has changed status, for the CR to update
+CHECK_STATUS_WAIT_SECONDS = 10
 
 def wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name):
     waiter = eks_client.get_waiter('nodegroup_active')
@@ -40,7 +47,7 @@ def wait_for_nodegroup_deleted(eks_client, cluster_name, nodegroup_name):
     waiter.wait(clusterName=cluster_name, nodegroupName=nodegroup_name)
 
 @pytest.fixture
-def simple_nodegroup(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceReference, Dict]:
+def simple_nodegroup(eks_client) -> Tuple[k8s.CustomResourceReference, Dict]:
     (ref, cr) = simple_cluster
     cluster_name = cr["spec"]["name"]
 
@@ -76,11 +83,9 @@ def simple_nodegroup(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceRefe
     _, deleted = k8s.delete_custom_resource(ref, 3, 10)
     assert deleted
 
-    wait_for_nodegroup_deleted(eks_client, cluster_name, nodegroup_name)
-
 @service_marker
 class TestNodegroup:
-    def test_create_delete_nodegroup(self, simple_nodegroup, eks_client):
+    def test_create_update_delete_nodegroup(self, simple_nodegroup, eks_client):
         (ref, cr) = simple_nodegroup
 
         cluster_name = cr["spec"]["clusterName"]
@@ -99,3 +104,93 @@ class TestNodegroup:
             assert aws_res["nodegroup"]["nodegroupArn"] is not None
         except eks_client.exceptions.ResourceNotFoundException:
             pytest.fail(f"Could not find Nodegroup '{cr_name}' in EKS")
+
+        wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
+
+        # Update the logging and VPC config fields
+        updates = {
+            "spec": {
+                "updateConfig": {
+                    "maxUnavailable": None,
+                    "maxUnavailablePercentage": 15
+                }
+            }
+        }
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        # Wait for the updating to become active again
+        wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
+
+        # Ensure status is updated properly once it has become active
+        time.sleep(CHECK_STATUS_WAIT_SECONDS)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        aws_res = eks_client.describe_nodegroup(
+            clusterName=cluster_name,
+            nodegroupName=nodegroup_name
+        )
+
+        assert aws_res["nodegroup"]["updateConfig"]["maxUnavailablePercentage"] == 15
+
+        updates = {
+            "spec": {
+                "labels": {
+                    "toot": "shoot",
+                    "boot": "snoot"
+                },
+                "taints": [
+                    {
+                        "key": "ifbooted",
+                        "value": "noexecuted",
+                        "effect": "NO_EXECUTE"
+                    },
+                ],
+            }
+        }
+
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
+
+        aws_res = eks_client.describe_nodegroup(
+            clusterName=cluster_name,
+            nodegroupName=nodegroup_name
+        )
+
+        assert len(aws_res["nodegroup"]["labels"]) == 2
+        assert aws_res["nodegroup"]["labels"]["toot"] == "shoot"
+        assert aws_res["nodegroup"]["labels"]["boot"] == "snoot"
+
+        assert len(aws_res["nodegroup"]["taints"]) == 1
+        assert aws_res["nodegroup"]["taints"][0]["key"] == "ifbooted"
+        assert aws_res["nodegroup"]["taints"][0]["value"] == "noexecuted"
+        assert aws_res["nodegroup"]["taints"][0]["effect"] == "NO_EXECUTE"
+
+        # Remove a label, update a label and remove a taint
+        updates = {
+            "spec": {
+                "labels": {
+                    "toot": "updooted",
+                    "boot": None
+                },
+                "taints": [],
+            }
+        }
+
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
+
+        aws_res = eks_client.describe_nodegroup(
+            clusterName=cluster_name,
+            nodegroupName=nodegroup_name
+        )
+
+        assert len(aws_res["nodegroup"]["labels"]) == 2
+        assert aws_res["nodegroup"]["labels"]["toot"] == "updooted"
+        assert "boot" not in aws_res["nodegroup"]["labels"]
+
+        assert len(aws_res["nodegroup"]["taints"]) == 0

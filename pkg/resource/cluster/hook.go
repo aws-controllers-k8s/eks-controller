@@ -15,7 +15,6 @@ package cluster
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -54,9 +53,7 @@ var (
 
 var (
 	requeueWaitWhileDeleting = ackrequeue.NeededAfter(
-		errors.New(
-			fmt.Sprintf("Cluster in '%s' state, cannot be modified or deleted.", StatusDeleting),
-		),
+		fmt.Errorf("cluster in '%s' state, cannot be modified or deleted", StatusDeleting),
 		ackrequeue.DefaultRequeueAfterDuration,
 	)
 	RequeueAfterUpdateDuration = 15 * time.Second
@@ -69,12 +66,9 @@ func requeueWaitUntilCanModify(r *resource) *ackrequeue.RequeueNeededAfter {
 		return nil
 	}
 	status := *r.ko.Status.Status
-	msg := fmt.Sprintf(
-		"Cluster in '%s' state, cannot be modified until '%s'.",
-		status, StatusActive,
-	)
 	return ackrequeue.NeededAfter(
-		errors.New(msg),
+		fmt.Errorf("cluster in '%s' state, cannot be modified until '%s'",
+			status, StatusActive),
 		ackrequeue.DefaultRequeueAfterDuration,
 	)
 }
@@ -84,12 +78,9 @@ func requeueWaitUntilCanModify(r *resource) *ackrequeue.RequeueNeededAfter {
 // has (first, started and then) completed and the cluster reaches an active
 // status.
 func requeueAfterAsyncUpdate() *ackrequeue.RequeueNeededAfter {
-	msg := fmt.Sprintf(
-		"Cluster has started asynchronously updating, cannot be modified until '%s'.",
-		StatusActive,
-	)
 	return ackrequeue.NeededAfter(
-		errors.New(msg),
+		fmt.Errorf("cluster has started asynchronously updating, cannot be modified until '%s'",
+			StatusActive),
 		RequeueAfterUpdateDuration,
 	)
 }

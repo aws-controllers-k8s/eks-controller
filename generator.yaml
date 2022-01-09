@@ -115,3 +115,16 @@ resources:
         - MissingAction
         - MissingParameter
         - ValidationError
+    hooks:
+      delta_pre_compare:
+        code: customPreCompare(a, b)
+      sdk_create_post_set_output:
+        template_path: hooks/nodegroup/sdk_create_post_set_output.go.tpl
+      sdk_read_one_post_set_output:
+        template_path: hooks/nodegroup/sdk_read_one_post_set_output.go.tpl
+      sdk_delete_pre_build_request:
+        template_path: hooks/nodegroup/sdk_delete_pre_build_request.go.tpl
+      sdk_file_end: 
+        template_path: hooks/nodegroup/sdk_file_end.go.tpl
+    update_operation:
+      custom_method_name: customUpdate
