@@ -189,7 +189,7 @@ class TestNodegroup:
             nodegroupName=nodegroup_name
         )
 
-        assert len(aws_res["nodegroup"]["labels"]) == 2
+        assert len(aws_res["nodegroup"]["labels"]) == 1
         assert aws_res["nodegroup"]["labels"]["toot"] == "updooted"
         assert "boot" not in aws_res["nodegroup"]["labels"]
 
