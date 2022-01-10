@@ -193,4 +193,4 @@ class TestNodegroup:
         assert aws_res["nodegroup"]["labels"]["toot"] == "updooted"
         assert "boot" not in aws_res["nodegroup"]["labels"]
 
-        assert len(aws_res["nodegroup"]["taints"]) == 0
+        assert "taints" not in aws_res["nodegroup"]
