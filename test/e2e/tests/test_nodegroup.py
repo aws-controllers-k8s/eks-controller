@@ -47,7 +47,7 @@ def wait_for_nodegroup_deleted(eks_client, cluster_name, nodegroup_name):
     waiter.wait(clusterName=cluster_name, nodegroupName=nodegroup_name)
 
 @pytest.fixture
-def simple_nodegroup(eks_client) -> Tuple[k8s.CustomResourceReference, Dict]:
+def simple_nodegroup(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceReference, Dict]:
     (ref, cr) = simple_cluster
     cluster_name = cr["spec"]["name"]
 
