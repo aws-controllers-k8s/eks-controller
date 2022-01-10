@@ -142,8 +142,6 @@ class TestCluster:
         k8s.patch_custom_resource(ref, updates)
         time.sleep(MODIFY_WAIT_AFTER_SECONDS)
 
-        get_and_assert_status(ref, 'UPDATING', False)
-
         wait_for_cluster_active(eks_client, cluster_name)
 
         aws_res = eks_client.describe_cluster(name=cluster_name)
