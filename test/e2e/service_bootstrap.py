@@ -26,7 +26,11 @@ def service_bootstrap() -> Resources:
     resources = BootstrapResources(
         ClusterRole=Role("cluster-role", "eks.amazonaws.com", managed_policies=["arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"]),
         FargatePodRole=Role("fargate-pod-role", "eks-fargate-pods.amazonaws.com", managed_policies=["arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy"]),
-        NodegroupRole=Role("nodegroup-role", "ec2.amazonaws.com", managed_policies=["arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"]),
+        NodegroupRole=Role("nodegroup-role", "ec2.amazonaws.com", managed_policies=[
+            "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+            "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+            "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+        ]),
         ClusterVPC=VPC(name_prefix="cluster-vpc", num_public_subnet=2, num_private_subnet=2)
     )
 
