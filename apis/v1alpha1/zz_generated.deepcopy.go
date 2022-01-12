@@ -189,6 +189,11 @@ func (in *AddonSpec) DeepCopyInto(out *AddonSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.ClusterNameRef != nil {
+		in, out := &in.ClusterNameRef, &out.ClusterNameRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Name != nil {
 		in, out := &in.Name, &out.Name
 		*out = new(string)
@@ -939,6 +944,11 @@ func (in *FargateProfileSpec) DeepCopyInto(out *FargateProfileSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.ClusterNameRef != nil {
+		in, out := &in.ClusterNameRef, &out.ClusterNameRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Name != nil {
 		in, out := &in.Name, &out.Name
 		*out = new(string)
@@ -1495,6 +1505,11 @@ func (in *NodegroupSpec) DeepCopyInto(out *NodegroupSpec) {
 		in, out := &in.ClusterName, &out.ClusterName
 		*out = new(string)
 		**out = **in
+	}
+	if in.ClusterNameRef != nil {
+		in, out := &in.ClusterNameRef, &out.ClusterNameRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.DiskSize != nil {
 		in, out := &in.DiskSize, &out.DiskSize
