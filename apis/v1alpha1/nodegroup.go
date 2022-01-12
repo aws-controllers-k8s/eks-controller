@@ -39,8 +39,8 @@ type NodegroupSpec struct {
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The name of the cluster to create the node group in.
-	// +kubebuilder:validation:Required
-	ClusterName *string `json:"clusterName"`
+	ClusterName    *string                                  `json:"clusterName,omitempty"`
+	ClusterNameRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterNameRef,omitempty"`
 	// The root device disk size (in GiB) for your node group instances. The default
 	// disk size is 20 GiB. If you specify launchTemplate, then don't specify diskSize,
 	// or the node group deployment will fail. For more information about using

@@ -17,8 +17,15 @@ package nodegroup
 
 import (
 	"context"
+	"fmt"
+
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
+	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
+	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	acktypes "github.com/aws-controllers-k8s/runtime/pkg/types"
 
 	svcapitypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
@@ -36,17 +43,90 @@ func (rm *resourceManager) ResolveReferences(
 	apiReader client.Reader,
 	res acktypes.AWSResource,
 ) (acktypes.AWSResource, error) {
-	return res, nil
+	namespace := res.MetaObject().GetNamespace()
+	ko := rm.concreteResource(res).ko.DeepCopy()
+	err := validateReferenceFields(ko)
+	if err == nil {
+		err = resolveReferenceForClusterName(ctx, apiReader, namespace, ko)
+	}
+	if hasNonNilReferences(ko) {
+		return ackcondition.WithReferencesResolvedCondition(&resource{ko}, err)
+	}
+	return &resource{ko}, err
 }
 
 // validateReferenceFields validates the reference field and corresponding
 // identifier field.
 func validateReferenceFields(ko *svcapitypes.Nodegroup) error {
+	if ko.Spec.ClusterNameRef != nil && ko.Spec.ClusterName != nil {
+		return ackerr.ResourceReferenceAndIDNotSupportedFor("ClusterName", "ClusterNameRef")
+	}
+	if ko.Spec.ClusterNameRef == nil && ko.Spec.ClusterName == nil {
+		return ackerr.ResourceReferenceOrIDRequiredFor("ClusterName", "ClusterNameRef")
+	}
 	return nil
 }
 
 // hasNonNilReferences returns true if resource contains a reference to another
 // resource
 func hasNonNilReferences(ko *svcapitypes.Nodegroup) bool {
-	return false
+	return false || ko.Spec.ClusterNameRef != nil
+}
+
+// resolveReferenceForClusterName reads the resource referenced
+// from ClusterNameRef field and sets the ClusterName
+// from referenced resource
+func resolveReferenceForClusterName(
+	ctx context.Context,
+	apiReader client.Reader,
+	namespace string,
+	ko *svcapitypes.Nodegroup,
+) error {
+	if ko.Spec.ClusterNameRef != nil &&
+		ko.Spec.ClusterNameRef.From != nil {
+		arr := ko.Spec.ClusterNameRef.From
+		if arr == nil || arr.Name == nil || *arr.Name == "" {
+			return fmt.Errorf("provided resource reference is nil or empty")
+		}
+		namespacedName := types.NamespacedName{
+			Namespace: namespace,
+			Name:      *arr.Name,
+		}
+		obj := svcapitypes.Cluster{}
+		err := apiReader.Get(ctx, namespacedName, &obj)
+		if err != nil {
+			return err
+		}
+		var refResourceSynced, refResourceTerminal bool
+		for _, cond := range obj.Status.Conditions {
+			if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+				cond.Status == corev1.ConditionTrue {
+				refResourceSynced = true
+			}
+			if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+				cond.Status == corev1.ConditionTrue {
+				refResourceTerminal = true
+			}
+		}
+		if refResourceTerminal {
+			return ackerr.ResourceReferenceTerminalFor(
+				"Cluster",
+				namespace, *arr.Name)
+		}
+		if !refResourceSynced {
+			//TODO(vijtrip2) Uncomment below return statment once
+			// ConditionTypeResourceSynced(True/False) is set for all resources
+			//return ackerr.ResourceReferenceNotSyncedFor(
+			//	"Cluster",
+			//	namespace, *arr.Name)
+		}
+		if obj.Spec.Name == nil {
+			return ackerr.ResourceReferenceMissingTargetFieldFor(
+				"Cluster",
+				namespace, *arr.Name,
+				"Spec.Name")
+		}
+		ko.Spec.ClusterName = obj.Spec.Name
+	}
+	return nil
 }

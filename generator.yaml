@@ -1,5 +1,10 @@
 resources:
   Addon:
+    fields:
+      ClusterName:
+        references:
+          resource: Cluster
+          path: Spec.Name
     renames:
       operations:
         CreateAddon:
@@ -58,6 +63,11 @@ resources:
     update_operation:
       custom_method_name: customUpdate
   FargateProfile:
+    fields:
+      ClusterName:
+        references:
+          resource: Cluster
+          path: Spec.Name
     renames:
       operations:
         CreateFargateProfile:
@@ -87,6 +97,11 @@ resources:
         - MissingParameter
         - ValidationError
   Nodegroup:
+    fields:
+      ClusterName:
+        references:
+          resource: Cluster
+          path: Spec.Name
     renames:
       operations:
         CreateNodegroup:

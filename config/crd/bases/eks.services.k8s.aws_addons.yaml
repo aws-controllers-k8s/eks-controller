@@ -48,6 +48,20 @@ spec:
               clusterName:
                 description: The name of the cluster to create the add-on for.
                 type: string
+              clusterNameRef:
+                description: 'AWSResourceReferenceWrapper provides a wrapper around
+                  *AWSResourceReference type to provide more user friendly syntax
+                  for references using ''from'' field Ex: APIIDRef:   from:     name:
+                  my-api'
+                properties:
+                  from:
+                    description: AWSResourceReference provides all the values necessary
+                      to reference another k8s resource for finding the identifier(Id/ARN/Name)
+                    properties:
+                      name:
+                        type: string
+                    type: object
+                type: object
               name:
                 description: The name of the add-on. The name must match one of the
                   names returned by ListAddons (https://docs.aws.amazon.com/eks/latest/APIReference/API_ListAddons.html).
@@ -77,7 +91,6 @@ spec:
                   both of which you define.
                 type: object
             required:
-            - clusterName
             - name
             type: object
           status:

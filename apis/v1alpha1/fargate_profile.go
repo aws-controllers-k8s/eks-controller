@@ -28,8 +28,8 @@ type FargateProfileSpec struct {
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The name of the Amazon EKS cluster to apply the Fargate profile to.
-	// +kubebuilder:validation:Required
-	ClusterName *string `json:"clusterName"`
+	ClusterName    *string                                  `json:"clusterName,omitempty"`
+	ClusterNameRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterNameRef,omitempty"`
 	// The name of the Fargate profile.
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
