@@ -92,7 +92,7 @@ func resolveReferenceForClusterName(
 			Namespace: namespace,
 			Name:      *arr.Name,
 		}
-		obj := acksvcv1alpha1.Cluster{}
+		obj := svcapitypes.Cluster{}
 		err := apiReader.Get(ctx, namespacedName, &obj)
 		if err != nil {
 			return err
