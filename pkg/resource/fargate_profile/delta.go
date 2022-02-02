@@ -55,8 +55,8 @@ func newResourceDelta(
 			delta.Add("Spec.ClusterName", a.ko.Spec.ClusterName, b.ko.Spec.ClusterName)
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.ClusterNameRef, b.ko.Spec.ClusterNameRef) {
-		delta.Add("Spec.ClusterNameRef", a.ko.Spec.ClusterNameRef, b.ko.Spec.ClusterNameRef)
+	if !reflect.DeepEqual(a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef) {
+		delta.Add("Spec.ClusterRef", a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef)
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Name, b.ko.Spec.Name) {
 		delta.Add("Spec.Name", a.ko.Spec.Name, b.ko.Spec.Name)

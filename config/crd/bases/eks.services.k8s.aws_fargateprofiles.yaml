@@ -35,7 +35,7 @@ spec:
             type: object
           spec:
             description: "FargateProfileSpec defines the desired state of FargateProfile.
-              \n An object representing an AWS Fargate profile."
+              \n An object representing an Fargate profile."
             properties:
               clientRequestToken:
                 description: Unique, case-sensitive identifier that you provide to
@@ -45,7 +45,7 @@ spec:
                 description: The name of the Amazon EKS cluster to apply the Fargate
                   profile to.
                 type: string
-              clusterNameRef:
+              clusterRef:
                 description: 'AWSResourceReferenceWrapper provides a wrapper around
                   *AWSResourceReference type to provide more user friendly syntax
                   for references using ''from'' field Ex: APIIDRef:   from:     name:
@@ -77,7 +77,7 @@ spec:
                   can also specify labels for a namespace. You may specify up to five
                   selectors in a Fargate profile.
                 items:
-                  description: An object representing an AWS Fargate profile selector.
+                  description: An object representing an Fargate profile selector.
                   properties:
                     labels:
                       additionalProperties:

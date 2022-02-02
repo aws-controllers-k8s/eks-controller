@@ -48,7 +48,7 @@ spec:
               clusterName:
                 description: The name of the cluster to create the add-on for.
                 type: string
-              clusterNameRef:
+              clusterRef:
                 description: 'AWSResourceReferenceWrapper provides a wrapper around
                   *AWSResourceReference type to provide more user friendly syntax
                   for references using ''from'' field Ex: APIIDRef:   from:     name:
@@ -64,7 +64,7 @@ spec:
                 type: object
               name:
                 description: The name of the add-on. The name must match one of the
-                  names returned by ListAddons (https://docs.aws.amazon.com/eks/latest/APIReference/API_ListAddons.html).
+                  names returned by DescribeAddonVersions (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonVersions.html).
                 type: string
               resolveConflicts:
                 description: How to resolve parameter value conflicts when migrating

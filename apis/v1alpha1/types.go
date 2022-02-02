@@ -82,11 +82,13 @@ type Certificate struct {
 type Cluster_SDK struct {
 	ARN *string `json:"arn,omitempty"`
 	// An object representing the certificate-authority-data for your cluster.
-	CertificateAuthority *Certificate        `json:"certificateAuthority,omitempty"`
-	ClientRequestToken   *string             `json:"clientRequestToken,omitempty"`
-	CreatedAt            *metav1.Time        `json:"createdAt,omitempty"`
-	EncryptionConfig     []*EncryptionConfig `json:"encryptionConfig,omitempty"`
-	Endpoint             *string             `json:"endpoint,omitempty"`
+	CertificateAuthority *Certificate `json:"certificateAuthority,omitempty"`
+	ClientRequestToken   *string      `json:"clientRequestToken,omitempty"`
+	// The full description of your connected cluster.
+	ConnectorConfig  *ConnectorConfigResponse `json:"connectorConfig,omitempty"`
+	CreatedAt        *metav1.Time             `json:"createdAt,omitempty"`
+	EncryptionConfig []*EncryptionConfig      `json:"encryptionConfig,omitempty"`
+	Endpoint         *string                  `json:"endpoint,omitempty"`
 	// An object representing an identity provider.
 	Identity *Identity `json:"identity,omitempty"`
 	// The Kubernetes network configuration for the cluster.
@@ -110,10 +112,23 @@ type Compatibility struct {
 	PlatformVersions []*string `json:"platformVersions,omitempty"`
 }
 
+// The configuration sent to a cluster for configuration.
+type ConnectorConfigRequest struct {
+	RoleARN *string `json:"roleARN,omitempty"`
+}
+
+// The full description of your connected cluster.
+type ConnectorConfigResponse struct {
+	ActivationCode   *string      `json:"activationCode,omitempty"`
+	ActivationExpiry *metav1.Time `json:"activationExpiry,omitempty"`
+	ActivationID     *string      `json:"activationID,omitempty"`
+	Provider         *string      `json:"provider,omitempty"`
+	RoleARN          *string      `json:"roleARN,omitempty"`
+}
+
 // The encryption configuration for the cluster.
 type EncryptionConfig struct {
-	// Identifies the AWS Key Management Service (AWS KMS) key used to encrypt the
-	// secrets.
+	// Identifies the Key Management Service (KMS) key used to encrypt the secrets.
 	Provider  *Provider `json:"provider,omitempty"`
 	Resources []*string `json:"resources,omitempty"`
 }
@@ -125,13 +140,13 @@ type ErrorDetail struct {
 	ResourceIDs  []*string `json:"resourceIDs,omitempty"`
 }
 
-// An object representing an AWS Fargate profile selector.
+// An object representing an Fargate profile selector.
 type FargateProfileSelector struct {
 	Labels    map[string]*string `json:"labels,omitempty"`
 	Namespace *string            `json:"namespace,omitempty"`
 }
 
-// An object representing an AWS Fargate profile.
+// An object representing an Fargate profile.
 type FargateProfile_SDK struct {
 	ClusterName         *string                   `json:"clusterName,omitempty"`
 	CreatedAt           *metav1.Time              `json:"createdAt,omitempty"`
@@ -227,6 +242,7 @@ type NodegroupScalingConfig struct {
 	MinSize     *int64 `json:"minSize,omitempty"`
 }
 
+// The node group update configuration.
 type NodegroupUpdateConfig struct {
 	MaxUnavailable           *int64 `json:"maxUnavailable,omitempty"`
 	MaxUnavailablePercentage *int64 `json:"maxUnavailablePercentage,omitempty"`
@@ -277,8 +293,9 @@ type Nodegroup_SDK struct {
 	Subnets       []*string               `json:"subnets,omitempty"`
 	Tags          map[string]*string      `json:"tags,omitempty"`
 	Taints        []*Taint                `json:"taints,omitempty"`
-	UpdateConfig  *NodegroupUpdateConfig  `json:"updateConfig,omitempty"`
-	Version       *string                 `json:"version,omitempty"`
+	// The node group update configuration.
+	UpdateConfig *NodegroupUpdateConfig `json:"updateConfig,omitempty"`
+	Version      *string                `json:"version,omitempty"`
 }
 
 // An object representing the OpenID Connect (https://openid.net/connect/) (OIDC)
@@ -316,8 +333,7 @@ type OIDCIdentityProviderConfigRequest struct {
 	UsernamePrefix             *string `json:"usernamePrefix,omitempty"`
 }
 
-// Identifies the AWS Key Management Service (AWS KMS) key used to encrypt the
-// secrets.
+// Identifies the Key Management Service (KMS) key used to encrypt the secrets.
 type Provider struct {
 	KeyARN *string `json:"keyARN,omitempty"`
 }

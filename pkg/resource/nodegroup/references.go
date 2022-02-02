@@ -58,11 +58,11 @@ func (rm *resourceManager) ResolveReferences(
 // validateReferenceFields validates the reference field and corresponding
 // identifier field.
 func validateReferenceFields(ko *svcapitypes.Nodegroup) error {
-	if ko.Spec.ClusterNameRef != nil && ko.Spec.ClusterName != nil {
-		return ackerr.ResourceReferenceAndIDNotSupportedFor("ClusterName", "ClusterNameRef")
+	if ko.Spec.ClusterRef != nil && ko.Spec.ClusterName != nil {
+		return ackerr.ResourceReferenceAndIDNotSupportedFor("ClusterName", "ClusterRef")
 	}
-	if ko.Spec.ClusterNameRef == nil && ko.Spec.ClusterName == nil {
-		return ackerr.ResourceReferenceOrIDRequiredFor("ClusterName", "ClusterNameRef")
+	if ko.Spec.ClusterRef == nil && ko.Spec.ClusterName == nil {
+		return ackerr.ResourceReferenceOrIDRequiredFor("ClusterName", "ClusterRef")
 	}
 	return nil
 }
@@ -70,11 +70,11 @@ func validateReferenceFields(ko *svcapitypes.Nodegroup) error {
 // hasNonNilReferences returns true if resource contains a reference to another
 // resource
 func hasNonNilReferences(ko *svcapitypes.Nodegroup) bool {
-	return false || ko.Spec.ClusterNameRef != nil
+	return false || ko.Spec.ClusterRef != nil
 }
 
 // resolveReferenceForClusterName reads the resource referenced
-// from ClusterNameRef field and sets the ClusterName
+// from ClusterRef field and sets the ClusterName
 // from referenced resource
 func resolveReferenceForClusterName(
 	ctx context.Context,
@@ -82,9 +82,9 @@ func resolveReferenceForClusterName(
 	namespace string,
 	ko *svcapitypes.Nodegroup,
 ) error {
-	if ko.Spec.ClusterNameRef != nil &&
-		ko.Spec.ClusterNameRef.From != nil {
-		arr := ko.Spec.ClusterNameRef.From
+	if ko.Spec.ClusterRef != nil &&
+		ko.Spec.ClusterRef.From != nil {
+		arr := ko.Spec.ClusterRef.From
 		if arr == nil || arr.Name == nil || *arr.Name == "" {
 			return fmt.Errorf("provided resource reference is nil or empty")
 		}
@@ -114,11 +114,9 @@ func resolveReferenceForClusterName(
 				namespace, *arr.Name)
 		}
 		if !refResourceSynced {
-			//TODO(vijtrip2) Uncomment below return statment once
-			// ConditionTypeResourceSynced(True/False) is set for all resources
-			//return ackerr.ResourceReferenceNotSyncedFor(
-			//	"Cluster",
-			//	namespace, *arr.Name)
+			return ackerr.ResourceReferenceNotSyncedFor(
+				"Cluster",
+				namespace, *arr.Name)
 		}
 		if obj.Spec.Name == nil {
 			return ackerr.ResourceReferenceMissingTargetFieldFor(

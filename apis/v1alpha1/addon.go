@@ -31,10 +31,10 @@ type AddonSpec struct {
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The name of the cluster to create the add-on for.
-	ClusterName    *string                                  `json:"clusterName,omitempty"`
-	ClusterNameRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterNameRef,omitempty"`
+	ClusterName *string                                  `json:"clusterName,omitempty"`
+	ClusterRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
 	// The name of the add-on. The name must match one of the names returned by
-	// ListAddons (https://docs.aws.amazon.com/eks/latest/APIReference/API_ListAddons.html).
+	// DescribeAddonVersions (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonVersions.html).
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
 	// How to resolve parameter value conflicts when migrating an existing add-on

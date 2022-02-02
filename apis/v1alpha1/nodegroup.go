@@ -39,8 +39,8 @@ type NodegroupSpec struct {
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The name of the cluster to create the node group in.
-	ClusterName    *string                                  `json:"clusterName,omitempty"`
-	ClusterNameRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterNameRef,omitempty"`
+	ClusterName *string                                  `json:"clusterName,omitempty"`
+	ClusterRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
 	// The root device disk size (in GiB) for your node group instances. The default
 	// disk size is 20 GiB. If you specify launchTemplate, then don't specify diskSize,
 	// or the node group deployment will fail. For more information about using
@@ -71,12 +71,12 @@ type NodegroupSpec struct {
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
 	// The Amazon Resource Name (ARN) of the IAM role to associate with your node
-	// group. The Amazon EKS worker node kubelet daemon makes calls to AWS APIs
-	// on your behalf. Nodes receive permissions for these API calls through an
-	// IAM instance profile and associated policies. Before you can launch nodes
-	// and register them into a cluster, you must create an IAM role for those nodes
-	// to use when they are launched. For more information, see Amazon EKS node
-	// IAM role (https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html)
+	// group. The Amazon EKS worker node kubelet daemon makes calls to Amazon Web
+	// Services APIs on your behalf. Nodes receive permissions for these API calls
+	// through an IAM instance profile and associated policies. Before you can launch
+	// nodes and register them into a cluster, you must create an IAM role for those
+	// nodes to use when they are launched. For more information, see Amazon EKS
+	// node IAM role (https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html)
 	// in the Amazon EKS User Guide . If you specify launchTemplate, then don't
 	// specify IamInstanceProfile (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IamInstanceProfile.html)
 	// in your launch template, or the node group deployment will fail. For more
@@ -119,7 +119,7 @@ type NodegroupSpec struct {
 	Tags map[string]*string `json:"tags,omitempty"`
 	// The Kubernetes taints to be applied to the nodes in the node group.
 	Taints []*Taint `json:"taints,omitempty"`
-
+	// The node group update configuration.
 	UpdateConfig *NodegroupUpdateConfig `json:"updateConfig,omitempty"`
 	// The Kubernetes version to use for your managed nodes. By default, the Kubernetes
 	// version of the cluster is used, and this is the only accepted specified value.

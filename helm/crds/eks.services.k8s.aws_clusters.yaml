@@ -47,8 +47,8 @@ spec:
                   description: The encryption configuration for the cluster.
                   properties:
                     provider:
-                      description: Identifies the AWS Key Management Service (AWS
-                        KMS) key used to encrypt the secrets.
+                      description: Identifies the Key Management Service (KMS) key
+                        used to encrypt the secrets.
                       properties:
                         keyARN:
                           type: string
@@ -69,10 +69,10 @@ spec:
                 description: "Enable or disable exporting the Kubernetes control plane
                   logs for your cluster to CloudWatch Logs. By default, cluster control
                   plane logs aren't exported to CloudWatch Logs. For more information,
-                  see Amazon EKS Cluster Control Plane Logs (https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html)
+                  see Amazon EKS Cluster control plane logs (https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html)
                   in the Amazon EKS User Guide . \n CloudWatch Logs ingestion, archive
                   storage, and data scanning rates apply to exported control plane
-                  logs. For more information, see Amazon CloudWatch Pricing (http://aws.amazon.com/cloudwatch/pricing/)."
+                  logs. For more information, see CloudWatch Pricing (http://aws.amazon.com/cloudwatch/pricing/)."
                 properties:
                   clusterLogging:
                     items:
@@ -120,9 +120,9 @@ spec:
                 type: object
               roleARN:
                 description: The Amazon Resource Name (ARN) of the IAM role that provides
-                  permissions for the Kubernetes control plane to make calls to AWS
-                  API operations on your behalf. For more information, see Amazon
-                  EKS Service IAM Role (https://docs.aws.amazon.com/eks/latest/userguide/service_IAM_role.html)
+                  permissions for the Kubernetes control plane to make calls to Amazon
+                  Web Services API operations on your behalf. For more information,
+                  see Amazon EKS Service IAM Role (https://docs.aws.amazon.com/eks/latest/userguide/service_IAM_role.html)
                   in the Amazon EKS User Guide .
                 type: string
               tags:
@@ -207,6 +207,21 @@ spec:
                   - type
                   type: object
                 type: array
+              connectorConfig:
+                description: The configuration used to connect to a cluster for registration.
+                properties:
+                  activationCode:
+                    type: string
+                  activationExpiry:
+                    format: date-time
+                    type: string
+                  activationID:
+                    type: string
+                  provider:
+                    type: string
+                  roleARN:
+                    type: string
+                type: object
               createdAt:
                 description: The Unix epoch timestamp in seconds for when the cluster
                   was created.
