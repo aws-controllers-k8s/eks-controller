@@ -22,14 +22,14 @@ import (
 
 // FargateProfileSpec defines the desired state of FargateProfile.
 //
-// An object representing an AWS Fargate profile.
+// An object representing an Fargate profile.
 type FargateProfileSpec struct {
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The name of the Amazon EKS cluster to apply the Fargate profile to.
-	ClusterName    *string                                  `json:"clusterName,omitempty"`
-	ClusterNameRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterNameRef,omitempty"`
+	ClusterName *string                                  `json:"clusterName,omitempty"`
+	ClusterRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
 	// The name of the Fargate profile.
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`

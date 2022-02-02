@@ -8,5 +8,5 @@ roleRef:
   name: ack-eks-controller
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: ack-eks-controller
   namespace: ack-system

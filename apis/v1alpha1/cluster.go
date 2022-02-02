@@ -33,13 +33,13 @@ type ClusterSpec struct {
 	KubernetesNetworkConfig *KubernetesNetworkConfigRequest `json:"kubernetesNetworkConfig,omitempty"`
 	// Enable or disable exporting the Kubernetes control plane logs for your cluster
 	// to CloudWatch Logs. By default, cluster control plane logs aren't exported
-	// to CloudWatch Logs. For more information, see Amazon EKS Cluster Control
-	// Plane Logs (https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html)
+	// to CloudWatch Logs. For more information, see Amazon EKS Cluster control
+	// plane logs (https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html)
 	// in the Amazon EKS User Guide .
 	//
 	// CloudWatch Logs ingestion, archive storage, and data scanning rates apply
-	// to exported control plane logs. For more information, see Amazon CloudWatch
-	// Pricing (http://aws.amazon.com/cloudwatch/pricing/).
+	// to exported control plane logs. For more information, see CloudWatch Pricing
+	// (http://aws.amazon.com/cloudwatch/pricing/).
 	Logging *Logging `json:"logging,omitempty"`
 	// The unique name to give to your cluster.
 	// +kubebuilder:validation:Required
@@ -54,8 +54,9 @@ type ClusterSpec struct {
 	// +kubebuilder:validation:Required
 	ResourcesVPCConfig *VPCConfigRequest `json:"resourcesVPCConfig"`
 	// The Amazon Resource Name (ARN) of the IAM role that provides permissions
-	// for the Kubernetes control plane to make calls to AWS API operations on your
-	// behalf. For more information, see Amazon EKS Service IAM Role (https://docs.aws.amazon.com/eks/latest/userguide/service_IAM_role.html)
+	// for the Kubernetes control plane to make calls to Amazon Web Services API
+	// operations on your behalf. For more information, see Amazon EKS Service IAM
+	// Role (https://docs.aws.amazon.com/eks/latest/userguide/service_IAM_role.html)
 	// in the Amazon EKS User Guide .
 	// +kubebuilder:validation:Required
 	RoleARN *string `json:"roleARN"`
@@ -83,6 +84,9 @@ type ClusterStatus struct {
 	// The certificate-authority-data for your cluster.
 	// +kubebuilder:validation:Optional
 	CertificateAuthority *Certificate `json:"certificateAuthority,omitempty"`
+	// The configuration used to connect to a cluster for registration.
+	// +kubebuilder:validation:Optional
+	ConnectorConfig *ConnectorConfigResponse `json:"connectorConfig,omitempty"`
 	// The Unix epoch timestamp in seconds for when the cluster was created.
 	// +kubebuilder:validation:Optional
 	CreatedAt *metav1.Time `json:"createdAt,omitempty"`

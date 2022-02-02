@@ -18,10 +18,12 @@ package v1alpha1
 type AMITypes string
 
 const (
-	AMITypes_AL2_x86_64     AMITypes = "AL2_x86_64"
-	AMITypes_AL2_x86_64_GPU AMITypes = "AL2_x86_64_GPU"
-	AMITypes_AL2_ARM_64     AMITypes = "AL2_ARM_64"
-	AMITypes_CUSTOM         AMITypes = "CUSTOM"
+	AMITypes_AL2_x86_64          AMITypes = "AL2_x86_64"
+	AMITypes_AL2_x86_64_GPU      AMITypes = "AL2_x86_64_GPU"
+	AMITypes_AL2_ARM_64          AMITypes = "AL2_ARM_64"
+	AMITypes_CUSTOM              AMITypes = "CUSTOM"
+	AMITypes_BOTTLEROCKET_ARM_64 AMITypes = "BOTTLEROCKET_ARM_64"
+	AMITypes_BOTTLEROCKET_x86_64 AMITypes = "BOTTLEROCKET_x86_64"
 )
 
 type AddonIssueCode string
@@ -33,6 +35,8 @@ const (
 	AddonIssueCode_InsufficientNumberOfReplicas AddonIssueCode = "InsufficientNumberOfReplicas"
 	AddonIssueCode_ConfigurationConflict        AddonIssueCode = "ConfigurationConflict"
 	AddonIssueCode_AdmissionRequestDenied       AddonIssueCode = "AdmissionRequestDenied"
+	AddonIssueCode_UnsupportedAddonModification AddonIssueCode = "UnsupportedAddonModification"
+	AddonIssueCode_K8sResourceNotFound          AddonIssueCode = "K8sResourceNotFound"
 )
 
 type AddonStatus_SDK string
@@ -62,6 +66,7 @@ const (
 	ClusterStatus_SDK_DELETING ClusterStatus_SDK = "DELETING"
 	ClusterStatus_SDK_FAILED   ClusterStatus_SDK = "FAILED"
 	ClusterStatus_SDK_UPDATING ClusterStatus_SDK = "UPDATING"
+	ClusterStatus_SDK_PENDING  ClusterStatus_SDK = "PENDING"
 )
 
 type ConfigStatus string
@@ -70,6 +75,20 @@ const (
 	ConfigStatus_CREATING ConfigStatus = "CREATING"
 	ConfigStatus_DELETING ConfigStatus = "DELETING"
 	ConfigStatus_ACTIVE   ConfigStatus = "ACTIVE"
+)
+
+type ConnectorConfigProvider string
+
+const (
+	ConnectorConfigProvider_EKS_ANYWHERE ConnectorConfigProvider = "EKS_ANYWHERE"
+	ConnectorConfigProvider_ANTHOS       ConnectorConfigProvider = "ANTHOS"
+	ConnectorConfigProvider_GKE          ConnectorConfigProvider = "GKE"
+	ConnectorConfigProvider_AKS          ConnectorConfigProvider = "AKS"
+	ConnectorConfigProvider_OPENSHIFT    ConnectorConfigProvider = "OPENSHIFT"
+	ConnectorConfigProvider_TANZU        ConnectorConfigProvider = "TANZU"
+	ConnectorConfigProvider_RANCHER      ConnectorConfigProvider = "RANCHER"
+	ConnectorConfigProvider_EC2          ConnectorConfigProvider = "EC2"
+	ConnectorConfigProvider_OTHER        ConnectorConfigProvider = "OTHER"
 )
 
 type ErrorCode string
@@ -90,6 +109,8 @@ const (
 	ErrorCode_InsufficientNumberOfReplicas ErrorCode = "InsufficientNumberOfReplicas"
 	ErrorCode_ConfigurationConflict        ErrorCode = "ConfigurationConflict"
 	ErrorCode_AdmissionRequestDenied       ErrorCode = "AdmissionRequestDenied"
+	ErrorCode_UnsupportedAddonModification ErrorCode = "UnsupportedAddonModification"
+	ErrorCode_K8sResourceNotFound          ErrorCode = "K8sResourceNotFound"
 )
 
 type FargateProfileStatus_SDK string
