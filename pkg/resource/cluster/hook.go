@@ -15,6 +15,7 @@ package cluster
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -54,6 +55,10 @@ var (
 var (
 	requeueWaitWhileDeleting = ackrequeue.NeededAfter(
 		fmt.Errorf("cluster in '%s' state, cannot be modified or deleted", StatusDeleting),
+		ackrequeue.DefaultRequeueAfterDuration,
+	)
+	requeueWaitWhileInUse = ackrequeue.NeededAfter(
+		errors.New("cluster is still in use, cannot be deleted"),
 		ackrequeue.DefaultRequeueAfterDuration,
 	)
 	RequeueAfterUpdateDuration = 15 * time.Second
@@ -136,6 +141,19 @@ func returnClusterUpdating(r *resource) (*resource, error) {
 	msg := "Cluster is currently being updated"
 	ackcondition.SetSynced(r, corev1.ConditionFalse, &msg, nil)
 	return r, requeueAfterAsyncUpdate()
+}
+
+// clusterInUse returns true if the supplied cluster is still being used. It
+// determines this by checking if there are any nodegroups still attached to
+// the cluster.
+func (rm *resourceManager) clusterInUse(ctx context.Context, r *resource) (bool, error) {
+	nodes, err := rm.listNodegroups(ctx, r)
+	if err != nil {
+		return false, err
+	}
+
+	// Cluster is in use if # of nodegroups != 0
+	return (nodes != nil && len(nodes.Nodegroups) > 0), nil
 }
 
 func (rm *resourceManager) customUpdate(
@@ -266,4 +284,24 @@ func (rm *resourceManager) updateConfigResourcesVPCConfig(
 	}
 
 	return nil
+}
+
+func (rm *resourceManager) listNodegroups(
+	ctx context.Context,
+	r *resource,
+) (nodes *svcsdk.ListNodegroupsOutput, err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.listNodegroups")
+	defer exit(err)
+	input := &svcsdk.ListNodegroupsInput{
+		ClusterName: r.ko.Spec.Name,
+	}
+
+	nodes, err = rm.sdkapi.ListNodegroupsWithContext(ctx, input)
+	rm.metrics.RecordAPICall("READ_MANY", "ListNodegroups", err)
+	if err != nil {
+		return nil, err
+	}
+
+	return nodes, nil
 }
