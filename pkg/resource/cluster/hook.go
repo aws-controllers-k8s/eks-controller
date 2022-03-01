@@ -188,7 +188,7 @@ func (rm *resourceManager) customUpdate(
 
 			// Check to see if we've raced an async update call and need to
 			// requeue
-			if ok && awserr.Code() != "ResourceInUseException" {
+			if ok && awserr.Code() == "ResourceInUseException" {
 				return nil, requeueAfterAsyncUpdate()
 			}
 
@@ -202,7 +202,7 @@ func (rm *resourceManager) customUpdate(
 
 			// Check to see if we've raced an async update call and need to
 			// requeue
-			if ok && awserr.Code() != "ResourceInUseException" {
+			if ok && awserr.Code() == "ResourceInUseException" {
 				return nil, requeueAfterAsyncUpdate()
 			}
 
