@@ -25,8 +25,8 @@ import pytest
 
 from acktest.k8s import resource as k8s
 from acktest.resources import random_suffix_name
+from acktest.k8s import condition
 from e2e import CRD_VERSION, service_marker, CRD_GROUP, load_eks_resource
-from e2e.common.types import CLUSTER_RESOURCE_PLURAL
 from e2e.replacement_values import REPLACEMENT_VALUES
 from e2e.bootstrap_resources import get_bootstrap_resources
 
@@ -34,6 +34,7 @@ from .test_cluster import simple_cluster, wait_for_cluster_active
 
 RESOURCE_PLURAL = 'fargateprofiles'
 
+CHECK_STATUS_WAIT_SECONDS = 30
 DELETE_WAIT_AFTER_SECONDS = 10
 
 def wait_for_profile_active(eks_client, cluster_name, profile_name):
@@ -43,6 +44,18 @@ def wait_for_profile_active(eks_client, cluster_name, profile_name):
 def wait_for_profile_deleted(eks_client, cluster_name, profile_name):
     waiter = eks_client.get_waiter('fargate_profile_deleted')
     waiter.wait(clusterName=cluster_name, fargateProfileName=profile_name)
+
+def get_and_assert_status(ref: k8s.CustomResourceReference, expected_status: str, expected_synced: bool):
+    cr = k8s.get_resource(ref)
+    assert cr is not None
+    assert 'status' in cr
+    assert 'status' in cr['status']
+    assert cr['status']['status'] == expected_status
+
+    if expected_synced:
+        condition.assert_synced(ref)
+    else:
+        condition.assert_not_synced(ref)
 
 @pytest.fixture(scope="module")
 def eks_client():
@@ -91,7 +104,13 @@ class TestFargateProfile:
         except eks_client.exceptions.ResourceNotFoundException:
             pytest.fail(f"Could not find fargate profile '{profile_name}' in EKS")
 
+        get_and_assert_status(ref, 'CREATING', False)
+
         wait_for_profile_active(eks_client, cluster_name, profile_name)
+
+        # Ensure status is updated properly once it has become active
+        time.sleep(CHECK_STATUS_WAIT_SECONDS)
+        get_and_assert_status(ref, 'ACTIVE', True)
 
         _, deleted = k8s.delete_custom_resource(ref, 3, 10)
         assert deleted

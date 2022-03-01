@@ -96,6 +96,15 @@ resources:
         - MissingAction
         - MissingParameter
         - ValidationError
+    hooks:
+      delta_pre_compare:
+        code: customPreCompare(a, b)
+      sdk_read_one_post_set_output:
+        template_path: hooks/fargate_profile/sdk_read_one_post_set_output.go.tpl
+      sdk_delete_pre_build_request:
+        template_path: hooks/fargate_profile/sdk_delete_pre_build_request.go.tpl
+    update_operation:
+      custom_method_name: customUpdate
   Nodegroup:
     fields:
       ClusterName:
