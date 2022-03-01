@@ -202,12 +202,28 @@ func (rm *resourceManager) customUpdate(
 	}
 	if delta.DifferentAt("Spec.ResourcesVPCConfig") {
 		if err := rm.updateConfigResourcesVPCConfig(ctx, desired); err != nil {
+			awserr, ok := ackerr.AWSError(err)
+
+			// Check to see if we've raced an async update call and need to
+			// requeue
+			if ok && awserr.Code() == "ResourceInUseException" {
+				return nil, requeueAfterAsyncUpdate()
+			}
+
 			return nil, err
 		}
 		return returnClusterUpdating(desired)
 	}
 	if delta.DifferentAt("Spec.Version") {
 		if err := rm.updateVersion(ctx, desired); err != nil {
+			awserr, ok := ackerr.AWSError(err)
+
+			// Check to see if we've raced an async update call and need to
+			// requeue
+			if ok && awserr.Code() == "ResourceInUseException" {
+				return nil, requeueAfterAsyncUpdate()
+			}
+
 			return nil, err
 		}
 		return returnClusterUpdating(desired)
