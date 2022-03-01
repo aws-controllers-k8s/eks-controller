@@ -23,11 +23,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	svcapitypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	acktypes "github.com/aws-controllers-k8s/runtime/pkg/types"
+
+	svcapitypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 )
 
 // ResolveReferences finds if there are any Reference field(s) present
