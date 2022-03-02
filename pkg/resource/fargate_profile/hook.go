@@ -38,16 +38,6 @@ var (
 	)
 )
 
-// profileActive returns true if the supplied EKS FargateProfile is in the
-// `Active` status
-func profileActive(r *resource) bool {
-	if r.ko.Status.Status == nil {
-		return false
-	}
-	ps := *r.ko.Status.Status
-	return ps == svcsdk.FargateProfileStatusActive
-}
-
 // profileDeleting returns true if the supplied EKS FargateProfile is in the
 // `Deleting` status
 func profileDeleting(r *resource) bool {
