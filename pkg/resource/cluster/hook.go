@@ -197,6 +197,12 @@ func (rm *resourceManager) customUpdate(
 			if !ok || awserr.Message() != LoggingNoChangesError {
 				return nil, err
 			}
+
+			// Check to see if we've raced an async update call and need to
+			// requeue
+			if ok && awserr.Code() == "ResourceInUseException" {
+				return nil, requeueAfterAsyncUpdate()
+			}
 		}
 		return returnClusterUpdating(desired)
 	}
