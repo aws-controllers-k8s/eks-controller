@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	iamapitypes "github.com/aws-controllers-k8s/iam-controller/apis/v1alpha1"
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
@@ -30,6 +31,9 @@ import (
 
 	svcapitypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 )
+
+// +kubebuilder:rbac:groups=iam.services.k8s.aws,resources=roles,verbs=get;list
+// +kubebuilder:rbac:groups=iam.services.k8s.aws,resources=roles/status,verbs=get;list
 
 // ResolveReferences finds if there are any Reference field(s) present
 // inside AWSResource passed in the parameter and attempts to resolve
@@ -49,6 +53,9 @@ func (rm *resourceManager) ResolveReferences(
 	if err == nil {
 		err = resolveReferenceForClusterName(ctx, apiReader, namespace, ko)
 	}
+	if err == nil {
+		err = resolveReferenceForServiceAccountRoleARN(ctx, apiReader, namespace, ko)
+	}
 
 	if hasNonNilReferences(ko) {
 		return ackcondition.WithReferencesResolvedCondition(&resource{ko}, err)
@@ -65,13 +72,16 @@ func validateReferenceFields(ko *svcapitypes.Addon) error {
 	if ko.Spec.ClusterRef == nil && ko.Spec.ClusterName == nil {
 		return ackerr.ResourceReferenceOrIDRequiredFor("ClusterName", "ClusterRef")
 	}
+	if ko.Spec.ServiceAccountRoleRef != nil && ko.Spec.ServiceAccountRoleARN != nil {
+		return ackerr.ResourceReferenceAndIDNotSupportedFor("ServiceAccountRoleARN", "ServiceAccountRoleRef")
+	}
 	return nil
 }
 
 // hasNonNilReferences returns true if resource contains a reference to another
 // resource
 func hasNonNilReferences(ko *svcapitypes.Addon) bool {
-	return false || (ko.Spec.ClusterRef != nil)
+	return false || ko.Spec.ClusterRef != nil || ko.Spec.ServiceAccountRoleRef != nil
 }
 
 // resolveReferenceForClusterName reads the resource referenced
@@ -127,6 +137,62 @@ func resolveReferenceForClusterName(
 		}
 		referencedValue := string(*obj.Spec.Name)
 		ko.Spec.ClusterName = &referencedValue
+	}
+	return nil
+}
+
+// resolveReferenceForServiceAccountRoleARN reads the resource referenced
+// from ServiceAccountRoleRef field and sets the ServiceAccountRoleARN
+// from referenced resource
+func resolveReferenceForServiceAccountRoleARN(
+	ctx context.Context,
+	apiReader client.Reader,
+	namespace string,
+	ko *svcapitypes.Addon,
+) error {
+	if ko.Spec.ServiceAccountRoleRef != nil &&
+		ko.Spec.ServiceAccountRoleRef.From != nil {
+		arr := ko.Spec.ServiceAccountRoleRef.From
+		if arr == nil || arr.Name == nil || *arr.Name == "" {
+			return fmt.Errorf("provided resource reference is nil or empty")
+		}
+		namespacedName := types.NamespacedName{
+			Namespace: namespace,
+			Name:      *arr.Name,
+		}
+		obj := iamapitypes.Role{}
+		err := apiReader.Get(ctx, namespacedName, &obj)
+		if err != nil {
+			return err
+		}
+		var refResourceSynced, refResourceTerminal bool
+		for _, cond := range obj.Status.Conditions {
+			if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+				cond.Status == corev1.ConditionTrue {
+				refResourceSynced = true
+			}
+			if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+				cond.Status == corev1.ConditionTrue {
+				refResourceTerminal = true
+			}
+		}
+		if refResourceTerminal {
+			return ackerr.ResourceReferenceTerminalFor(
+				"Role",
+				namespace, *arr.Name)
+		}
+		if !refResourceSynced {
+			return ackerr.ResourceReferenceNotSyncedFor(
+				"Role",
+				namespace, *arr.Name)
+		}
+		if obj.Status.ACKResourceMetadata.ARN == nil {
+			return ackerr.ResourceReferenceMissingTargetFieldFor(
+				"Role",
+				namespace, *arr.Name,
+				"Status.ACKResourceMetadata.ARN")
+		}
+		ko.Spec.ServiceAccountRoleARN = obj.Status.ACKResourceMetadata.ARN
 	}
 	return nil
 }

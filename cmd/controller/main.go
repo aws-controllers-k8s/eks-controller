@@ -30,8 +30,11 @@ import (
 	ctrlrt "sigs.k8s.io/controller-runtime"
 	ctrlrtmetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 
+	ec2apitypes "github.com/aws-controllers-k8s/ec2-controller/apis/v1alpha1"
 	svctypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 	svcresource "github.com/aws-controllers-k8s/eks-controller/pkg/resource"
+	iamapitypes "github.com/aws-controllers-k8s/iam-controller/apis/v1alpha1"
+	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/addon"
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/cluster"
@@ -54,6 +57,8 @@ func init() {
 
 	_ = svctypes.AddToScheme(scheme)
 	_ = ackv1alpha1.AddToScheme(scheme)
+	_ = iamapitypes.AddToScheme(scheme)
+	_ = ec2apitypes.AddToScheme(scheme)
 }
 
 func main() {

@@ -86,6 +86,9 @@ func newResourceDelta(
 			delta.Add("Spec.ServiceAccountRoleARN", a.ko.Spec.ServiceAccountRoleARN, b.ko.Spec.ServiceAccountRoleARN)
 		}
 	}
+	if !reflect.DeepEqual(a.ko.Spec.ServiceAccountRoleRef, b.ko.Spec.ServiceAccountRoleRef) {
+		delta.Add("Spec.ServiceAccountRoleRef", a.ko.Spec.ServiceAccountRoleRef, b.ko.Spec.ServiceAccountRoleRef)
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Tags, b.ko.Spec.Tags) {
 		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
 	} else if a.ko.Spec.Tags != nil && b.ko.Spec.Tags != nil {

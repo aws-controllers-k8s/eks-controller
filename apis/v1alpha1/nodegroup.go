@@ -83,8 +83,8 @@ type NodegroupSpec struct {
 	// information about using launch templates with Amazon EKS, see Launch template
 	// support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
-	// +kubebuilder:validation:Required
-	NodeRole *string `json:"nodeRole"`
+	NodeRole    *string                                  `json:"nodeRole,omitempty"`
+	NodeRoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"nodeRoleRef,omitempty"`
 	// The AMI version of the Amazon EKS optimized AMI to use with your node group.
 	// By default, the latest available AMI version for the node group's current
 	// Kubernetes version is used. For more information, see Amazon EKS optimized
@@ -103,15 +103,15 @@ type NodegroupSpec struct {
 	RemoteAccess *RemoteAccessConfig `json:"remoteAccess,omitempty"`
 	// The scaling configuration details for the Auto Scaling group that is created
 	// for your node group.
-	ScalingConfig *NodegroupScalingConfig `json:"scalingConfig,omitempty"`
+	ScalingConfig *NodegroupScalingConfig                    `json:"scalingConfig,omitempty"`
+	SubnetRefs    []*ackv1alpha1.AWSResourceReferenceWrapper `json:"subnetRefs,omitempty"`
 	// The subnets to use for the Auto Scaling group that is created for your node
 	// group. If you specify launchTemplate, then don't specify SubnetId (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateNetworkInterface.html)
 	// in your launch template, or the node group deployment will fail. For more
 	// information about using launch templates with Amazon EKS, see Launch template
 	// support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
-	// +kubebuilder:validation:Required
-	Subnets []*string `json:"subnets"`
+	Subnets []*string `json:"subnets,omitempty"`
 	// The metadata to apply to the node group to assist with categorization and
 	// organization. Each tag consists of a key and an optional value. You define
 	// both. Node group tags do not propagate to any other resources associated

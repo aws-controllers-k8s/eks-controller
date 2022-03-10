@@ -3,6 +3,8 @@ module github.com/aws-controllers-k8s/eks-controller
 go 1.17
 
 require (
+	github.com/aws-controllers-k8s/ec2-controller v0.0.10
+	github.com/aws-controllers-k8s/iam-controller v0.0.8
 	github.com/aws-controllers-k8s/runtime v0.18.4
 	github.com/aws/aws-sdk-go v1.42.28
 	github.com/go-logr/logr v1.2.0
@@ -42,7 +44,6 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.28.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
-	github.com/stretchr/objx v0.2.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.19.1 // indirect

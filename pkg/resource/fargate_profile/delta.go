@@ -73,8 +73,14 @@ func newResourceDelta(
 			delta.Add("Spec.PodExecutionRoleARN", a.ko.Spec.PodExecutionRoleARN, b.ko.Spec.PodExecutionRoleARN)
 		}
 	}
+	if !reflect.DeepEqual(a.ko.Spec.PodExecutionRoleRef, b.ko.Spec.PodExecutionRoleRef) {
+		delta.Add("Spec.PodExecutionRoleRef", a.ko.Spec.PodExecutionRoleRef, b.ko.Spec.PodExecutionRoleRef)
+	}
 	if !reflect.DeepEqual(a.ko.Spec.Selectors, b.ko.Spec.Selectors) {
 		delta.Add("Spec.Selectors", a.ko.Spec.Selectors, b.ko.Spec.Selectors)
+	}
+	if !reflect.DeepEqual(a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs) {
+		delta.Add("Spec.SubnetRefs", a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs)
 	}
 	if !ackcompare.SliceStringPEqual(a.ko.Spec.Subnets, b.ko.Spec.Subnets) {
 		delta.Add("Spec.Subnets", a.ko.Spec.Subnets, b.ko.Spec.Subnets)

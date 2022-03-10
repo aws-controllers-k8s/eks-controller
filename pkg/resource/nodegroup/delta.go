@@ -129,6 +129,9 @@ func newResourceDelta(
 			delta.Add("Spec.NodeRole", a.ko.Spec.NodeRole, b.ko.Spec.NodeRole)
 		}
 	}
+	if !reflect.DeepEqual(a.ko.Spec.NodeRoleRef, b.ko.Spec.NodeRoleRef) {
+		delta.Add("Spec.NodeRoleRef", a.ko.Spec.NodeRoleRef, b.ko.Spec.NodeRoleRef)
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.ReleaseVersion, b.ko.Spec.ReleaseVersion) {
 		delta.Add("Spec.ReleaseVersion", a.ko.Spec.ReleaseVersion, b.ko.Spec.ReleaseVersion)
 	} else if a.ko.Spec.ReleaseVersion != nil && b.ko.Spec.ReleaseVersion != nil {
@@ -174,6 +177,9 @@ func newResourceDelta(
 				delta.Add("Spec.ScalingConfig.MinSize", a.ko.Spec.ScalingConfig.MinSize, b.ko.Spec.ScalingConfig.MinSize)
 			}
 		}
+	}
+	if !reflect.DeepEqual(a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs) {
+		delta.Add("Spec.SubnetRefs", a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs)
 	}
 	if !ackcompare.SliceStringPEqual(a.ko.Spec.Subnets, b.ko.Spec.Subnets) {
 		delta.Add("Spec.Subnets", a.ko.Spec.Subnets, b.ko.Spec.Subnets)

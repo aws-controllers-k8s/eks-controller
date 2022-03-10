@@ -32,6 +32,19 @@ rules:
   - list
   - patch
   - watch
+  - ec2.services.k8s.aws
+  resources:
+  - subnets
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ec2.services.k8s.aws
+  resources:
+  - subnets/status
+  verbs:
+  - get
+  - list
 - apiGroups:
   - eks.services.k8s.aws
   resources:
@@ -112,6 +125,20 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - iam.services.k8s.aws
+  resources:
+  - roles
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - iam.services.k8s.aws
+  resources:
+  - roles/status
+  verbs:
+  - get
+  - list
 - apiGroups:
   - services.k8s.aws
   resources:

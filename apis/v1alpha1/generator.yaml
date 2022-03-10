@@ -5,6 +5,11 @@ resources:
         references:
           resource: Cluster
           path: Spec.Name
+      ServiceAccountRoleArn:
+        references:
+          service_name: iam
+          resource: Role
+          path: Status.ACKResourceMetadata.ARN
     renames:
       operations:
         CreateAddon:
@@ -34,6 +39,17 @@ resources:
         - MissingParameter
         - ValidationError
   Cluster:
+    fields:
+      RoleArn:
+        references:
+          service_name: iam
+          resource: Role
+          path: Status.ACKResourceMetadata.ARN
+      ResourcesVpcConfig.SecurityGroupIds:
+        references:
+          service_name: ec2
+          resource: SecurityGroup
+          path: Status.ID
     exceptions:
       errors:
         404:
@@ -68,6 +84,16 @@ resources:
         references:
           resource: Cluster
           path: Spec.Name
+      PodExecutionRoleArn:
+        references:
+          service_name: iam
+          resource: Role
+          path: Status.ACKResourceMetadata.ARN
+      Subnets:
+        references:
+          service_name: ec2
+          resource: Subnet
+          path: State.SubnetID
     renames:
       operations:
         CreateFargateProfile:
@@ -114,6 +140,16 @@ resources:
         references:
           resource: Cluster
           path: Spec.Name
+      NodeRole:
+        references:
+          service_name: iam
+          resource: Role
+          path: Status.ACKResourceMetadata.ARN
+      Subnets:
+        references:
+          service_name: ec2
+          resource: Subnet
+          path: State.SubnetID
     renames:
       operations:
         CreateNodegroup:

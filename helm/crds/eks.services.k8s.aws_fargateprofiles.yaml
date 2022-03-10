@@ -71,6 +71,20 @@ spec:
                   Role (https://docs.aws.amazon.com/eks/latest/userguide/pod-execution-role.html)
                   in the Amazon EKS User Guide.
                 type: string
+              podExecutionRoleRef:
+                description: 'AWSResourceReferenceWrapper provides a wrapper around
+                  *AWSResourceReference type to provide more user friendly syntax
+                  for references using ''from'' field Ex: APIIDRef:   from:     name:
+                  my-api'
+                properties:
+                  from:
+                    description: AWSResourceReference provides all the values necessary
+                      to reference another k8s resource for finding the identifier(Id/ARN/Name)
+                    properties:
+                      name:
+                        type: string
+                    type: object
+                type: object
               selectors:
                 description: The selectors to match for pods to use this Fargate profile.
                   Each selector must have an associated namespace. Optionally, you
@@ -85,6 +99,22 @@ spec:
                       type: object
                     namespace:
                       type: string
+                  type: object
+                type: array
+              subnetRefs:
+                items:
+                  description: 'AWSResourceReferenceWrapper provides a wrapper around
+                    *AWSResourceReference type to provide more user friendly syntax
+                    for references using ''from'' field Ex: APIIDRef:   from:     name:
+                    my-api'
+                  properties:
+                    from:
+                      description: AWSResourceReference provides all the values necessary
+                        to reference another k8s resource for finding the identifier(Id/ARN/Name)
+                      properties:
+                        name:
+                          type: string
+                      type: object
                   type: object
                 type: array
               subnets:
@@ -106,7 +136,6 @@ spec:
                 type: object
             required:
             - name
-            - podExecutionRoleARN
             type: object
           status:
             description: FargateProfileStatus defines the observed state of FargateProfile
