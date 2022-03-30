@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	ec2apitypes "github.com/aws-controllers-k8s/ec2-controller/apis/v1alpha1"
 	iamapitypes "github.com/aws-controllers-k8s/iam-controller/apis/v1alpha1"
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
@@ -31,6 +32,9 @@ import (
 
 	svcapitypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 )
+
+// +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=securitygroups,verbs=get;list
+// +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=securitygroups/status,verbs=get;list
 
 // +kubebuilder:rbac:groups=iam.services.k8s.aws,resources=roles,verbs=get;list
 // +kubebuilder:rbac:groups=iam.services.k8s.aws,resources=roles/status,verbs=get;list
@@ -51,6 +55,9 @@ func (rm *resourceManager) ResolveReferences(
 	ko := rm.concreteResource(res).ko.DeepCopy()
 	err := validateReferenceFields(ko)
 	if err == nil {
+		err = resolveReferenceForResourcesVPCConfig_SecurityGroupIDs(ctx, apiReader, namespace, ko)
+	}
+	if err == nil {
 		err = resolveReferenceForRoleARN(ctx, apiReader, namespace, ko)
 	}
 
@@ -63,6 +70,11 @@ func (rm *resourceManager) ResolveReferences(
 // validateReferenceFields validates the reference field and corresponding
 // identifier field.
 func validateReferenceFields(ko *svcapitypes.Cluster) error {
+	if ko.Spec.ResourcesVPCConfig != nil {
+		if ko.Spec.ResourcesVPCConfig.SecurityGroupRefs != nil && ko.Spec.ResourcesVPCConfig.SecurityGroupIDs != nil {
+			return ackerr.ResourceReferenceAndIDNotSupportedFor("ResourcesVPCConfig.SecurityGroupIDs", "ResourcesVPCConfig.SecurityGroupRefs")
+		}
+	}
 	if ko.Spec.RoleRef != nil && ko.Spec.RoleARN != nil {
 		return ackerr.ResourceReferenceAndIDNotSupportedFor("RoleARN", "RoleRef")
 	}
@@ -75,7 +87,71 @@ func validateReferenceFields(ko *svcapitypes.Cluster) error {
 // hasNonNilReferences returns true if resource contains a reference to another
 // resource
 func hasNonNilReferences(ko *svcapitypes.Cluster) bool {
-	return false || ko.Spec.RoleRef != nil
+	return false || (ko.Spec.ResourcesVPCConfig != nil && ko.Spec.ResourcesVPCConfig.SecurityGroupRefs != nil) || (ko.Spec.RoleRef != nil)
+}
+
+// resolveReferenceForResourcesVPCConfig_SecurityGroupIDs reads the resource referenced
+// from ResourcesVPCConfig.SecurityGroupRefs field and sets the ResourcesVPCConfig.SecurityGroupIDs
+// from referenced resource
+func resolveReferenceForResourcesVPCConfig_SecurityGroupIDs(
+	ctx context.Context,
+	apiReader client.Reader,
+	namespace string,
+	ko *svcapitypes.Cluster,
+) error {
+	if ko.Spec.ResourcesVPCConfig == nil {
+		return nil
+	}
+	if ko.Spec.ResourcesVPCConfig.SecurityGroupRefs != nil &&
+		len(ko.Spec.ResourcesVPCConfig.SecurityGroupRefs) > 0 {
+		resolvedReferences := []*string{}
+		for _, arrw := range ko.Spec.ResourcesVPCConfig.SecurityGroupRefs {
+			arr := arrw.From
+			if arr == nil || arr.Name == nil || *arr.Name == "" {
+				return fmt.Errorf("provided resource reference is nil or empty")
+			}
+			namespacedName := types.NamespacedName{
+				Namespace: namespace,
+				Name:      *arr.Name,
+			}
+			obj := ec2apitypes.SecurityGroup{}
+			err := apiReader.Get(ctx, namespacedName, &obj)
+			if err != nil {
+				return err
+			}
+			var refResourceSynced, refResourceTerminal bool
+			for _, cond := range obj.Status.Conditions {
+				if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+					cond.Status == corev1.ConditionTrue {
+					refResourceSynced = true
+				}
+				if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+					cond.Status == corev1.ConditionTrue {
+					refResourceTerminal = true
+				}
+			}
+			if refResourceTerminal {
+				return ackerr.ResourceReferenceTerminalFor(
+					"SecurityGroup",
+					namespace, *arr.Name)
+			}
+			if !refResourceSynced {
+				return ackerr.ResourceReferenceNotSyncedFor(
+					"SecurityGroup",
+					namespace, *arr.Name)
+			}
+			if obj.Status.ID == nil {
+				return ackerr.ResourceReferenceMissingTargetFieldFor(
+					"SecurityGroup",
+					namespace, *arr.Name,
+					"Status.ID")
+			}
+			referencedValue := string(*obj.Status.ID)
+			resolvedReferences = append(resolvedReferences, &referencedValue)
+		}
+		ko.Spec.ResourcesVPCConfig.SecurityGroupIDs = resolvedReferences
+	}
+	return nil
 }
 
 // resolveReferenceForRoleARN reads the resource referenced
@@ -129,7 +205,8 @@ func resolveReferenceForRoleARN(
 				namespace, *arr.Name,
 				"Status.ACKResourceMetadata.ARN")
 		}
-		ko.Spec.RoleARN = obj.Status.ACKResourceMetadata.ARN
+		referencedValue := string(*obj.Status.ACKResourceMetadata.ARN)
+		ko.Spec.RoleARN = &referencedValue
 	}
 	return nil
 }

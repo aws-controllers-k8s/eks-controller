@@ -81,7 +81,7 @@ func validateReferenceFields(ko *svcapitypes.Addon) error {
 // hasNonNilReferences returns true if resource contains a reference to another
 // resource
 func hasNonNilReferences(ko *svcapitypes.Addon) bool {
-	return false || ko.Spec.ClusterRef != nil || ko.Spec.ServiceAccountRoleRef != nil
+	return false || (ko.Spec.ClusterRef != nil) || (ko.Spec.ServiceAccountRoleRef != nil)
 }
 
 // resolveReferenceForClusterName reads the resource referenced
@@ -192,7 +192,8 @@ func resolveReferenceForServiceAccountRoleARN(
 				namespace, *arr.Name,
 				"Status.ACKResourceMetadata.ARN")
 		}
-		ko.Spec.ServiceAccountRoleARN = obj.Status.ACKResourceMetadata.ARN
+		referencedValue := string(*obj.Status.ACKResourceMetadata.ARN)
+		ko.Spec.ServiceAccountRoleARN = &referencedValue
 	}
 	return nil
 }

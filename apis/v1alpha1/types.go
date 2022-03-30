@@ -391,7 +391,9 @@ type VPCConfigRequest struct {
 	EndpointPublicAccess  *bool     `json:"endpointPublicAccess,omitempty"`
 	PublicAccessCIDRs     []*string `json:"publicAccessCIDRs,omitempty"`
 	SecurityGroupIDs      []*string `json:"securityGroupIDs,omitempty"`
-	SubnetIDs             []*string `json:"subnetIDs,omitempty"`
+	// Reference field for SecurityGroupIDs
+	SecurityGroupRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"securityGroupRefs,omitempty"`
+	SubnetIDs         []*string                                  `json:"subnetIDs,omitempty"`
 }
 
 // An object representing an Amazon EKS cluster VPC configuration response.

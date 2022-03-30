@@ -93,7 +93,7 @@ resources:
         references:
           service_name: ec2
           resource: Subnet
-          path: State.SubnetID
+          path: Status.SubnetID
     renames:
       operations:
         CreateFargateProfile:
@@ -149,7 +149,7 @@ resources:
         references:
           service_name: ec2
           resource: Subnet
-          path: State.SubnetID
+          path: Status.SubnetID
     renames:
       operations:
         CreateNodegroup:

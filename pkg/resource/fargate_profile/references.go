@@ -94,7 +94,7 @@ func validateReferenceFields(ko *svcapitypes.FargateProfile) error {
 // hasNonNilReferences returns true if resource contains a reference to another
 // resource
 func hasNonNilReferences(ko *svcapitypes.FargateProfile) bool {
-	return false || ko.Spec.ClusterRef != nil || ko.Spec.PodExecutionRoleRef != nil || ko.Spec.SubnetRefs != nil
+	return false || (ko.Spec.ClusterRef != nil) || (ko.Spec.PodExecutionRoleRef != nil) || (ko.Spec.SubnetRefs != nil)
 }
 
 // resolveReferenceForClusterName reads the resource referenced
@@ -205,7 +205,8 @@ func resolveReferenceForPodExecutionRoleARN(
 				namespace, *arr.Name,
 				"Status.ACKResourceMetadata.ARN")
 		}
-		ko.Spec.PodExecutionRoleARN = obj.Status.ACKResourceMetadata.ARN
+		referencedValue := string(*obj.Status.ACKResourceMetadata.ARN)
+		ko.Spec.PodExecutionRoleARN = &referencedValue
 	}
 	return nil
 }
@@ -257,14 +258,14 @@ func resolveReferenceForSubnets(
 					"Subnet",
 					namespace, *arr.Name)
 			}
-			if obj.State.SubnetID == nil {
+			if obj.Status.SubnetID == nil {
 				return ackerr.ResourceReferenceMissingTargetFieldFor(
 					"Subnet",
 					namespace, *arr.Name,
-					"State.SubnetID")
+					"Status.SubnetID")
 			}
-			resolvedReferences = append(resolvedReferences,
-				obj.State.SubnetID)
+			referencedValue := string(*obj.Status.SubnetID)
+			resolvedReferences = append(resolvedReferences, &referencedValue)
 		}
 		ko.Spec.Subnets = resolvedReferences
 	}
