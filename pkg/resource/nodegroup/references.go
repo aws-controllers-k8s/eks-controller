@@ -71,7 +71,7 @@ func validateReferenceFields(ko *svcapitypes.Nodegroup) error {
 // hasNonNilReferences returns true if resource contains a reference to another
 // resource
 func hasNonNilReferences(ko *svcapitypes.Nodegroup) bool {
-	return false || ko.Spec.ClusterRef != nil
+	return false || (ko.Spec.ClusterRef != nil)
 }
 
 // resolveReferenceForClusterName reads the resource referenced
@@ -125,7 +125,8 @@ func resolveReferenceForClusterName(
 				namespace, *arr.Name,
 				"Spec.Name")
 		}
-		ko.Spec.ClusterName = obj.Spec.Name
+		referencedValue := string(*obj.Spec.Name)
+		ko.Spec.ClusterName = &referencedValue
 	}
 	return nil
 }
