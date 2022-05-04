@@ -174,6 +174,9 @@ func (rm *resourceManager) sdkFind(
 	}
 	if resp.Cluster.KubernetesNetworkConfig != nil {
 		f8 := &svcapitypes.KubernetesNetworkConfigRequest{}
+		if resp.Cluster.KubernetesNetworkConfig.IpFamily != nil {
+			f8.IPFamily = resp.Cluster.KubernetesNetworkConfig.IpFamily
+		}
 		if resp.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr != nil {
 			f8.ServiceIPv4CIDR = resp.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr
 		}
@@ -438,6 +441,9 @@ func (rm *resourceManager) sdkCreate(
 	}
 	if resp.Cluster.KubernetesNetworkConfig != nil {
 		f8 := &svcapitypes.KubernetesNetworkConfigRequest{}
+		if resp.Cluster.KubernetesNetworkConfig.IpFamily != nil {
+			f8.IPFamily = resp.Cluster.KubernetesNetworkConfig.IpFamily
+		}
 		if resp.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr != nil {
 			f8.ServiceIPv4CIDR = resp.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr
 		}
@@ -597,6 +603,9 @@ func (rm *resourceManager) newCreateRequestPayload(
 	}
 	if r.ko.Spec.KubernetesNetworkConfig != nil {
 		f2 := &svcsdk.KubernetesNetworkConfigRequest{}
+		if r.ko.Spec.KubernetesNetworkConfig.IPFamily != nil {
+			f2.SetIpFamily(*r.ko.Spec.KubernetesNetworkConfig.IPFamily)
+		}
 		if r.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR != nil {
 			f2.SetServiceIpv4Cidr(*r.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR)
 		}

@@ -113,8 +113,8 @@ type NodegroupSpec struct {
 	// +kubebuilder:validation:Required
 	Subnets []*string `json:"subnets"`
 	// The metadata to apply to the node group to assist with categorization and
-	// organization. Each tag consists of a key and an optional value, both of which
-	// you define. Node group tags do not propagate to any other resources associated
+	// organization. Each tag consists of a key and an optional value. You define
+	// both. Node group tags do not propagate to any other resources associated
 	// with the node group, such as the Amazon EC2 instances or subnets.
 	Tags map[string]*string `json:"tags,omitempty"`
 	// The Kubernetes taints to be applied to the nodes in the node group.

@@ -44,13 +44,13 @@ type ClusterSpec struct {
 	// The unique name to give to your cluster.
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
-	// The VPC configuration used by the cluster control plane. Amazon EKS VPC resources
-	// have specific requirements to work properly with Kubernetes. For more information,
-	// see Cluster VPC Considerations (https://docs.aws.amazon.com/eks/latest/userguide/network_reqs.html)
+	// The VPC configuration that's used by the cluster control plane. Amazon EKS
+	// VPC resources have specific requirements to work properly with Kubernetes.
+	// For more information, see Cluster VPC Considerations (https://docs.aws.amazon.com/eks/latest/userguide/network_reqs.html)
 	// and Cluster Security Group Considerations (https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html)
 	// in the Amazon EKS User Guide. You must specify at least two subnets. You
-	// can specify up to five security groups, but we recommend that you use a dedicated
-	// security group for your cluster control plane.
+	// can specify up to five security groups. However, we recommend that you use
+	// a dedicated security group for your cluster control plane.
 	// +kubebuilder:validation:Required
 	ResourcesVPCConfig *VPCConfigRequest `json:"resourcesVPCConfig"`
 	// The Amazon Resource Name (ARN) of the IAM role that provides permissions
@@ -61,7 +61,7 @@ type ClusterSpec struct {
 	// +kubebuilder:validation:Required
 	RoleARN *string `json:"roleARN"`
 	// The metadata to apply to the cluster to assist with categorization and organization.
-	// Each tag consists of a key and an optional value, both of which you define.
+	// Each tag consists of a key and an optional value. You define both.
 	Tags map[string]*string `json:"tags,omitempty"`
 	// The desired Kubernetes version for your cluster. If you don't specify a value
 	// here, the latest version available in Amazon EKS is used.

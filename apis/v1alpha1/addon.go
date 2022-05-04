@@ -22,7 +22,8 @@ import (
 
 // AddonSpec defines the desired state of Addon.
 //
-// An Amazon EKS add-on.
+// An Amazon EKS add-on. For more information, see Amazon EKS add-ons (https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html)
+// in the Amazon EKS User Guide.
 type AddonSpec struct {
 	// The version of the add-on. The version must match one of the versions returned
 	// by DescribeAddonVersions (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonVersions.html).
@@ -53,7 +54,7 @@ type AddonSpec struct {
 	// in the Amazon EKS User Guide.
 	ServiceAccountRoleARN *string `json:"serviceAccountRoleARN,omitempty"`
 	// The metadata to apply to the cluster to assist with categorization and organization.
-	// Each tag consists of a key and an optional value, both of which you define.
+	// Each tag consists of a key and an optional value. You define both.
 	Tags map[string]*string `json:"tags,omitempty"`
 }
 

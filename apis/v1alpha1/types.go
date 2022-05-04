@@ -52,7 +52,8 @@ type AddonVersionInfo struct {
 	Architecture []*string `json:"architecture,omitempty"`
 }
 
-// An Amazon EKS add-on.
+// An Amazon EKS add-on. For more information, see Amazon EKS add-ons (https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html)
+// in the Amazon EKS User Guide.
 type Addon_SDK struct {
 	AddonARN     *string      `json:"addonARN,omitempty"`
 	AddonName    *string      `json:"addonName,omitempty"`
@@ -91,7 +92,8 @@ type Cluster_SDK struct {
 	Endpoint         *string                  `json:"endpoint,omitempty"`
 	// An object representing an identity provider.
 	Identity *Identity `json:"identity,omitempty"`
-	// The Kubernetes network configuration for the cluster.
+	// The Kubernetes network configuration for the cluster. The response contains
+	// a value for serviceIpv6Cidr or serviceIpv4Cidr, but not both.
 	KubernetesNetworkConfig *KubernetesNetworkConfigResponse `json:"kubernetesNetworkConfig,omitempty"`
 	// An object representing the logging configuration for resources in your cluster.
 	Logging         *Logging `json:"logging,omitempty"`
@@ -181,12 +183,16 @@ type Issue struct {
 
 // The Kubernetes network configuration for the cluster.
 type KubernetesNetworkConfigRequest struct {
+	IPFamily        *string `json:"ipFamily,omitempty"`
 	ServiceIPv4CIDR *string `json:"serviceIPv4CIDR,omitempty"`
 }
 
-// The Kubernetes network configuration for the cluster.
+// The Kubernetes network configuration for the cluster. The response contains
+// a value for serviceIpv6Cidr or serviceIpv4Cidr, but not both.
 type KubernetesNetworkConfigResponse struct {
+	IPFamily        *string `json:"ipFamily,omitempty"`
 	ServiceIPv4CIDR *string `json:"serviceIPv4CIDR,omitempty"`
+	ServiceIPv6CIDR *string `json:"serviceIPv6CIDR,omitempty"`
 }
 
 // An object representing a node group launch template specification. The launch
