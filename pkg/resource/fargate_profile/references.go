@@ -199,7 +199,7 @@ func resolveReferenceForPodExecutionRoleARN(
 				"Role",
 				namespace, *arr.Name)
 		}
-		if obj.Status.ACKResourceMetadata.ARN == nil {
+		if obj.Status.ACKResourceMetadata == nil || obj.Status.ACKResourceMetadata.ARN == nil {
 			return ackerr.ResourceReferenceMissingTargetFieldFor(
 				"Role",
 				namespace, *arr.Name,

@@ -113,6 +113,7 @@ func resolveReferenceForResourcesVPCConfig_SecurityGroupIDs(
 	if ko.Spec.ResourcesVPCConfig == nil {
 		return nil
 	}
+
 	if ko.Spec.ResourcesVPCConfig.SecurityGroupRefs != nil &&
 		len(ko.Spec.ResourcesVPCConfig.SecurityGroupRefs) > 0 {
 		resolvedReferences := []*string{}
@@ -177,6 +178,7 @@ func resolveReferenceForResourcesVPCConfig_SubnetIDs(
 	if ko.Spec.ResourcesVPCConfig == nil {
 		return nil
 	}
+
 	if ko.Spec.ResourcesVPCConfig.SubnetRefs != nil &&
 		len(ko.Spec.ResourcesVPCConfig.SubnetRefs) > 0 {
 		resolvedReferences := []*string{}
@@ -274,7 +276,7 @@ func resolveReferenceForRoleARN(
 				"Role",
 				namespace, *arr.Name)
 		}
-		if obj.Status.ACKResourceMetadata.ARN == nil {
+		if obj.Status.ACKResourceMetadata == nil || obj.Status.ACKResourceMetadata.ARN == nil {
 			return ackerr.ResourceReferenceMissingTargetFieldFor(
 				"Role",
 				namespace, *arr.Name,

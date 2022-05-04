@@ -213,7 +213,7 @@ func resolveReferenceForNodeRole(
 				"Role",
 				namespace, *arr.Name)
 		}
-		if obj.Status.ACKResourceMetadata.ARN == nil {
+		if obj.Status.ACKResourceMetadata == nil || obj.Status.ACKResourceMetadata.ARN == nil {
 			return ackerr.ResourceReferenceMissingTargetFieldFor(
 				"Role",
 				namespace, *arr.Name,
@@ -237,6 +237,7 @@ func resolveReferenceForRemoteAccess_SourceSecurityGroups(
 	if ko.Spec.RemoteAccess == nil {
 		return nil
 	}
+
 	if ko.Spec.RemoteAccess.SourceSecurityGroupRefs != nil &&
 		len(ko.Spec.RemoteAccess.SourceSecurityGroupRefs) > 0 {
 		resolvedReferences := []*string{}

@@ -18,6 +18,8 @@ package main
 import (
 	"os"
 
+	ec2apitypes "github.com/aws-controllers-k8s/ec2-controller/apis/v1alpha1"
+	iamapitypes "github.com/aws-controllers-k8s/iam-controller/apis/v1alpha1"
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 	ackcfg "github.com/aws-controllers-k8s/runtime/pkg/config"
 	ackrt "github.com/aws-controllers-k8s/runtime/pkg/runtime"
@@ -30,11 +32,8 @@ import (
 	ctrlrt "sigs.k8s.io/controller-runtime"
 	ctrlrtmetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 
-	ec2apitypes "github.com/aws-controllers-k8s/ec2-controller/apis/v1alpha1"
 	svctypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 	svcresource "github.com/aws-controllers-k8s/eks-controller/pkg/resource"
-	iamapitypes "github.com/aws-controllers-k8s/iam-controller/apis/v1alpha1"
-	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/addon"
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/cluster"
