@@ -40,6 +40,11 @@ resources:
         - ValidationError
   Cluster:
     fields:
+      EncryptionProvider.Provider.KeyArn:
+        references:
+          service_name: kms
+          resources: Key
+          path: Status.ACKResourceMetadata.ARN
       RoleArn:
         references:
           service_name: iam
@@ -50,6 +55,11 @@ resources:
           service_name: ec2
           resource: SecurityGroup
           path: Status.ID
+      ResourcesVpcConfig.SubnetIds:
+        references:
+          service_name: ec2
+          resource: Subnet
+          path: Status.SubnetID
     exceptions:
       errors:
         404:
@@ -145,6 +155,11 @@ resources:
           service_name: iam
           resource: Role
           path: Status.ACKResourceMetadata.ARN
+      RemoteAccess.SourceSecurityGroups:
+        references:
+          service_name: ec2
+          resource: SecurityGroup
+          path: Status.ID
       Subnets:
         references:
           service_name: ec2

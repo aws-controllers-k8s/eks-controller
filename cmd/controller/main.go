@@ -57,8 +57,8 @@ func init() {
 
 	_ = svctypes.AddToScheme(scheme)
 	_ = ackv1alpha1.AddToScheme(scheme)
-	_ = iamapitypes.AddToScheme(scheme)
 	_ = ec2apitypes.AddToScheme(scheme)
+	_ = iamapitypes.AddToScheme(scheme)
 }
 
 func main() {

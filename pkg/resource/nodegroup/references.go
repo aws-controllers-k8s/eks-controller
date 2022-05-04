@@ -36,6 +36,9 @@ import (
 // +kubebuilder:rbac:groups=iam.services.k8s.aws,resources=roles,verbs=get;list
 // +kubebuilder:rbac:groups=iam.services.k8s.aws,resources=roles/status,verbs=get;list
 
+// +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=securitygroups,verbs=get;list
+// +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=securitygroups/status,verbs=get;list
+
 // +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=subnets,verbs=get;list
 // +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=subnets/status,verbs=get;list
 
@@ -59,6 +62,9 @@ func (rm *resourceManager) ResolveReferences(
 	}
 	if err == nil {
 		err = resolveReferenceForNodeRole(ctx, apiReader, namespace, ko)
+	}
+	if err == nil {
+		err = resolveReferenceForRemoteAccess_SourceSecurityGroups(ctx, apiReader, namespace, ko)
 	}
 	if err == nil {
 		err = resolveReferenceForSubnets(ctx, apiReader, namespace, ko)
@@ -85,6 +91,11 @@ func validateReferenceFields(ko *svcapitypes.Nodegroup) error {
 	if ko.Spec.NodeRoleRef == nil && ko.Spec.NodeRole == nil {
 		return ackerr.ResourceReferenceOrIDRequiredFor("NodeRole", "NodeRoleRef")
 	}
+	if ko.Spec.RemoteAccess != nil {
+		if ko.Spec.RemoteAccess.SourceSecurityGroupRefs != nil && ko.Spec.RemoteAccess.SourceSecurityGroups != nil {
+			return ackerr.ResourceReferenceAndIDNotSupportedFor("RemoteAccess.SourceSecurityGroups", "RemoteAccess.SourceSecurityGroupRefs")
+		}
+	}
 	if ko.Spec.SubnetRefs != nil && ko.Spec.Subnets != nil {
 		return ackerr.ResourceReferenceAndIDNotSupportedFor("Subnets", "SubnetRefs")
 	}
@@ -97,7 +108,7 @@ func validateReferenceFields(ko *svcapitypes.Nodegroup) error {
 // hasNonNilReferences returns true if resource contains a reference to another
 // resource
 func hasNonNilReferences(ko *svcapitypes.Nodegroup) bool {
-	return false || (ko.Spec.ClusterRef != nil) || (ko.Spec.NodeRoleRef != nil) || (ko.Spec.SubnetRefs != nil)
+	return false || (ko.Spec.ClusterRef != nil) || (ko.Spec.NodeRoleRef != nil) || (ko.Spec.RemoteAccess != nil && ko.Spec.RemoteAccess.SourceSecurityGroupRefs != nil) || (ko.Spec.SubnetRefs != nil)
 }
 
 // resolveReferenceForClusterName reads the resource referenced
@@ -210,6 +221,70 @@ func resolveReferenceForNodeRole(
 		}
 		referencedValue := string(*obj.Status.ACKResourceMetadata.ARN)
 		ko.Spec.NodeRole = &referencedValue
+	}
+	return nil
+}
+
+// resolveReferenceForRemoteAccess_SourceSecurityGroups reads the resource referenced
+// from RemoteAccess.SourceSecurityGroupRefs field and sets the RemoteAccess.SourceSecurityGroups
+// from referenced resource
+func resolveReferenceForRemoteAccess_SourceSecurityGroups(
+	ctx context.Context,
+	apiReader client.Reader,
+	namespace string,
+	ko *svcapitypes.Nodegroup,
+) error {
+	if ko.Spec.RemoteAccess == nil {
+		return nil
+	}
+	if ko.Spec.RemoteAccess.SourceSecurityGroupRefs != nil &&
+		len(ko.Spec.RemoteAccess.SourceSecurityGroupRefs) > 0 {
+		resolvedReferences := []*string{}
+		for _, arrw := range ko.Spec.RemoteAccess.SourceSecurityGroupRefs {
+			arr := arrw.From
+			if arr == nil || arr.Name == nil || *arr.Name == "" {
+				return fmt.Errorf("provided resource reference is nil or empty")
+			}
+			namespacedName := types.NamespacedName{
+				Namespace: namespace,
+				Name:      *arr.Name,
+			}
+			obj := ec2apitypes.SecurityGroup{}
+			err := apiReader.Get(ctx, namespacedName, &obj)
+			if err != nil {
+				return err
+			}
+			var refResourceSynced, refResourceTerminal bool
+			for _, cond := range obj.Status.Conditions {
+				if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+					cond.Status == corev1.ConditionTrue {
+					refResourceSynced = true
+				}
+				if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+					cond.Status == corev1.ConditionTrue {
+					refResourceTerminal = true
+				}
+			}
+			if refResourceTerminal {
+				return ackerr.ResourceReferenceTerminalFor(
+					"SecurityGroup",
+					namespace, *arr.Name)
+			}
+			if !refResourceSynced {
+				return ackerr.ResourceReferenceNotSyncedFor(
+					"SecurityGroup",
+					namespace, *arr.Name)
+			}
+			if obj.Status.ID == nil {
+				return ackerr.ResourceReferenceMissingTargetFieldFor(
+					"SecurityGroup",
+					namespace, *arr.Name,
+					"Status.ID")
+			}
+			referencedValue := string(*obj.Status.ID)
+			resolvedReferences = append(resolvedReferences, &referencedValue)
+		}
+		ko.Spec.RemoteAccess.SourceSecurityGroups = resolvedReferences
 	}
 	return nil
 }
