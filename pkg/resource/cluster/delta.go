@@ -54,6 +54,13 @@ func newResourceDelta(
 	if ackcompare.HasNilDifference(a.ko.Spec.KubernetesNetworkConfig, b.ko.Spec.KubernetesNetworkConfig) {
 		delta.Add("Spec.KubernetesNetworkConfig", a.ko.Spec.KubernetesNetworkConfig, b.ko.Spec.KubernetesNetworkConfig)
 	} else if a.ko.Spec.KubernetesNetworkConfig != nil && b.ko.Spec.KubernetesNetworkConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.KubernetesNetworkConfig.IPFamily, b.ko.Spec.KubernetesNetworkConfig.IPFamily) {
+			delta.Add("Spec.KubernetesNetworkConfig.IPFamily", a.ko.Spec.KubernetesNetworkConfig.IPFamily, b.ko.Spec.KubernetesNetworkConfig.IPFamily)
+		} else if a.ko.Spec.KubernetesNetworkConfig.IPFamily != nil && b.ko.Spec.KubernetesNetworkConfig.IPFamily != nil {
+			if *a.ko.Spec.KubernetesNetworkConfig.IPFamily != *b.ko.Spec.KubernetesNetworkConfig.IPFamily {
+				delta.Add("Spec.KubernetesNetworkConfig.IPFamily", a.ko.Spec.KubernetesNetworkConfig.IPFamily, b.ko.Spec.KubernetesNetworkConfig.IPFamily)
+			}
+		}
 		if ackcompare.HasNilDifference(a.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR, b.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR) {
 			delta.Add("Spec.KubernetesNetworkConfig.ServiceIPv4CIDR", a.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR, b.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR)
 		} else if a.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR != nil && b.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR != nil {

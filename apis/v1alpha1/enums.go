@@ -123,6 +123,13 @@ const (
 	FargateProfileStatus_SDK_DELETE_FAILED FargateProfileStatus_SDK = "DELETE_FAILED"
 )
 
+type IPFamily string
+
+const (
+	IPFamily_ipv4 IPFamily = "ipv4"
+	IPFamily_ipv6 IPFamily = "ipv6"
+)
+
 type LogType string
 
 const (

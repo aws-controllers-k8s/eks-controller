@@ -35,7 +35,8 @@ spec:
             type: object
           spec:
             description: "AddonSpec defines the desired state of Addon. \n An Amazon
-              EKS add-on."
+              EKS add-on. For more information, see Amazon EKS add-ons (https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html)
+              in the Amazon EKS User Guide."
             properties:
               addonVersion:
                 description: The version of the add-on. The version must match one
@@ -87,8 +88,8 @@ spec:
                 additionalProperties:
                   type: string
                 description: The metadata to apply to the cluster to assist with categorization
-                  and organization. Each tag consists of a key and an optional value,
-                  both of which you define.
+                  and organization. Each tag consists of a key and an optional value.
+                  You define both.
                 type: object
             required:
             - name
