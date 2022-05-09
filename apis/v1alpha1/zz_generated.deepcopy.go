@@ -209,6 +209,11 @@ func (in *AddonSpec) DeepCopyInto(out *AddonSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.ServiceAccountRoleRef != nil {
+		in, out := &in.ServiceAccountRoleRef, &out.ServiceAccountRoleRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Tags != nil {
 		in, out := &in.Tags, &out.Tags
 		*out = make(map[string]*string, len(*in))
@@ -531,6 +536,11 @@ func (in *ClusterSpec) DeepCopyInto(out *ClusterSpec) {
 		in, out := &in.RoleARN, &out.RoleARN
 		*out = new(string)
 		**out = **in
+	}
+	if in.RoleRef != nil {
+		in, out := &in.RoleRef, &out.RoleRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Tags != nil {
 		in, out := &in.Tags, &out.Tags
@@ -1028,6 +1038,11 @@ func (in *FargateProfileSpec) DeepCopyInto(out *FargateProfileSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.PodExecutionRoleRef != nil {
+		in, out := &in.PodExecutionRoleRef, &out.PodExecutionRoleRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Selectors != nil {
 		in, out := &in.Selectors, &out.Selectors
 		*out = make([]*FargateProfileSelector, len(*in))
@@ -1035,6 +1050,17 @@ func (in *FargateProfileSpec) DeepCopyInto(out *FargateProfileSpec) {
 			if (*in)[i] != nil {
 				in, out := &(*in)[i], &(*out)[i]
 				*out = new(FargateProfileSelector)
+				(*in).DeepCopyInto(*out)
+			}
+		}
+	}
+	if in.SubnetRefs != nil {
+		in, out := &in.SubnetRefs, &out.SubnetRefs
+		*out = make([]*corev1alpha1.AWSResourceReferenceWrapper, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(corev1alpha1.AWSResourceReferenceWrapper)
 				(*in).DeepCopyInto(*out)
 			}
 		}
@@ -1641,6 +1667,11 @@ func (in *NodegroupSpec) DeepCopyInto(out *NodegroupSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.NodeRoleRef != nil {
+		in, out := &in.NodeRoleRef, &out.NodeRoleRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.ReleaseVersion != nil {
 		in, out := &in.ReleaseVersion, &out.ReleaseVersion
 		*out = new(string)
@@ -1655,6 +1686,17 @@ func (in *NodegroupSpec) DeepCopyInto(out *NodegroupSpec) {
 		in, out := &in.ScalingConfig, &out.ScalingConfig
 		*out = new(NodegroupScalingConfig)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.SubnetRefs != nil {
+		in, out := &in.SubnetRefs, &out.SubnetRefs
+		*out = make([]*corev1alpha1.AWSResourceReferenceWrapper, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+				(*in).DeepCopyInto(*out)
+			}
+		}
 	}
 	if in.Subnets != nil {
 		in, out := &in.Subnets, &out.Subnets
@@ -2133,6 +2175,17 @@ func (in *RemoteAccessConfig) DeepCopyInto(out *RemoteAccessConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.SourceSecurityGroupRefs != nil {
+		in, out := &in.SourceSecurityGroupRefs, &out.SourceSecurityGroupRefs
+		*out = make([]*corev1alpha1.AWSResourceReferenceWrapper, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+				(*in).DeepCopyInto(*out)
+			}
+		}
+	}
 	if in.SourceSecurityGroups != nil {
 		in, out := &in.SourceSecurityGroups, &out.SourceSecurityGroups
 		*out = make([]*string, len(*in))
@@ -2369,6 +2422,17 @@ func (in *VPCConfigRequest) DeepCopyInto(out *VPCConfigRequest) {
 			}
 		}
 	}
+	if in.SecurityGroupRefs != nil {
+		in, out := &in.SecurityGroupRefs, &out.SecurityGroupRefs
+		*out = make([]*corev1alpha1.AWSResourceReferenceWrapper, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+				(*in).DeepCopyInto(*out)
+			}
+		}
+	}
 	if in.SubnetIDs != nil {
 		in, out := &in.SubnetIDs, &out.SubnetIDs
 		*out = make([]*string, len(*in))
@@ -2377,6 +2441,17 @@ func (in *VPCConfigRequest) DeepCopyInto(out *VPCConfigRequest) {
 				in, out := &(*in)[i], &(*out)[i]
 				*out = new(string)
 				**out = **in
+			}
+		}
+	}
+	if in.SubnetRefs != nil {
+		in, out := &in.SubnetRefs, &out.SubnetRefs
+		*out = make([]*corev1alpha1.AWSResourceReferenceWrapper, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+				(*in).DeepCopyInto(*out)
 			}
 		}
 	}

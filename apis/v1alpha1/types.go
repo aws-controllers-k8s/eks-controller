@@ -347,8 +347,10 @@ type Provider struct {
 // An object representing the remote access configuration for the managed node
 // group.
 type RemoteAccessConfig struct {
-	EC2SshKey            *string   `json:"ec2SshKey,omitempty"`
-	SourceSecurityGroups []*string `json:"sourceSecurityGroups,omitempty"`
+	EC2SshKey *string `json:"ec2SshKey,omitempty"`
+	// Reference field for SourceSecurityGroups
+	SourceSecurityGroupRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"sourceSecurityGroupRefs,omitempty"`
+	SourceSecurityGroups    []*string                                  `json:"sourceSecurityGroups,omitempty"`
 }
 
 // A property that allows a node to repel a set of pods.
@@ -391,7 +393,11 @@ type VPCConfigRequest struct {
 	EndpointPublicAccess  *bool     `json:"endpointPublicAccess,omitempty"`
 	PublicAccessCIDRs     []*string `json:"publicAccessCIDRs,omitempty"`
 	SecurityGroupIDs      []*string `json:"securityGroupIDs,omitempty"`
-	SubnetIDs             []*string `json:"subnetIDs,omitempty"`
+	// Reference field for SecurityGroupIDs
+	SecurityGroupRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"securityGroupRefs,omitempty"`
+	SubnetIDs         []*string                                  `json:"subnetIDs,omitempty"`
+	// Reference field for SubnetIDs
+	SubnetRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"subnetRefs,omitempty"`
 }
 
 // An object representing an Amazon EKS cluster VPC configuration response.

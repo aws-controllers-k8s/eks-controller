@@ -5,6 +5,11 @@ resources:
         references:
           resource: Cluster
           path: Spec.Name
+      ServiceAccountRoleArn:
+        references:
+          service_name: iam
+          resource: Role
+          path: Status.ACKResourceMetadata.ARN
     renames:
       operations:
         CreateAddon:
@@ -34,6 +39,27 @@ resources:
         - MissingParameter
         - ValidationError
   Cluster:
+    fields:
+      EncryptionProvider.Provider.KeyArn:
+        references:
+          service_name: kms
+          resources: Key
+          path: Status.ACKResourceMetadata.ARN
+      RoleArn:
+        references:
+          service_name: iam
+          resource: Role
+          path: Status.ACKResourceMetadata.ARN
+      ResourcesVpcConfig.SecurityGroupIds:
+        references:
+          service_name: ec2
+          resource: SecurityGroup
+          path: Status.ID
+      ResourcesVpcConfig.SubnetIds:
+        references:
+          service_name: ec2
+          resource: Subnet
+          path: Status.SubnetID
     exceptions:
       errors:
         404:
@@ -68,6 +94,16 @@ resources:
         references:
           resource: Cluster
           path: Spec.Name
+      PodExecutionRoleArn:
+        references:
+          service_name: iam
+          resource: Role
+          path: Status.ACKResourceMetadata.ARN
+      Subnets:
+        references:
+          service_name: ec2
+          resource: Subnet
+          path: Status.SubnetID
     renames:
       operations:
         CreateFargateProfile:
@@ -114,6 +150,21 @@ resources:
         references:
           resource: Cluster
           path: Spec.Name
+      NodeRole:
+        references:
+          service_name: iam
+          resource: Role
+          path: Status.ACKResourceMetadata.ARN
+      RemoteAccess.SourceSecurityGroups:
+        references:
+          service_name: ec2
+          resource: SecurityGroup
+          path: Status.ID
+      Subnets:
+        references:
+          service_name: ec2
+          resource: Subnet
+          path: Status.SubnetID
     renames:
       operations:
         CreateNodegroup:

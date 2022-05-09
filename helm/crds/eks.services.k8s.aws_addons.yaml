@@ -84,6 +84,20 @@ spec:
                   accounts on your cluster (https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html)
                   in the Amazon EKS User Guide."
                 type: string
+              serviceAccountRoleRef:
+                description: 'AWSResourceReferenceWrapper provides a wrapper around
+                  *AWSResourceReference type to provide more user friendly syntax
+                  for references using ''from'' field Ex: APIIDRef:   from:     name:
+                  my-api'
+                properties:
+                  from:
+                    description: AWSResourceReference provides all the values necessary
+                      to reference another k8s resource for finding the identifier(Id/ARN/Name)
+                    properties:
+                      name:
+                        type: string
+                    type: object
+                type: object
               tags:
                 additionalProperties:
                   type: string

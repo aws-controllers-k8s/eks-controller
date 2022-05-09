@@ -52,7 +52,8 @@ type AddonSpec struct {
 	// provider created for your cluster. For more information, see Enabling IAM
 	// roles for service accounts on your cluster (https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html)
 	// in the Amazon EKS User Guide.
-	ServiceAccountRoleARN *string `json:"serviceAccountRoleARN,omitempty"`
+	ServiceAccountRoleARN *string                                  `json:"serviceAccountRoleARN,omitempty"`
+	ServiceAccountRoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"serviceAccountRoleRef,omitempty"`
 	// The metadata to apply to the cluster to assist with categorization and organization.
 	// Each tag consists of a key and an optional value. You define both.
 	Tags map[string]*string `json:"tags,omitempty"`

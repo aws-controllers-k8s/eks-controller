@@ -23,6 +23,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	ec2apitypes "github.com/aws-controllers-k8s/ec2-controller/apis/v1alpha1"
+	iamapitypes "github.com/aws-controllers-k8s/iam-controller/apis/v1alpha1"
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
@@ -30,6 +32,12 @@ import (
 
 	svcapitypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 )
+
+// +kubebuilder:rbac:groups=iam.services.k8s.aws,resources=roles,verbs=get;list
+// +kubebuilder:rbac:groups=iam.services.k8s.aws,resources=roles/status,verbs=get;list
+
+// +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=subnets,verbs=get;list
+// +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=subnets/status,verbs=get;list
 
 // ResolveReferences finds if there are any Reference field(s) present
 // inside AWSResource passed in the parameter and attempts to resolve
@@ -49,6 +57,12 @@ func (rm *resourceManager) ResolveReferences(
 	if err == nil {
 		err = resolveReferenceForClusterName(ctx, apiReader, namespace, ko)
 	}
+	if err == nil {
+		err = resolveReferenceForPodExecutionRoleARN(ctx, apiReader, namespace, ko)
+	}
+	if err == nil {
+		err = resolveReferenceForSubnets(ctx, apiReader, namespace, ko)
+	}
 
 	if hasNonNilReferences(ko) {
 		return ackcondition.WithReferencesResolvedCondition(&resource{ko}, err)
@@ -65,13 +79,22 @@ func validateReferenceFields(ko *svcapitypes.FargateProfile) error {
 	if ko.Spec.ClusterRef == nil && ko.Spec.ClusterName == nil {
 		return ackerr.ResourceReferenceOrIDRequiredFor("ClusterName", "ClusterRef")
 	}
+	if ko.Spec.PodExecutionRoleRef != nil && ko.Spec.PodExecutionRoleARN != nil {
+		return ackerr.ResourceReferenceAndIDNotSupportedFor("PodExecutionRoleARN", "PodExecutionRoleRef")
+	}
+	if ko.Spec.PodExecutionRoleRef == nil && ko.Spec.PodExecutionRoleARN == nil {
+		return ackerr.ResourceReferenceOrIDRequiredFor("PodExecutionRoleARN", "PodExecutionRoleRef")
+	}
+	if ko.Spec.SubnetRefs != nil && ko.Spec.Subnets != nil {
+		return ackerr.ResourceReferenceAndIDNotSupportedFor("Subnets", "SubnetRefs")
+	}
 	return nil
 }
 
 // hasNonNilReferences returns true if resource contains a reference to another
 // resource
 func hasNonNilReferences(ko *svcapitypes.FargateProfile) bool {
-	return false || (ko.Spec.ClusterRef != nil)
+	return false || (ko.Spec.ClusterRef != nil) || (ko.Spec.PodExecutionRoleRef != nil) || (ko.Spec.SubnetRefs != nil)
 }
 
 // resolveReferenceForClusterName reads the resource referenced
@@ -127,6 +150,124 @@ func resolveReferenceForClusterName(
 		}
 		referencedValue := string(*obj.Spec.Name)
 		ko.Spec.ClusterName = &referencedValue
+	}
+	return nil
+}
+
+// resolveReferenceForPodExecutionRoleARN reads the resource referenced
+// from PodExecutionRoleRef field and sets the PodExecutionRoleARN
+// from referenced resource
+func resolveReferenceForPodExecutionRoleARN(
+	ctx context.Context,
+	apiReader client.Reader,
+	namespace string,
+	ko *svcapitypes.FargateProfile,
+) error {
+	if ko.Spec.PodExecutionRoleRef != nil &&
+		ko.Spec.PodExecutionRoleRef.From != nil {
+		arr := ko.Spec.PodExecutionRoleRef.From
+		if arr == nil || arr.Name == nil || *arr.Name == "" {
+			return fmt.Errorf("provided resource reference is nil or empty")
+		}
+		namespacedName := types.NamespacedName{
+			Namespace: namespace,
+			Name:      *arr.Name,
+		}
+		obj := iamapitypes.Role{}
+		err := apiReader.Get(ctx, namespacedName, &obj)
+		if err != nil {
+			return err
+		}
+		var refResourceSynced, refResourceTerminal bool
+		for _, cond := range obj.Status.Conditions {
+			if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+				cond.Status == corev1.ConditionTrue {
+				refResourceSynced = true
+			}
+			if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+				cond.Status == corev1.ConditionTrue {
+				refResourceTerminal = true
+			}
+		}
+		if refResourceTerminal {
+			return ackerr.ResourceReferenceTerminalFor(
+				"Role",
+				namespace, *arr.Name)
+		}
+		if !refResourceSynced {
+			return ackerr.ResourceReferenceNotSyncedFor(
+				"Role",
+				namespace, *arr.Name)
+		}
+		if obj.Status.ACKResourceMetadata == nil || obj.Status.ACKResourceMetadata.ARN == nil {
+			return ackerr.ResourceReferenceMissingTargetFieldFor(
+				"Role",
+				namespace, *arr.Name,
+				"Status.ACKResourceMetadata.ARN")
+		}
+		referencedValue := string(*obj.Status.ACKResourceMetadata.ARN)
+		ko.Spec.PodExecutionRoleARN = &referencedValue
+	}
+	return nil
+}
+
+// resolveReferenceForSubnets reads the resource referenced
+// from SubnetRefs field and sets the Subnets
+// from referenced resource
+func resolveReferenceForSubnets(
+	ctx context.Context,
+	apiReader client.Reader,
+	namespace string,
+	ko *svcapitypes.FargateProfile,
+) error {
+	if ko.Spec.SubnetRefs != nil &&
+		len(ko.Spec.SubnetRefs) > 0 {
+		resolvedReferences := []*string{}
+		for _, arrw := range ko.Spec.SubnetRefs {
+			arr := arrw.From
+			if arr == nil || arr.Name == nil || *arr.Name == "" {
+				return fmt.Errorf("provided resource reference is nil or empty")
+			}
+			namespacedName := types.NamespacedName{
+				Namespace: namespace,
+				Name:      *arr.Name,
+			}
+			obj := ec2apitypes.Subnet{}
+			err := apiReader.Get(ctx, namespacedName, &obj)
+			if err != nil {
+				return err
+			}
+			var refResourceSynced, refResourceTerminal bool
+			for _, cond := range obj.Status.Conditions {
+				if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+					cond.Status == corev1.ConditionTrue {
+					refResourceSynced = true
+				}
+				if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+					cond.Status == corev1.ConditionTrue {
+					refResourceTerminal = true
+				}
+			}
+			if refResourceTerminal {
+				return ackerr.ResourceReferenceTerminalFor(
+					"Subnet",
+					namespace, *arr.Name)
+			}
+			if !refResourceSynced {
+				return ackerr.ResourceReferenceNotSyncedFor(
+					"Subnet",
+					namespace, *arr.Name)
+			}
+			if obj.Status.SubnetID == nil {
+				return ackerr.ResourceReferenceMissingTargetFieldFor(
+					"Subnet",
+					namespace, *arr.Name,
+					"Status.SubnetID")
+			}
+			referencedValue := string(*obj.Status.SubnetID)
+			resolvedReferences = append(resolvedReferences, &referencedValue)
+		}
+		ko.Spec.Subnets = resolvedReferences
 	}
 	return nil
 }

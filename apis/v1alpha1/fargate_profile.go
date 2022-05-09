@@ -39,12 +39,13 @@ type FargateProfileSpec struct {
 	// read access to Amazon ECR image repositories. For more information, see Pod
 	// Execution Role (https://docs.aws.amazon.com/eks/latest/userguide/pod-execution-role.html)
 	// in the Amazon EKS User Guide.
-	// +kubebuilder:validation:Required
-	PodExecutionRoleARN *string `json:"podExecutionRoleARN"`
+	PodExecutionRoleARN *string                                  `json:"podExecutionRoleARN,omitempty"`
+	PodExecutionRoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"podExecutionRoleRef,omitempty"`
 	// The selectors to match for pods to use this Fargate profile. Each selector
 	// must have an associated namespace. Optionally, you can also specify labels
 	// for a namespace. You may specify up to five selectors in a Fargate profile.
-	Selectors []*FargateProfileSelector `json:"selectors,omitempty"`
+	Selectors  []*FargateProfileSelector                  `json:"selectors,omitempty"`
+	SubnetRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"subnetRefs,omitempty"`
 	// The IDs of subnets to launch your pods into. At this time, pods running on
 	// Fargate are not assigned public IP addresses, so only private subnets (with
 	// no direct route to an Internet Gateway) are accepted for this parameter.
