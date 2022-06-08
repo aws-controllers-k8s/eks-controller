@@ -332,10 +332,16 @@ func (rm *resourceManager) updateConfig(
 	input := &svcsdk.UpdateNodegroupConfigInput{
 		NodegroupName: desired.ko.Spec.Name,
 		ClusterName:   desired.ko.Spec.ClusterName,
-		ScalingConfig: rm.newNodegroupScalingConfig(desired),
-		UpdateConfig:  rm.newNodegroupUpdateConfig(desired),
 		Labels:        newUpdateLabelsPayload(desired, latest),
 		Taints:        newUpdateTaintsPayload(desired, latest),
+	}
+
+	if desired.ko.Spec.ScalingConfig != nil {
+		input.SetScalingConfig(rm.newNodegroupScalingConfig(desired))
+	}
+
+	if desired.ko.Spec.UpdateConfig != nil {
+		input.SetUpdateConfig(rm.newNodegroupUpdateConfig(desired))
 	}
 
 	_, err = rm.sdkapi.UpdateNodegroupConfigWithContext(ctx, input)
