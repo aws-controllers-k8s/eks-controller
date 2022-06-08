@@ -107,12 +107,17 @@ class TestNodegroup:
 
         wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
 
-        # Update the logging and VPC config fields
+        # Update the update and scaling configs fields
         updates = {
             "spec": {
                 "updateConfig": {
                     "maxUnavailable": None,
                     "maxUnavailablePercentage": 15
+                },
+                "scalingConfig": {
+                    "minSize": 2,
+                    "maxSize": 2,
+                    "desiredSize": 2,
                 }
             }
         }
@@ -132,6 +137,9 @@ class TestNodegroup:
         )
 
         assert aws_res["nodegroup"]["updateConfig"]["maxUnavailablePercentage"] == 15
+        assert aws_res["nodegroup"]["scalingConfig"]["minSize"] == 2
+        assert aws_res["nodegroup"]["scalingConfig"]["maxSize"] == 2
+        assert aws_res["nodegroup"]["scalingConfig"]["desiredSize"] == 2
 
         updates = {
             "spec": {
