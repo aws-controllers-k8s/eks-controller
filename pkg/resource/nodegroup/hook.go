@@ -171,45 +171,44 @@ func (rm *resourceManager) customUpdate(
 	exit := rlog.Trace("rm.customUpdate")
 	defer exit(err)
 
+	// For asynchronous updates, latest(from ReadOne) contains the
+	// outdate values for Spec fields. However the status(Cluster status)
+	// is correct inside latest.
+	// So we construct the updatedRes object from the desired resource to
+	// obtain correct spec fields and then copy the status from latest.
+	updatedRes := rm.concreteResource(desired.DeepCopy())
+	updatedRes.SetStatus(latest)
 	if nodegroupDeleting(latest) {
 		msg := "Nodegroup is currently being deleted"
-		ackcondition.SetSynced(desired, corev1.ConditionFalse, &msg, nil)
-		return desired, requeueWaitWhileDeleting
+		ackcondition.SetSynced(updatedRes, corev1.ConditionFalse, &msg, nil)
+		return updatedRes, requeueWaitWhileDeleting
 	}
 	if !nodegroupActive(latest) {
 		msg := "Nodegroup is in '" + *latest.ko.Status.Status + "' status"
-		ackcondition.SetSynced(desired, corev1.ConditionFalse, &msg, nil)
+		ackcondition.SetSynced(updatedRes, corev1.ConditionFalse, &msg, nil)
 		if nodegroupHasTerminalStatus(latest) {
-			ackcondition.SetTerminal(desired, corev1.ConditionTrue, &msg, nil)
-			return desired, nil
+			ackcondition.SetTerminal(updatedRes, corev1.ConditionTrue, &msg, nil)
+			return updatedRes, nil
 		}
-		return desired, requeueWaitUntilCanModify(latest)
+		return updatedRes, requeueWaitUntilCanModify(latest)
 	}
-
-	// Merge in the information we read from the API call above to the copy of
-	// the original Kubernetes object we passed to the function
-	ko := desired.ko.DeepCopy()
-
-	// None of these methods modify the status, so we should return the latest
-	// status as given by the ReadOne
-	ko.Status = latest.ko.Status
 
 	if delta.DifferentAt("Spec.Labels") || delta.DifferentAt("Spec.Taints") ||
 		delta.DifferentAt("Spec.ScalingConfig") || delta.DifferentAt("Spec.UpdateConfig") {
 		if err := rm.updateConfig(ctx, desired, latest); err != nil {
 			return nil, err
 		}
-		return returnNodegroupUpdating(desired)
+		return returnNodegroupUpdating(updatedRes)
 	}
 	if delta.DifferentAt("Spec.Version") {
 		if err := rm.updateVersion(ctx, desired); err != nil {
 			return nil, err
 		}
-		return returnNodegroupUpdating(desired)
+		return returnNodegroupUpdating(updatedRes)
 	}
 
-	rm.setStatusDefaults(ko)
-	return &resource{ko}, nil
+	rm.setStatusDefaults(updatedRes.ko)
+	return updatedRes, nil
 }
 
 // newUpdateLabelsPayload determines which of the labels should be added or
