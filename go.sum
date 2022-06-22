@@ -69,8 +69,8 @@ github.com/aws-controllers-k8s/ec2-controller v0.0.10/go.mod h1:N8vii7yTsYHmMjOh
 github.com/aws-controllers-k8s/iam-controller v0.0.8 h1:7F4W45I7l30jZZGS8FEesScJmOcnPASCoa1sHBcTLNI=
 github.com/aws-controllers-k8s/iam-controller v0.0.8/go.mod h1:IibRVHZc+MEISws4FXQVC0rGwTeePm/O1Pk4kpXq5x0=
 github.com/aws-controllers-k8s/runtime v0.17.2/go.mod h1:9c2CL3w0BlVkse+foHlP1SkJRqYWLs9H+4X/z+2kE3w=
-github.com/aws-controllers-k8s/runtime v0.19.1 h1:OBV7vbIbLFRpXdAwJfoPGphhjTa7xSc3pS/kuYlKzRU=
-github.com/aws-controllers-k8s/runtime v0.19.1/go.mod h1:oA8ML1/LL3chPn26P6SzBNu1CUI2nekB+PTqykNs0qU=
+github.com/aws-controllers-k8s/runtime v0.19.2 h1:Oar0P5eIIXlA+DolGwurw2+wyY5j+d/dxbisZTsrRLw=
+github.com/aws-controllers-k8s/runtime v0.19.2/go.mod h1:oA8ML1/LL3chPn26P6SzBNu1CUI2nekB+PTqykNs0qU=
 github.com/aws/aws-sdk-go v1.42.0/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
 github.com/aws/aws-sdk-go v1.42.28 h1:YJtgL7IGSN41saY4JLW08jya5nU0vGcuAeAa1OL2M6c=
 github.com/aws/aws-sdk-go v1.42.28/go.mod h1:OGr6lGMAKGlG9CVrYnWYDKIyb829c6EVBRjxqjmPepc=
