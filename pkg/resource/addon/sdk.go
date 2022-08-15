@@ -407,6 +407,9 @@ func (rm *resourceManager) newUpdateRequestPayload(
 ) (*svcsdk.UpdateAddonInput, error) {
 	res := &svcsdk.UpdateAddonInput{}
 
+	if r.ko.Spec.Name != nil {
+		res.SetAddonName(*r.ko.Spec.Name)
+	}
 	if r.ko.Spec.AddonVersion != nil {
 		res.SetAddonVersion(*r.ko.Spec.AddonVersion)
 	}

@@ -625,7 +625,7 @@ func (rm *resourceManager) sdkCreate(
 	}
 
 	rm.setStatusDefaults(ko)
-	// We expect the nodegorup to be in 'CREATING' status since we just issued
+	// We expect the nodegroup to be in 'CREATING' status since we just issued
 	// the call to create it, but I suppose it doesn't hurt to check here.
 	if nodegroupCreating(&resource{ko}) {
 		// Setting resource synced condition to false will trigger a requeue of
