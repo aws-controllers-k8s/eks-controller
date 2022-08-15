@@ -21,6 +21,9 @@ resources:
         DeleteAddon:
           input_fields:
             AddonName: Name
+        UpdateAddon:
+          input_fields:
+            AddonName: Name
     exceptions:
       errors:
         404:
