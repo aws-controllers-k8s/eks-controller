@@ -196,7 +196,7 @@ type KubernetesNetworkConfigResponse struct {
 }
 
 // An object representing a node group launch template specification. The launch
-// template cannot include SubnetId (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateNetworkInterface.html),
+// template can't include SubnetId (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateNetworkInterface.html),
 // IamInstanceProfile (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IamInstanceProfile.html),
 // RequestSpotInstances (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestSpotInstances.html),
 // HibernationOptions (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_HibernationOptionsRequest.html),
@@ -207,7 +207,8 @@ type KubernetesNetworkConfigResponse struct {
 // templates with Amazon EKS, see Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 // in the Amazon EKS User Guide.
 //
-// Specify either name or id, but not both.
+// You must specify either the launch template ID or the launch template name
+// in the request, but not both.
 type LaunchTemplateSpecification struct {
 	ID      *string `json:"id,omitempty"`
 	Name    *string `json:"name,omitempty"`
@@ -266,7 +267,7 @@ type Nodegroup_SDK struct {
 	InstanceTypes []*string          `json:"instanceTypes,omitempty"`
 	Labels        map[string]*string `json:"labels,omitempty"`
 	// An object representing a node group launch template specification. The launch
-	// template cannot include SubnetId (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateNetworkInterface.html),
+	// template can't include SubnetId (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateNetworkInterface.html),
 	// IamInstanceProfile (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IamInstanceProfile.html),
 	// RequestSpotInstances (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestSpotInstances.html),
 	// HibernationOptions (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_HibernationOptionsRequest.html),
@@ -277,7 +278,8 @@ type Nodegroup_SDK struct {
 	// templates with Amazon EKS, see Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
 	//
-	// Specify either name or id, but not both.
+	// You must specify either the launch template ID or the launch template name
+	// in the request, but not both.
 	LaunchTemplate *LaunchTemplateSpecification `json:"launchTemplate,omitempty"`
 	ModifiedAt     *metav1.Time                 `json:"modifiedAt,omitempty"`
 	NodeRole       *string                      `json:"nodeRole,omitempty"`
@@ -353,7 +355,8 @@ type RemoteAccessConfig struct {
 	SourceSecurityGroups    []*string                                  `json:"sourceSecurityGroups,omitempty"`
 }
 
-// A property that allows a node to repel a set of pods.
+// A property that allows a node to repel a set of pods. For more information,
+// see Node taints on managed node groups (https://docs.aws.amazon.com/eks/latest/userguide/node-taints-managed-node-groups.html).
 type Taint struct {
 	Effect *string `json:"effect,omitempty"`
 	Key    *string `json:"key,omitempty"`
@@ -381,7 +384,8 @@ type UpdateParam struct {
 	Value *string `json:"value,omitempty"`
 }
 
-// An object representing the details of an update to a taints payload.
+// An object representing the details of an update to a taints payload. For
+// more information, see Node taints on managed node groups (https://docs.aws.amazon.com/eks/latest/userguide/node-taints-managed-node-groups.html).
 type UpdateTaintsPayload struct {
 	AddOrUpdateTaints []*Taint `json:"addOrUpdateTaints,omitempty"`
 	RemoveTaints      []*Taint `json:"removeTaints,omitempty"`

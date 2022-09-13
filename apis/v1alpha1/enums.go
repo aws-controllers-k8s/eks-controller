@@ -18,12 +18,14 @@ package v1alpha1
 type AMITypes string
 
 const (
-	AMITypes_AL2_x86_64          AMITypes = "AL2_x86_64"
-	AMITypes_AL2_x86_64_GPU      AMITypes = "AL2_x86_64_GPU"
-	AMITypes_AL2_ARM_64          AMITypes = "AL2_ARM_64"
-	AMITypes_CUSTOM              AMITypes = "CUSTOM"
-	AMITypes_BOTTLEROCKET_ARM_64 AMITypes = "BOTTLEROCKET_ARM_64"
-	AMITypes_BOTTLEROCKET_x86_64 AMITypes = "BOTTLEROCKET_x86_64"
+	AMITypes_AL2_x86_64                 AMITypes = "AL2_x86_64"
+	AMITypes_AL2_x86_64_GPU             AMITypes = "AL2_x86_64_GPU"
+	AMITypes_AL2_ARM_64                 AMITypes = "AL2_ARM_64"
+	AMITypes_CUSTOM                     AMITypes = "CUSTOM"
+	AMITypes_BOTTLEROCKET_ARM_64        AMITypes = "BOTTLEROCKET_ARM_64"
+	AMITypes_BOTTLEROCKET_x86_64        AMITypes = "BOTTLEROCKET_x86_64"
+	AMITypes_BOTTLEROCKET_ARM_64_NVIDIA AMITypes = "BOTTLEROCKET_ARM_64_NVIDIA"
+	AMITypes_BOTTLEROCKET_x86_64_NVIDIA AMITypes = "BOTTLEROCKET_x86_64_NVIDIA"
 )
 
 type AddonIssueCode string
@@ -49,6 +51,7 @@ const (
 	AddonStatus_SDK_DELETING      AddonStatus_SDK = "DELETING"
 	AddonStatus_SDK_DELETE_FAILED AddonStatus_SDK = "DELETE_FAILED"
 	AddonStatus_SDK_DEGRADED      AddonStatus_SDK = "DEGRADED"
+	AddonStatus_SDK_UPDATE_FAILED AddonStatus_SDK = "UPDATE_FAILED"
 )
 
 type CapacityTypes string
@@ -161,6 +164,7 @@ const (
 	NodegroupIssueCode_AccessDenied                         NodegroupIssueCode = "AccessDenied"
 	NodegroupIssueCode_InternalFailure                      NodegroupIssueCode = "InternalFailure"
 	NodegroupIssueCode_ClusterUnreachable                   NodegroupIssueCode = "ClusterUnreachable"
+	NodegroupIssueCode_Ec2SubnetMissingIpv6Assignment       NodegroupIssueCode = "Ec2SubnetMissingIpv6Assignment"
 )
 
 type NodegroupStatus_SDK string
@@ -180,6 +184,7 @@ type ResolveConflicts string
 const (
 	ResolveConflicts_OVERWRITE ResolveConflicts = "OVERWRITE"
 	ResolveConflicts_NONE      ResolveConflicts = "NONE"
+	ResolveConflicts_PRESERVE  ResolveConflicts = "PRESERVE"
 )
 
 type TaintEffect string

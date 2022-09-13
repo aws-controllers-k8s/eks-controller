@@ -1,10 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.7.0
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: nodegroups.eks.services.k8s.aws
 spec:
@@ -61,8 +60,7 @@ spec:
               clusterRef:
                 description: 'AWSResourceReferenceWrapper provides a wrapper around
                   *AWSResourceReference type to provide more user friendly syntax
-                  for references using ''from'' field Ex: APIIDRef:   from:     name:
-                  my-api'
+                  for references using ''from'' field Ex: APIIDRef: from: name: my-api'
                 properties:
                   from:
                     description: AWSResourceReference provides all the values necessary
@@ -128,7 +126,7 @@ spec:
                   and associated policies. Before you can launch nodes and register
                   them into a cluster, you must create an IAM role for those nodes
                   to use when they are launched. For more information, see Amazon
-                  EKS node IAM role (https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html)
+                  EKS node IAM role (https://docs.aws.amazon.com/eks/latest/userguide/create-node-role.html)
                   in the Amazon EKS User Guide . If you specify launchTemplate, then
                   don't specify IamInstanceProfile (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IamInstanceProfile.html)
                   in your launch template, or the node group deployment will fail.
@@ -139,8 +137,7 @@ spec:
               nodeRoleRef:
                 description: 'AWSResourceReferenceWrapper provides a wrapper around
                   *AWSResourceReference type to provide more user friendly syntax
-                  for references using ''from'' field Ex: APIIDRef:   from:     name:
-                  my-api'
+                  for references using ''from'' field Ex: APIIDRef: from: name: my-api'
                 properties:
                   from:
                     description: AWSResourceReference provides all the values necessary
@@ -178,8 +175,8 @@ spec:
                     items:
                       description: 'AWSResourceReferenceWrapper provides a wrapper
                         around *AWSResourceReference type to provide more user friendly
-                        syntax for references using ''from'' field Ex: APIIDRef:   from:     name:
-                        my-api'
+                        syntax for references using ''from'' field Ex: APIIDRef: from:
+                        name: my-api'
                       properties:
                         from:
                           description: AWSResourceReference provides all the values
@@ -214,7 +211,7 @@ spec:
                 items:
                   description: 'AWSResourceReferenceWrapper provides a wrapper around
                     *AWSResourceReference type to provide more user friendly syntax
-                    for references using ''from'' field Ex: APIIDRef:   from:     name:
+                    for references using ''from'' field Ex: APIIDRef: from: name:
                     my-api'
                   properties:
                     from:
@@ -248,9 +245,11 @@ spec:
                 type: object
               taints:
                 description: The Kubernetes taints to be applied to the nodes in the
-                  node group.
+                  node group. For more information, see Node taints on managed node
+                  groups (https://docs.aws.amazon.com/eks/latest/userguide/node-taints-managed-node-groups.html).
                 items:
                   description: A property that allows a node to repel a set of pods.
+                    For more information, see Node taints on managed node groups (https://docs.aws.amazon.com/eks/latest/userguide/node-taints-managed-node-groups.html).
                   properties:
                     effect:
                       type: string
@@ -402,9 +401,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
