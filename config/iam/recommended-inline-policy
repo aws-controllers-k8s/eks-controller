@@ -4,7 +4,11 @@
         {
             "Effect": "Allow",
             "Action": [
-                "eks:*"
+                "eks:*",
+                "iam:GetRole",
+                "iam:PassRole",
+                "iam:ListAttachedRolePolicies",
+                "ec2:DescribeSubnets"
             ],
             "Resource": "*"
         }
