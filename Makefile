@@ -11,15 +11,12 @@ GO_LDFLAGS=-ldflags "-X main.version=$(VERSION) \
 			-X main.buildHash=$(GITCOMMIT) \
 			-X main.buildDate=$(BUILDDATE)"
 
-AUTHENTICATED_ACCOUNT_ID=$(shell aws sts get-caller-identity --output text --query "Account")
-
 .PHONY: all test local-test
 
 all: test
 
 local-run-controller: ## Run a controller image locally for SERVICE
 	@go run ./cmd/controller/main.go \
-		--aws-account-id=$(AUTHENTICATED_ACCOUNT_ID) \
 		--aws-region=us-west-2 \
 		--enable-development-logging \
 		--log-level=debug
