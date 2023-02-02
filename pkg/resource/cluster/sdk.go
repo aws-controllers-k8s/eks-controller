@@ -172,7 +172,7 @@ func (rm *resourceManager) sdkFind(
 			if resp.Cluster.Identity.Oidc.Issuer != nil {
 				f7f0.Issuer = resp.Cluster.Identity.Oidc.Issuer
 			}
-			f7.OIDC = f7f0
+			f7.OIDc = f7f0
 		}
 		ko.Status.Identity = f7
 	} else {
@@ -441,7 +441,7 @@ func (rm *resourceManager) sdkCreate(
 			if resp.Cluster.Identity.Oidc.Issuer != nil {
 				f7f0.Issuer = resp.Cluster.Identity.Oidc.Issuer
 			}
-			f7.OIDC = f7f0
+			f7.OIDc = f7f0
 		}
 		ko.Status.Identity = f7
 	} else {

@@ -24,6 +24,7 @@ import (
 //
 // An object representing an Amazon EKS managed node group.
 type NodegroupSpec struct {
+
 	// The AMI type for your node group. GPU instance types should use the AL2_x86_64_GPU
 	// AMI type. Non-GPU instances should use the AL2_x86_64 AMI type. Arm instances
 	// should use the AL2_ARM_64 AMI type. All types use the Amazon EKS optimized

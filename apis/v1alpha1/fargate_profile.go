@@ -24,6 +24,7 @@ import (
 //
 // An object representing an Fargate profile.
 type FargateProfileSpec struct {
+
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
