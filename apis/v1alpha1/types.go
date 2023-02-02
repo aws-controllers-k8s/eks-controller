@@ -165,7 +165,7 @@ type FargateProfile_SDK struct {
 type Identity struct {
 	// An object representing the OpenID Connect (https://openid.net/connect/) (OIDC)
 	// identity provider information for the cluster.
-	OIDc *OIDC `json:"oidc,omitempty"`
+	OIDC *OIDC `json:"oidc,omitempty"`
 }
 
 // An object representing an identity provider configuration.
@@ -314,7 +314,7 @@ type OIDC struct {
 
 // An object that represents the configuration for an OpenID Connect (OIDC)
 // identity provider.
-type OIDcIdentityProviderConfig struct {
+type OIDCIdentityProviderConfig struct {
 	ClientID                   *string            `json:"clientID,omitempty"`
 	ClusterName                *string            `json:"clusterName,omitempty"`
 	GroupsClaim                *string            `json:"groupsClaim,omitempty"`
@@ -331,7 +331,7 @@ type OIDcIdentityProviderConfig struct {
 // an OIDC identity provider to your cluster, review the considerations in Authenticating
 // users for your cluster from an OpenID Connect identity provider (https://docs.aws.amazon.com/eks/latest/userguide/authenticate-oidc-identity-provider.html)
 // in the Amazon EKS User Guide.
-type OIDcIdentityProviderConfigRequest struct {
+type OIDCIdentityProviderConfigRequest struct {
 	ClientID                   *string `json:"clientID,omitempty"`
 	GroupsClaim                *string `json:"groupsClaim,omitempty"`
 	GroupsPrefix               *string `json:"groupsPrefix,omitempty"`
