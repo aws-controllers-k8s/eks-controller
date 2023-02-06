@@ -109,44 +109,71 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Spec.ClusterName = nil
 	}
+	if resp.Addon.ConfigurationValues != nil {
+		ko.Spec.ConfigurationValues = resp.Addon.ConfigurationValues
+	} else {
+		ko.Spec.ConfigurationValues = nil
+	}
 	if resp.Addon.CreatedAt != nil {
 		ko.Status.CreatedAt = &metav1.Time{*resp.Addon.CreatedAt}
 	} else {
 		ko.Status.CreatedAt = nil
 	}
 	if resp.Addon.Health != nil {
-		f5 := &svcapitypes.AddonHealth{}
+		f6 := &svcapitypes.AddonHealth{}
 		if resp.Addon.Health.Issues != nil {
-			f5f0 := []*svcapitypes.AddonIssue{}
-			for _, f5f0iter := range resp.Addon.Health.Issues {
-				f5f0elem := &svcapitypes.AddonIssue{}
-				if f5f0iter.Code != nil {
-					f5f0elem.Code = f5f0iter.Code
+			f6f0 := []*svcapitypes.AddonIssue{}
+			for _, f6f0iter := range resp.Addon.Health.Issues {
+				f6f0elem := &svcapitypes.AddonIssue{}
+				if f6f0iter.Code != nil {
+					f6f0elem.Code = f6f0iter.Code
 				}
-				if f5f0iter.Message != nil {
-					f5f0elem.Message = f5f0iter.Message
+				if f6f0iter.Message != nil {
+					f6f0elem.Message = f6f0iter.Message
 				}
-				if f5f0iter.ResourceIds != nil {
-					f5f0elemf2 := []*string{}
-					for _, f5f0elemf2iter := range f5f0iter.ResourceIds {
-						var f5f0elemf2elem string
-						f5f0elemf2elem = *f5f0elemf2iter
-						f5f0elemf2 = append(f5f0elemf2, &f5f0elemf2elem)
+				if f6f0iter.ResourceIds != nil {
+					f6f0elemf2 := []*string{}
+					for _, f6f0elemf2iter := range f6f0iter.ResourceIds {
+						var f6f0elemf2elem string
+						f6f0elemf2elem = *f6f0elemf2iter
+						f6f0elemf2 = append(f6f0elemf2, &f6f0elemf2elem)
 					}
-					f5f0elem.ResourceIDs = f5f0elemf2
+					f6f0elem.ResourceIDs = f6f0elemf2
 				}
-				f5f0 = append(f5f0, f5f0elem)
+				f6f0 = append(f6f0, f6f0elem)
 			}
-			f5.Issues = f5f0
+			f6.Issues = f6f0
 		}
-		ko.Status.Health = f5
+		ko.Status.Health = f6
 	} else {
 		ko.Status.Health = nil
+	}
+	if resp.Addon.MarketplaceInformation != nil {
+		f7 := &svcapitypes.MarketplaceInformation{}
+		if resp.Addon.MarketplaceInformation.ProductId != nil {
+			f7.ProductID = resp.Addon.MarketplaceInformation.ProductId
+		}
+		if resp.Addon.MarketplaceInformation.ProductUrl != nil {
+			f7.ProductURL = resp.Addon.MarketplaceInformation.ProductUrl
+		}
+		ko.Status.MarketplaceInformation = f7
+	} else {
+		ko.Status.MarketplaceInformation = nil
 	}
 	if resp.Addon.ModifiedAt != nil {
 		ko.Status.ModifiedAt = &metav1.Time{*resp.Addon.ModifiedAt}
 	} else {
 		ko.Status.ModifiedAt = nil
+	}
+	if resp.Addon.Owner != nil {
+		ko.Status.Owner = resp.Addon.Owner
+	} else {
+		ko.Status.Owner = nil
+	}
+	if resp.Addon.Publisher != nil {
+		ko.Status.Publisher = resp.Addon.Publisher
+	} else {
+		ko.Status.Publisher = nil
 	}
 	if resp.Addon.ServiceAccountRoleArn != nil {
 		ko.Spec.ServiceAccountRoleARN = resp.Addon.ServiceAccountRoleArn
@@ -159,13 +186,13 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.Status = nil
 	}
 	if resp.Addon.Tags != nil {
-		f9 := map[string]*string{}
-		for f9key, f9valiter := range resp.Addon.Tags {
-			var f9val string
-			f9val = *f9valiter
-			f9[f9key] = &f9val
+		f13 := map[string]*string{}
+		for f13key, f13valiter := range resp.Addon.Tags {
+			var f13val string
+			f13val = *f13valiter
+			f13[f13key] = &f13val
 		}
-		ko.Spec.Tags = f9
+		ko.Spec.Tags = f13
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -251,44 +278,71 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Spec.ClusterName = nil
 	}
+	if resp.Addon.ConfigurationValues != nil {
+		ko.Spec.ConfigurationValues = resp.Addon.ConfigurationValues
+	} else {
+		ko.Spec.ConfigurationValues = nil
+	}
 	if resp.Addon.CreatedAt != nil {
 		ko.Status.CreatedAt = &metav1.Time{*resp.Addon.CreatedAt}
 	} else {
 		ko.Status.CreatedAt = nil
 	}
 	if resp.Addon.Health != nil {
-		f5 := &svcapitypes.AddonHealth{}
+		f6 := &svcapitypes.AddonHealth{}
 		if resp.Addon.Health.Issues != nil {
-			f5f0 := []*svcapitypes.AddonIssue{}
-			for _, f5f0iter := range resp.Addon.Health.Issues {
-				f5f0elem := &svcapitypes.AddonIssue{}
-				if f5f0iter.Code != nil {
-					f5f0elem.Code = f5f0iter.Code
+			f6f0 := []*svcapitypes.AddonIssue{}
+			for _, f6f0iter := range resp.Addon.Health.Issues {
+				f6f0elem := &svcapitypes.AddonIssue{}
+				if f6f0iter.Code != nil {
+					f6f0elem.Code = f6f0iter.Code
 				}
-				if f5f0iter.Message != nil {
-					f5f0elem.Message = f5f0iter.Message
+				if f6f0iter.Message != nil {
+					f6f0elem.Message = f6f0iter.Message
 				}
-				if f5f0iter.ResourceIds != nil {
-					f5f0elemf2 := []*string{}
-					for _, f5f0elemf2iter := range f5f0iter.ResourceIds {
-						var f5f0elemf2elem string
-						f5f0elemf2elem = *f5f0elemf2iter
-						f5f0elemf2 = append(f5f0elemf2, &f5f0elemf2elem)
+				if f6f0iter.ResourceIds != nil {
+					f6f0elemf2 := []*string{}
+					for _, f6f0elemf2iter := range f6f0iter.ResourceIds {
+						var f6f0elemf2elem string
+						f6f0elemf2elem = *f6f0elemf2iter
+						f6f0elemf2 = append(f6f0elemf2, &f6f0elemf2elem)
 					}
-					f5f0elem.ResourceIDs = f5f0elemf2
+					f6f0elem.ResourceIDs = f6f0elemf2
 				}
-				f5f0 = append(f5f0, f5f0elem)
+				f6f0 = append(f6f0, f6f0elem)
 			}
-			f5.Issues = f5f0
+			f6.Issues = f6f0
 		}
-		ko.Status.Health = f5
+		ko.Status.Health = f6
 	} else {
 		ko.Status.Health = nil
+	}
+	if resp.Addon.MarketplaceInformation != nil {
+		f7 := &svcapitypes.MarketplaceInformation{}
+		if resp.Addon.MarketplaceInformation.ProductId != nil {
+			f7.ProductID = resp.Addon.MarketplaceInformation.ProductId
+		}
+		if resp.Addon.MarketplaceInformation.ProductUrl != nil {
+			f7.ProductURL = resp.Addon.MarketplaceInformation.ProductUrl
+		}
+		ko.Status.MarketplaceInformation = f7
+	} else {
+		ko.Status.MarketplaceInformation = nil
 	}
 	if resp.Addon.ModifiedAt != nil {
 		ko.Status.ModifiedAt = &metav1.Time{*resp.Addon.ModifiedAt}
 	} else {
 		ko.Status.ModifiedAt = nil
+	}
+	if resp.Addon.Owner != nil {
+		ko.Status.Owner = resp.Addon.Owner
+	} else {
+		ko.Status.Owner = nil
+	}
+	if resp.Addon.Publisher != nil {
+		ko.Status.Publisher = resp.Addon.Publisher
+	} else {
+		ko.Status.Publisher = nil
 	}
 	if resp.Addon.ServiceAccountRoleArn != nil {
 		ko.Spec.ServiceAccountRoleARN = resp.Addon.ServiceAccountRoleArn
@@ -301,13 +355,13 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.Status = nil
 	}
 	if resp.Addon.Tags != nil {
-		f9 := map[string]*string{}
-		for f9key, f9valiter := range resp.Addon.Tags {
-			var f9val string
-			f9val = *f9valiter
-			f9[f9key] = &f9val
+		f13 := map[string]*string{}
+		for f13key, f13valiter := range resp.Addon.Tags {
+			var f13val string
+			f13val = *f13valiter
+			f13[f13key] = &f13val
 		}
-		ko.Spec.Tags = f9
+		ko.Spec.Tags = f13
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -336,6 +390,9 @@ func (rm *resourceManager) newCreateRequestPayload(
 	if r.ko.Spec.ClusterName != nil {
 		res.SetClusterName(*r.ko.Spec.ClusterName)
 	}
+	if r.ko.Spec.ConfigurationValues != nil {
+		res.SetConfigurationValues(*r.ko.Spec.ConfigurationValues)
+	}
 	if r.ko.Spec.ResolveConflicts != nil {
 		res.SetResolveConflicts(*r.ko.Spec.ResolveConflicts)
 	}
@@ -343,13 +400,13 @@ func (rm *resourceManager) newCreateRequestPayload(
 		res.SetServiceAccountRoleArn(*r.ko.Spec.ServiceAccountRoleARN)
 	}
 	if r.ko.Spec.Tags != nil {
-		f6 := map[string]*string{}
-		for f6key, f6valiter := range r.ko.Spec.Tags {
-			var f6val string
-			f6val = *f6valiter
-			f6[f6key] = &f6val
+		f7 := map[string]*string{}
+		for f7key, f7valiter := range r.ko.Spec.Tags {
+			var f7val string
+			f7val = *f7valiter
+			f7[f7key] = &f7val
 		}
-		res.SetTags(f6)
+		res.SetTags(f7)
 	}
 
 	return res, nil
@@ -418,6 +475,9 @@ func (rm *resourceManager) newUpdateRequestPayload(
 	}
 	if r.ko.Spec.ClusterName != nil {
 		res.SetClusterName(*r.ko.Spec.ClusterName)
+	}
+	if r.ko.Spec.ConfigurationValues != nil {
+		res.SetConfigurationValues(*r.ko.Spec.ConfigurationValues)
 	}
 	if r.ko.Spec.ResolveConflicts != nil {
 		res.SetResolveConflicts(*r.ko.Spec.ResolveConflicts)
