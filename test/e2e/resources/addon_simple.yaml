@@ -6,3 +6,5 @@ spec:
   name: $ADDON_NAME
   addonVersion: $ADDON_VERSION
   clusterName: $CLUSTER_NAME
+  configurationValues: $CONFIGURATION_VALUES
+  resolveConflicts: $RESOLVE_CONFLICTS

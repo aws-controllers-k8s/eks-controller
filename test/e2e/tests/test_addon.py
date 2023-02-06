@@ -38,7 +38,9 @@ def wait_for_addon_deleted(eks_client, cluster_name, addon_name):
 @pytest.fixture
 def coredns_addon(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceReference, Dict]:
     addon_name = "coredns"
-    addon_version = "v1.8.4-eksbuild.1"
+    addon_version = "v1.8.7-eksbuild.3"
+    configuration_values = "{\"resources\":{\"limits\":{\"memory\":\"64Mi\"},\"requests\":{\"cpu\":\"10m\",\"memory\":\"64Mi\"}}}"
+    resolve_conflicts = "OVERWRITE"
 
     (ref, cr) = simple_cluster
     cluster_name = cr["spec"]["name"]
@@ -52,6 +54,8 @@ def coredns_addon(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceReferen
     replacements["CR_NAME"] = cr_name
     replacements["ADDON_NAME"] = addon_name
     replacements["ADDON_VERSION"] = addon_version
+    replacements["CONFIGURATION_VALUES"] = configuration_values
+    replacements["RESOLVE_CONFLICTS"] = resolve_conflicts
 
     resource_data = load_eks_resource(
         "addon_simple",
