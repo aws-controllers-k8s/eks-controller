@@ -14,12 +14,12 @@
 """Integration tests for the EKS Addon resource
 """
 
+import json
 import logging
 import time
 from typing import Dict, Tuple
 
 import pytest
-
 from acktest.k8s import resource as k8s
 from acktest.resources import random_suffix_name
 from e2e import CRD_VERSION, service_marker, CRD_GROUP, load_eks_resource
@@ -31,15 +31,18 @@ RESOURCE_PLURAL = 'addons'
 
 CREATE_WAIT_AFTER_SECONDS = 10
 
+
 def wait_for_addon_deleted(eks_client, cluster_name, addon_name):
     waiter = eks_client.get_waiter('addon_deleted')
     waiter.wait(clusterName=cluster_name, addonName=addon_name)
+
 
 @pytest.fixture
 def coredns_addon(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceReference, Dict]:
     addon_name = "coredns"
     addon_version = "v1.8.7-eksbuild.3"
-    configuration_values = "{\"resources\":{\"limits\":{\"memory\":\"64Mi\"},\"requests\":{\"cpu\":\"10m\",\"memory\":\"64Mi\"}}}"
+    configuration_values = json.dumps(
+        {"resources": {"limits": {"memory": "64Mi"}, "requests": {"cpu": "10m", "memory": "64Mi"}}})
     resolve_conflicts = "OVERWRITE"
 
     (ref, cr) = simple_cluster
@@ -82,6 +85,7 @@ def coredns_addon(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceReferen
     assert deleted
 
     wait_for_addon_deleted(eks_client, cluster_name, cr_name)
+
 
 @service_marker
 class TestAddon:
