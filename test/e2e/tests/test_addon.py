@@ -96,15 +96,18 @@ class TestAddon:
         cr_name = ref.name
 
         addon_name = cr["spec"]["name"]
+        configuration_values = cr["spec"]["configurationValues"]
 
         try:
             aws_res = eks_client.describe_addon(
                 clusterName=cluster_name,
-                addonName=addon_name
+                addonName=addon_name,
+                configurationValues=configuration_values
             )
             assert aws_res is not None
 
             assert aws_res["addon"]["addonName"] == addon_name
+            assert aws_res["addon"]["configurationValues"] == configuration_values
             assert aws_res["addon"]["addonArn"] is not None
         except eks_client.exceptions.ResourceNotFoundException:
             pytest.fail(f"Could not find Addon '{cr_name}' in EKS")
