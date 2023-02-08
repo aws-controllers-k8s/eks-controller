@@ -14,6 +14,7 @@
 """Integration tests for the EKS Addon resource
 """
 
+import json
 import logging
 import time
 from typing import Dict, Tuple
@@ -40,7 +41,8 @@ def wait_for_addon_deleted(eks_client, cluster_name, addon_name):
 def coredns_addon(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceReference, Dict]:
     addon_name = "coredns"
     addon_version = "v1.8.7-eksbuild.3"
-    configuration_values = "{\"resources\":{\"limits\":{\"memory\":\"64Mi\"},\"requests\":{\"cpu\":\"10m\",\"memory\":\"64Mi\"}}}"
+    configuration_values = json.dumps(
+        {"resources": {"limits": {"memory": "64Mi"}, "requests": {"cpu": "10m", "memory": "64Mi"}}})
     resolve_conflicts = "OVERWRITE"
 
     (ref, cr) = simple_cluster
@@ -99,8 +101,7 @@ class TestAddon:
         try:
             aws_res = eks_client.describe_addon(
                 clusterName=cluster_name,
-                addonName=addon_name,
-                configurationValues=configuration_values
+                addonName=addon_name
             )
             assert aws_res is not None
 
