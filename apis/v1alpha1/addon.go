@@ -35,8 +35,13 @@ type AddonSpec struct {
 	// The name of the cluster to create the add-on for.
 	ClusterName *string                                  `json:"clusterName,omitempty"`
 	ClusterRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
-	// The name of the add-on. The name must match one of the names returned by
-	// DescribeAddonVersions (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonVersions.html).
+	// The set of configuration values for the add-on that's created. The values
+	// that you provide are validated against the schema in DescribeAddonConfiguration
+	// (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonConfiguration.html).
+	ConfigurationValues *string `json:"configurationValues,omitempty"`
+	// The name of the add-on. The name must match one of the names that DescribeAddonVersions
+	// (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonVersions.html)
+	// returns.
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
 	// How to resolve field value conflicts for an Amazon EKS add-on. Conflicts
@@ -95,9 +100,18 @@ type AddonStatus struct {
 	// An object that represents the health of the add-on.
 	// +kubebuilder:validation:Optional
 	Health *AddonHealth `json:"health,omitempty"`
+	// Information about an Amazon EKS add-on from the Amazon Web Services Marketplace.
+	// +kubebuilder:validation:Optional
+	MarketplaceInformation *MarketplaceInformation `json:"marketplaceInformation,omitempty"`
 	// The date and time that the add-on was last modified.
 	// +kubebuilder:validation:Optional
 	ModifiedAt *metav1.Time `json:"modifiedAt,omitempty"`
+	// The owner of the add-on.
+	// +kubebuilder:validation:Optional
+	Owner *string `json:"owner,omitempty"`
+	// The publisher of the add-on.
+	// +kubebuilder:validation:Optional
+	Publisher *string `json:"publisher,omitempty"`
 	// The status of the add-on.
 	// +kubebuilder:validation:Optional
 	Status *string `json:"status,omitempty"`

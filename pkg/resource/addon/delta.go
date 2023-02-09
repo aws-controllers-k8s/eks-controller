@@ -65,6 +65,13 @@ func newResourceDelta(
 	if !reflect.DeepEqual(a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef) {
 		delta.Add("Spec.ClusterRef", a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef)
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.ConfigurationValues, b.ko.Spec.ConfigurationValues) {
+		delta.Add("Spec.ConfigurationValues", a.ko.Spec.ConfigurationValues, b.ko.Spec.ConfigurationValues)
+	} else if a.ko.Spec.ConfigurationValues != nil && b.ko.Spec.ConfigurationValues != nil {
+		if *a.ko.Spec.ConfigurationValues != *b.ko.Spec.ConfigurationValues {
+			delta.Add("Spec.ConfigurationValues", a.ko.Spec.ConfigurationValues, b.ko.Spec.ConfigurationValues)
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Name, b.ko.Spec.Name) {
 		delta.Add("Spec.Name", a.ko.Spec.Name, b.ko.Spec.Name)
 	} else if a.ko.Spec.Name != nil && b.ko.Spec.Name != nil {
