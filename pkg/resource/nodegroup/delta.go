@@ -20,12 +20,14 @@ import (
 	"reflect"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
+	acktags "github.com/aws-controllers-k8s/runtime/pkg/tags"
 )
 
 // Hack to avoid import errors during build...
 var (
 	_ = &bytes.Buffer{}
 	_ = &reflect.Method{}
+	_ = &acktags.Tags{}
 )
 
 // newResourceDelta returns a new `ackcompare.Delta` used to compare two
@@ -184,12 +186,8 @@ func newResourceDelta(
 	if !ackcompare.SliceStringPEqual(a.ko.Spec.Subnets, b.ko.Spec.Subnets) {
 		delta.Add("Spec.Subnets", a.ko.Spec.Subnets, b.ko.Spec.Subnets)
 	}
-	if ackcompare.HasNilDifference(a.ko.Spec.Tags, b.ko.Spec.Tags) {
+	if !ackcompare.MapStringStringEqual(ToACKTags(a.ko.Spec.Tags), ToACKTags(b.ko.Spec.Tags)) {
 		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
-	} else if a.ko.Spec.Tags != nil && b.ko.Spec.Tags != nil {
-		if !ackcompare.MapStringStringPEqual(a.ko.Spec.Tags, b.ko.Spec.Tags) {
-			delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
-		}
 	}
 	if !reflect.DeepEqual(a.ko.Spec.Taints, b.ko.Spec.Taints) {
 		delta.Add("Spec.Taints", a.ko.Spec.Taints, b.ko.Spec.Taints)

@@ -92,6 +92,31 @@ spec:
               name:
                 description: The unique name to give to your cluster.
                 type: string
+              outpostConfig:
+                description: An object representing the configuration of your local
+                  Amazon EKS cluster on an Amazon Web Services Outpost. Before creating
+                  a local cluster on an Outpost, review Local clusters for Amazon
+                  EKS on Amazon Web Services Outposts (https://docs.aws.amazon.com/eks/latest/userguide/eks-outposts-local-cluster-overview.html)
+                  in the Amazon EKS User Guide. This object isn't available for creating
+                  Amazon EKS clusters on the Amazon Web Services cloud.
+                properties:
+                  controlPlaneInstanceType:
+                    type: string
+                  controlPlanePlacement:
+                    description: The placement configuration for all the control plane
+                      instances of your local Amazon EKS cluster on an Amazon Web
+                      Services Outpost. For more information, see Capacity considerations
+                      (https://docs.aws.amazon.com/eks/latest/userguide/eks-outposts-capacity-considerations.html)
+                      in the Amazon EKS User Guide
+                    properties:
+                      groupName:
+                        type: string
+                    type: object
+                  outpostARNs:
+                    items:
+                      type: string
+                    type: array
+                type: object
               resourcesVPCConfig:
                 description: The VPC configuration that's used by the cluster control
                   plane. Amazon EKS VPC resources have specific requirements to work
@@ -118,10 +143,10 @@ spec:
                   securityGroupRefs:
                     description: Reference field for SecurityGroupIDs
                     items:
-                      description: 'AWSResourceReferenceWrapper provides a wrapper
+                      description: "AWSResourceReferenceWrapper provides a wrapper
                         around *AWSResourceReference type to provide more user friendly
-                        syntax for references using ''from'' field Ex: APIIDRef: from:
-                        name: my-api'
+                        syntax for references using 'from' field Ex: APIIDRef: \n
+                        from: name: my-api"
                       properties:
                         from:
                           description: AWSResourceReference provides all the values
@@ -140,10 +165,10 @@ spec:
                   subnetRefs:
                     description: Reference field for SubnetIDs
                     items:
-                      description: 'AWSResourceReferenceWrapper provides a wrapper
+                      description: "AWSResourceReferenceWrapper provides a wrapper
                         around *AWSResourceReference type to provide more user friendly
-                        syntax for references using ''from'' field Ex: APIIDRef: from:
-                        name: my-api'
+                        syntax for references using 'from' field Ex: APIIDRef: \n
+                        from: name: my-api"
                       properties:
                         from:
                           description: AWSResourceReference provides all the values
@@ -164,9 +189,9 @@ spec:
                   in the Amazon EKS User Guide .
                 type: string
               roleRef:
-                description: 'AWSResourceReferenceWrapper provides a wrapper around
+                description: "AWSResourceReferenceWrapper provides a wrapper around
                   *AWSResourceReference type to provide more user friendly syntax
-                  for references using ''from'' field Ex: APIIDRef: from: name: my-api'
+                  for references using 'from' field Ex: APIIDRef: \n from: name: my-api"
                 properties:
                   from:
                     description: AWSResourceReference provides all the values necessary
@@ -184,9 +209,10 @@ spec:
                   You define both.
                 type: object
               version:
-                description: The desired Kubernetes version for your cluster. If you
-                  don't specify a value here, the latest version available in Amazon
-                  EKS is used.
+                description: "The desired Kubernetes version for your cluster. If
+                  you don't specify a value here, the default version available in
+                  Amazon EKS is used. \n The default version might not be the latest
+                  version available."
                 type: string
             required:
             - name
@@ -284,6 +310,33 @@ spec:
                 type: string
               endpoint:
                 description: The endpoint for your Kubernetes API server.
+                type: string
+              health:
+                description: An object representing the health of your local Amazon
+                  EKS cluster on an Amazon Web Services Outpost. This object isn't
+                  available for clusters on the Amazon Web Services cloud.
+                properties:
+                  issues:
+                    items:
+                      description: An issue with your local Amazon EKS cluster on
+                        an Amazon Web Services Outpost. You can't use this API with
+                        an Amazon EKS cluster on the Amazon Web Services cloud.
+                      properties:
+                        code:
+                          type: string
+                        message:
+                          type: string
+                        resourceIDs:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                type: object
+              id:
+                description: The ID of your local Amazon EKS cluster on an Amazon
+                  Web Services Outpost. This property isn't available for an Amazon
+                  EKS cluster on the Amazon Web Services cloud.
                 type: string
               identity:
                 description: The identity provider information for the cluster.

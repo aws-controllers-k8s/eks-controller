@@ -45,6 +45,13 @@ type ClusterSpec struct {
 	// The unique name to give to your cluster.
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
+	// An object representing the configuration of your local Amazon EKS cluster
+	// on an Amazon Web Services Outpost. Before creating a local cluster on an
+	// Outpost, review Local clusters for Amazon EKS on Amazon Web Services Outposts
+	// (https://docs.aws.amazon.com/eks/latest/userguide/eks-outposts-local-cluster-overview.html)
+	// in the Amazon EKS User Guide. This object isn't available for creating Amazon
+	// EKS clusters on the Amazon Web Services cloud.
+	OutpostConfig *OutpostConfigRequest `json:"outpostConfig,omitempty"`
 	// The VPC configuration that's used by the cluster control plane. Amazon EKS
 	// VPC resources have specific requirements to work properly with Kubernetes.
 	// For more information, see Cluster VPC Considerations (https://docs.aws.amazon.com/eks/latest/userguide/network_reqs.html)
@@ -65,7 +72,9 @@ type ClusterSpec struct {
 	// Each tag consists of a key and an optional value. You define both.
 	Tags map[string]*string `json:"tags,omitempty"`
 	// The desired Kubernetes version for your cluster. If you don't specify a value
-	// here, the latest version available in Amazon EKS is used.
+	// here, the default version available in Amazon EKS is used.
+	//
+	// The default version might not be the latest version available.
 	Version *string `json:"version,omitempty"`
 }
 
@@ -94,6 +103,16 @@ type ClusterStatus struct {
 	// The endpoint for your Kubernetes API server.
 	// +kubebuilder:validation:Optional
 	Endpoint *string `json:"endpoint,omitempty"`
+	// An object representing the health of your local Amazon EKS cluster on an
+	// Amazon Web Services Outpost. This object isn't available for clusters on
+	// the Amazon Web Services cloud.
+	// +kubebuilder:validation:Optional
+	Health *ClusterHealth `json:"health,omitempty"`
+	// The ID of your local Amazon EKS cluster on an Amazon Web Services Outpost.
+	// This property isn't available for an Amazon EKS cluster on the Amazon Web
+	// Services cloud.
+	// +kubebuilder:validation:Optional
+	ID *string `json:"id,omitempty"`
 	// The identity provider information for the cluster.
 	// +kubebuilder:validation:Optional
 	Identity *Identity `json:"identity,omitempty"`
