@@ -89,6 +89,22 @@ type Certificate struct {
 	Data *string `json:"data,omitempty"`
 }
 
+// An object representing the health of your local Amazon EKS cluster on an
+// Amazon Web Services Outpost. You can't use this API with an Amazon EKS cluster
+// on the Amazon Web Services cloud.
+type ClusterHealth struct {
+	Issues []*ClusterIssue `json:"issues,omitempty"`
+}
+
+// An issue with your local Amazon EKS cluster on an Amazon Web Services Outpost.
+// You can't use this API with an Amazon EKS cluster on the Amazon Web Services
+// cloud.
+type ClusterIssue struct {
+	Code        *string   `json:"code,omitempty"`
+	Message     *string   `json:"message,omitempty"`
+	ResourceIDs []*string `json:"resourceIDs,omitempty"`
+}
+
 // An object representing an Amazon EKS cluster.
 type Cluster_SDK struct {
 	ARN *string `json:"arn,omitempty"`
@@ -100,15 +116,24 @@ type Cluster_SDK struct {
 	CreatedAt        *metav1.Time             `json:"createdAt,omitempty"`
 	EncryptionConfig []*EncryptionConfig      `json:"encryptionConfig,omitempty"`
 	Endpoint         *string                  `json:"endpoint,omitempty"`
+	// An object representing the health of your local Amazon EKS cluster on an
+	// Amazon Web Services Outpost. You can't use this API with an Amazon EKS cluster
+	// on the Amazon Web Services cloud.
+	Health *ClusterHealth `json:"health,omitempty"`
+	ID     *string        `json:"id,omitempty"`
 	// An object representing an identity provider.
 	Identity *Identity `json:"identity,omitempty"`
 	// The Kubernetes network configuration for the cluster. The response contains
 	// a value for serviceIpv6Cidr or serviceIpv4Cidr, but not both.
 	KubernetesNetworkConfig *KubernetesNetworkConfigResponse `json:"kubernetesNetworkConfig,omitempty"`
 	// An object representing the logging configuration for resources in your cluster.
-	Logging         *Logging `json:"logging,omitempty"`
-	Name            *string  `json:"name,omitempty"`
-	PlatformVersion *string  `json:"platformVersion,omitempty"`
+	Logging *Logging `json:"logging,omitempty"`
+	Name    *string  `json:"name,omitempty"`
+	// An object representing the configuration of your local Amazon EKS cluster
+	// on an Amazon Web Services Outpost. This API isn't available for Amazon EKS
+	// clusters on the Amazon Web Services cloud.
+	OutpostConfig   *OutpostConfigResponse `json:"outpostConfig,omitempty"`
+	PlatformVersion *string                `json:"platformVersion,omitempty"`
 	// An object representing an Amazon EKS cluster VPC configuration response.
 	ResourcesVPCConfig *VPCConfigResponse `json:"resourcesVPCConfig,omitempty"`
 	RoleARN            *string            `json:"roleARN,omitempty"`
@@ -136,6 +161,22 @@ type ConnectorConfigResponse struct {
 	ActivationID     *string      `json:"activationID,omitempty"`
 	Provider         *string      `json:"provider,omitempty"`
 	RoleARN          *string      `json:"roleARN,omitempty"`
+}
+
+// The placement configuration for all the control plane instances of your local
+// Amazon EKS cluster on an Amazon Web Services Outpost. For more information,
+// see Capacity considerations (https://docs.aws.amazon.com/eks/latest/userguide/eks-outposts-capacity-considerations.html)
+// in the Amazon EKS User Guide
+type ControlPlanePlacementRequest struct {
+	GroupName *string `json:"groupName,omitempty"`
+}
+
+// The placement configuration for all the control plane instances of your local
+// Amazon EKS cluster on an Amazon Web Services Outpost. For more information,
+// see Capacity considerations (https://docs.aws.amazon.com/eks/latest/userguide/eks-outposts-capacity-considerations.html)
+// in the Amazon EKS User Guide.
+type ControlPlanePlacementResponse struct {
+	GroupName *string `json:"groupName,omitempty"`
 }
 
 // The encryption configuration for the cluster.
@@ -328,8 +369,8 @@ type OIDC struct {
 	Issuer *string `json:"issuer,omitempty"`
 }
 
-// An object that represents the configuration for an OpenID Connect (OIDC)
-// identity provider.
+// An object representing the configuration for an OpenID Connect (OIDC) identity
+// provider.
 type OIDCIdentityProviderConfig struct {
 	ClientID                   *string            `json:"clientID,omitempty"`
 	ClusterName                *string            `json:"clusterName,omitempty"`
@@ -355,6 +396,34 @@ type OIDCIdentityProviderConfigRequest struct {
 	IssuerURL                  *string `json:"issuerURL,omitempty"`
 	UsernameClaim              *string `json:"usernameClaim,omitempty"`
 	UsernamePrefix             *string `json:"usernamePrefix,omitempty"`
+}
+
+// The configuration of your local Amazon EKS cluster on an Amazon Web Services
+// Outpost. Before creating a cluster on an Outpost, review Creating a local
+// cluster on an Outpost (https://docs.aws.amazon.com/eks/latest/userguide/eks-outposts-local-cluster-create.html)
+// in the Amazon EKS User Guide. This API isn't available for Amazon EKS clusters
+// on the Amazon Web Services cloud.
+type OutpostConfigRequest struct {
+	ControlPlaneInstanceType *string `json:"controlPlaneInstanceType,omitempty"`
+	// The placement configuration for all the control plane instances of your local
+	// Amazon EKS cluster on an Amazon Web Services Outpost. For more information,
+	// see Capacity considerations (https://docs.aws.amazon.com/eks/latest/userguide/eks-outposts-capacity-considerations.html)
+	// in the Amazon EKS User Guide
+	ControlPlanePlacement *ControlPlanePlacementRequest `json:"controlPlanePlacement,omitempty"`
+	OutpostARNs           []*string                     `json:"outpostARNs,omitempty"`
+}
+
+// An object representing the configuration of your local Amazon EKS cluster
+// on an Amazon Web Services Outpost. This API isn't available for Amazon EKS
+// clusters on the Amazon Web Services cloud.
+type OutpostConfigResponse struct {
+	ControlPlaneInstanceType *string `json:"controlPlaneInstanceType,omitempty"`
+	// The placement configuration for all the control plane instances of your local
+	// Amazon EKS cluster on an Amazon Web Services Outpost. For more information,
+	// see Capacity considerations (https://docs.aws.amazon.com/eks/latest/userguide/eks-outposts-capacity-considerations.html)
+	// in the Amazon EKS User Guide.
+	ControlPlanePlacement *ControlPlanePlacementResponse `json:"controlPlanePlacement,omitempty"`
+	OutpostARNs           []*string                      `json:"outpostARNs,omitempty"`
 }
 
 // Identifies the Key Management Service (KMS) key used to encrypt the secrets.

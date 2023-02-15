@@ -20,12 +20,14 @@ import (
 	"reflect"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
+	acktags "github.com/aws-controllers-k8s/runtime/pkg/tags"
 )
 
 // Hack to avoid import errors during build...
 var (
 	_ = &bytes.Buffer{}
 	_ = &reflect.Method{}
+	_ = &acktags.Tags{}
 )
 
 // newResourceDelta returns a new `ackcompare.Delta` used to compare two
@@ -83,6 +85,31 @@ func newResourceDelta(
 			delta.Add("Spec.Name", a.ko.Spec.Name, b.ko.Spec.Name)
 		}
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.OutpostConfig, b.ko.Spec.OutpostConfig) {
+		delta.Add("Spec.OutpostConfig", a.ko.Spec.OutpostConfig, b.ko.Spec.OutpostConfig)
+	} else if a.ko.Spec.OutpostConfig != nil && b.ko.Spec.OutpostConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.OutpostConfig.ControlPlaneInstanceType, b.ko.Spec.OutpostConfig.ControlPlaneInstanceType) {
+			delta.Add("Spec.OutpostConfig.ControlPlaneInstanceType", a.ko.Spec.OutpostConfig.ControlPlaneInstanceType, b.ko.Spec.OutpostConfig.ControlPlaneInstanceType)
+		} else if a.ko.Spec.OutpostConfig.ControlPlaneInstanceType != nil && b.ko.Spec.OutpostConfig.ControlPlaneInstanceType != nil {
+			if *a.ko.Spec.OutpostConfig.ControlPlaneInstanceType != *b.ko.Spec.OutpostConfig.ControlPlaneInstanceType {
+				delta.Add("Spec.OutpostConfig.ControlPlaneInstanceType", a.ko.Spec.OutpostConfig.ControlPlaneInstanceType, b.ko.Spec.OutpostConfig.ControlPlaneInstanceType)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.OutpostConfig.ControlPlanePlacement, b.ko.Spec.OutpostConfig.ControlPlanePlacement) {
+			delta.Add("Spec.OutpostConfig.ControlPlanePlacement", a.ko.Spec.OutpostConfig.ControlPlanePlacement, b.ko.Spec.OutpostConfig.ControlPlanePlacement)
+		} else if a.ko.Spec.OutpostConfig.ControlPlanePlacement != nil && b.ko.Spec.OutpostConfig.ControlPlanePlacement != nil {
+			if ackcompare.HasNilDifference(a.ko.Spec.OutpostConfig.ControlPlanePlacement.GroupName, b.ko.Spec.OutpostConfig.ControlPlanePlacement.GroupName) {
+				delta.Add("Spec.OutpostConfig.ControlPlanePlacement.GroupName", a.ko.Spec.OutpostConfig.ControlPlanePlacement.GroupName, b.ko.Spec.OutpostConfig.ControlPlanePlacement.GroupName)
+			} else if a.ko.Spec.OutpostConfig.ControlPlanePlacement.GroupName != nil && b.ko.Spec.OutpostConfig.ControlPlanePlacement.GroupName != nil {
+				if *a.ko.Spec.OutpostConfig.ControlPlanePlacement.GroupName != *b.ko.Spec.OutpostConfig.ControlPlanePlacement.GroupName {
+					delta.Add("Spec.OutpostConfig.ControlPlanePlacement.GroupName", a.ko.Spec.OutpostConfig.ControlPlanePlacement.GroupName, b.ko.Spec.OutpostConfig.ControlPlanePlacement.GroupName)
+				}
+			}
+		}
+		if !ackcompare.SliceStringPEqual(a.ko.Spec.OutpostConfig.OutpostARNs, b.ko.Spec.OutpostConfig.OutpostARNs) {
+			delta.Add("Spec.OutpostConfig.OutpostARNs", a.ko.Spec.OutpostConfig.OutpostARNs, b.ko.Spec.OutpostConfig.OutpostARNs)
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.ResourcesVPCConfig, b.ko.Spec.ResourcesVPCConfig) {
 		delta.Add("Spec.ResourcesVPCConfig", a.ko.Spec.ResourcesVPCConfig, b.ko.Spec.ResourcesVPCConfig)
 	} else if a.ko.Spec.ResourcesVPCConfig != nil && b.ko.Spec.ResourcesVPCConfig != nil {
@@ -120,12 +147,8 @@ func newResourceDelta(
 	if !reflect.DeepEqual(a.ko.Spec.RoleRef, b.ko.Spec.RoleRef) {
 		delta.Add("Spec.RoleRef", a.ko.Spec.RoleRef, b.ko.Spec.RoleRef)
 	}
-	if ackcompare.HasNilDifference(a.ko.Spec.Tags, b.ko.Spec.Tags) {
+	if !ackcompare.MapStringStringEqual(ToACKTags(a.ko.Spec.Tags), ToACKTags(b.ko.Spec.Tags)) {
 		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
-	} else if a.ko.Spec.Tags != nil && b.ko.Spec.Tags != nil {
-		if !ackcompare.MapStringStringPEqual(a.ko.Spec.Tags, b.ko.Spec.Tags) {
-			delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
-		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Version, b.ko.Spec.Version) {
 		delta.Add("Spec.Version", a.ko.Spec.Version, b.ko.Spec.Version)

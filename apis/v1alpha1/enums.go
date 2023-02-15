@@ -65,6 +65,17 @@ const (
 	CapacityTypes_SPOT      CapacityTypes = "SPOT"
 )
 
+type ClusterIssueCode string
+
+const (
+	ClusterIssueCode_AccessDenied          ClusterIssueCode = "AccessDenied"
+	ClusterIssueCode_ClusterUnreachable    ClusterIssueCode = "ClusterUnreachable"
+	ClusterIssueCode_ConfigurationConflict ClusterIssueCode = "ConfigurationConflict"
+	ClusterIssueCode_InternalFailure       ClusterIssueCode = "InternalFailure"
+	ClusterIssueCode_ResourceLimitExceeded ClusterIssueCode = "ResourceLimitExceeded"
+	ClusterIssueCode_ResourceNotFound      ClusterIssueCode = "ResourceNotFound"
+)
+
 type ClusterStatus_SDK string
 
 const (
