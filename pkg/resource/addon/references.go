@@ -25,7 +25,6 @@ import (
 
 	iamapitypes "github.com/aws-controllers-k8s/iam-controller/apis/v1alpha1"
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
-	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	acktypes "github.com/aws-controllers-k8s/runtime/pkg/types"
 
@@ -35,82 +34,97 @@ import (
 // +kubebuilder:rbac:groups=iam.services.k8s.aws,resources=roles,verbs=get;list
 // +kubebuilder:rbac:groups=iam.services.k8s.aws,resources=roles/status,verbs=get;list
 
+// ClearResolvedReferences removes any reference values that were made
+// concrete in the spec. It returns a copy of the input AWSResource which
+// contains the original *Ref values, but none of their respective concrete
+// values.
+func (rm *resourceManager) ClearResolvedReferences(res acktypes.AWSResource) acktypes.AWSResource {
+	ko := rm.concreteResource(res).ko.DeepCopy()
+
+	if ko.Spec.ClusterRef != nil {
+		ko.Spec.ClusterName = nil
+	}
+
+	if ko.Spec.ServiceAccountRoleRef != nil {
+		ko.Spec.ServiceAccountRoleARN = nil
+	}
+
+	return &resource{ko}
+}
+
 // ResolveReferences finds if there are any Reference field(s) present
-// inside AWSResource passed in the parameter and attempts to resolve
-// those reference field(s) into target field(s).
-// It returns an AWSResource with resolved reference(s), and an error if the
-// passed AWSResource's reference field(s) cannot be resolved.
-// This method also adds/updates the ConditionTypeReferencesResolved for the
-// AWSResource.
+// inside AWSResource passed in the parameter and attempts to resolve those
+// reference field(s) into their respective target field(s). It returns a
+// copy of the input AWSResource with resolved reference(s), a boolean which
+// is set to true if the resource contains any references (regardless of if
+// they are resolved successfully) and an error if the passed AWSResource's
+// reference field(s) could not be resolved.
 func (rm *resourceManager) ResolveReferences(
 	ctx context.Context,
 	apiReader client.Reader,
 	res acktypes.AWSResource,
-) (acktypes.AWSResource, error) {
+) (acktypes.AWSResource, bool, error) {
 	namespace := res.MetaObject().GetNamespace()
-	ko := rm.concreteResource(res).ko.DeepCopy()
+	ko := rm.concreteResource(res).ko
+
+	resourceHasReferences := false
 	err := validateReferenceFields(ko)
-	if err == nil {
-		err = resolveReferenceForClusterName(ctx, apiReader, namespace, ko)
-	}
-	if err == nil {
-		err = resolveReferenceForServiceAccountRoleARN(ctx, apiReader, namespace, ko)
+	if fieldHasReferences, err := rm.resolveReferenceForClusterName(ctx, apiReader, namespace, ko); err != nil {
+		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
+	} else {
+		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
 
-	// If there was an error while resolving any reference, reset all the
-	// resolved values so that they do not get persisted inside etcd
-	if err != nil {
-		ko = rm.concreteResource(res).ko.DeepCopy()
+	if fieldHasReferences, err := rm.resolveReferenceForServiceAccountRoleARN(ctx, apiReader, namespace, ko); err != nil {
+		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
+	} else {
+		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
-	if hasNonNilReferences(ko) {
-		return ackcondition.WithReferencesResolvedCondition(&resource{ko}, err)
-	}
-	return &resource{ko}, err
+
+	return &resource{ko}, resourceHasReferences, err
 }
 
 // validateReferenceFields validates the reference field and corresponding
 // identifier field.
 func validateReferenceFields(ko *svcapitypes.Addon) error {
+
 	if ko.Spec.ClusterRef != nil && ko.Spec.ClusterName != nil {
 		return ackerr.ResourceReferenceAndIDNotSupportedFor("ClusterName", "ClusterRef")
 	}
 	if ko.Spec.ClusterRef == nil && ko.Spec.ClusterName == nil {
 		return ackerr.ResourceReferenceOrIDRequiredFor("ClusterName", "ClusterRef")
 	}
+
 	if ko.Spec.ServiceAccountRoleRef != nil && ko.Spec.ServiceAccountRoleARN != nil {
 		return ackerr.ResourceReferenceAndIDNotSupportedFor("ServiceAccountRoleARN", "ServiceAccountRoleRef")
 	}
 	return nil
 }
 
-// hasNonNilReferences returns true if resource contains a reference to another
-// resource
-func hasNonNilReferences(ko *svcapitypes.Addon) bool {
-	return false || (ko.Spec.ClusterRef != nil) || (ko.Spec.ServiceAccountRoleRef != nil)
-}
-
 // resolveReferenceForClusterName reads the resource referenced
 // from ClusterRef field and sets the ClusterName
-// from referenced resource
-func resolveReferenceForClusterName(
+// from referenced resource. Returns a boolean indicating whether a reference
+// contains references, or an error
+func (rm *resourceManager) resolveReferenceForClusterName(
 	ctx context.Context,
 	apiReader client.Reader,
 	namespace string,
 	ko *svcapitypes.Addon,
-) error {
+) (hasReferences bool, err error) {
 	if ko.Spec.ClusterRef != nil && ko.Spec.ClusterRef.From != nil {
+		hasReferences = true
 		arr := ko.Spec.ClusterRef.From
-		if arr == nil || arr.Name == nil || *arr.Name == "" {
-			return fmt.Errorf("provided resource reference is nil or empty: ClusterRef")
+		if arr.Name == nil || *arr.Name == "" {
+			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: ClusterRef")
 		}
 		obj := &svcapitypes.Cluster{}
 		if err := getReferencedResourceState_Cluster(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
-			return err
+			return hasReferences, err
 		}
 		ko.Spec.ClusterName = (*string)(obj.Spec.Name)
 	}
 
-	return nil
+	return hasReferences, nil
 }
 
 // getReferencedResourceState_Cluster looks up whether a referenced resource
@@ -166,26 +180,28 @@ func getReferencedResourceState_Cluster(
 
 // resolveReferenceForServiceAccountRoleARN reads the resource referenced
 // from ServiceAccountRoleRef field and sets the ServiceAccountRoleARN
-// from referenced resource
-func resolveReferenceForServiceAccountRoleARN(
+// from referenced resource. Returns a boolean indicating whether a reference
+// contains references, or an error
+func (rm *resourceManager) resolveReferenceForServiceAccountRoleARN(
 	ctx context.Context,
 	apiReader client.Reader,
 	namespace string,
 	ko *svcapitypes.Addon,
-) error {
+) (hasReferences bool, err error) {
 	if ko.Spec.ServiceAccountRoleRef != nil && ko.Spec.ServiceAccountRoleRef.From != nil {
+		hasReferences = true
 		arr := ko.Spec.ServiceAccountRoleRef.From
-		if arr == nil || arr.Name == nil || *arr.Name == "" {
-			return fmt.Errorf("provided resource reference is nil or empty: ServiceAccountRoleRef")
+		if arr.Name == nil || *arr.Name == "" {
+			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: ServiceAccountRoleRef")
 		}
 		obj := &iamapitypes.Role{}
 		if err := getReferencedResourceState_Role(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
-			return err
+			return hasReferences, err
 		}
 		ko.Spec.ServiceAccountRoleARN = (*string)(obj.Status.ACKResourceMetadata.ARN)
 	}
 
-	return nil
+	return hasReferences, nil
 }
 
 // getReferencedResourceState_Role looks up whether a referenced resource
