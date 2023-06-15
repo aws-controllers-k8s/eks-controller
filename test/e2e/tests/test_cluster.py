@@ -44,7 +44,7 @@ def wait_for_cluster_deleted(eks_client, cluster_name):
         name=cluster_name,
         WaiterConfig={
             'Delay': 30,
-            'MaxAttempts': 100,
+            'MaxAttempts': 40, # 20 minutes
         },
     )
 
