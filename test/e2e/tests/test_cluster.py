@@ -40,7 +40,7 @@ def wait_for_cluster_active(eks_client, cluster_name):
 
 def wait_for_cluster_deleted(eks_client, cluster_name):
     waiter = eks_client.get_waiter('cluster_deleted')
-    waiter.wait(
+    return waiter.wait(
         name=cluster_name,
         WaiterConfig={
             'Delay': 30,
@@ -94,7 +94,8 @@ def simple_cluster(eks_client):
     try:
         _, deleted = k8s.delete_custom_resource(ref, 3, 10)
         assert deleted
-        wait_for_cluster_deleted(eks_client, cluster_name)
+        err = wait_for_cluster_deleted(eks_client, cluster_name)
+        assert err is None
     except:
         pass
 
@@ -163,4 +164,6 @@ class TestCluster:
 
         # Delete the k8s resource on teardown of the module
         k8s.delete_custom_resource(ref)
-        wait_for_cluster_deleted(eks_client, cluster_name)
+        err = wait_for_cluster_deleted(eks_client, cluster_name)
+
+        assert err is None
