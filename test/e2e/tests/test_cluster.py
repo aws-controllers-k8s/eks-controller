@@ -38,6 +38,16 @@ def wait_for_cluster_active(eks_client, cluster_name):
     waiter = eks_client.get_waiter('cluster_active')
     waiter.wait(name=cluster_name)
 
+def wait_for_cluster_deleted(eks_client, cluster_name):
+    waiter = eks_client.get_waiter('cluster_deleted')
+    waiter.wait(
+        name=cluster_name,
+        WaiterConfig={
+            'Delay': 30,
+            'MaxAttempts': 40, # 20 minutes
+        },
+    )
+
 def get_and_assert_status(ref: k8s.CustomResourceReference, expected_status: str, expected_synced: bool):
     cr = k8s.get_resource(ref)
     assert cr is not None
@@ -55,7 +65,7 @@ def eks_client():
     return boto3.client('eks')
 
 @pytest.fixture
-def simple_cluster():
+def simple_cluster(eks_client):
     cluster_name = random_suffix_name("simple-cluster", 32)
 
     replacements = REPLACEMENT_VALUES.copy()
@@ -84,6 +94,7 @@ def simple_cluster():
     try:
         _, deleted = k8s.delete_custom_resource(ref, 3, 10)
         assert deleted
+        wait_for_cluster_deleted(eks_client, cluster_name)
     except:
         pass
 
@@ -152,3 +163,4 @@ class TestCluster:
 
         # Delete the k8s resource on teardown of the module
         k8s.delete_custom_resource(ref)
+        wait_for_cluster_deleted(eks_client, cluster_name)
