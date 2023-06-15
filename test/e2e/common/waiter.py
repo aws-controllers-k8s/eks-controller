@@ -75,8 +75,8 @@ def wait_until_deleted(
         timeout_seconds: int = DEFAULT_WAIT_UNTIL_DELETED_TIMEOUT_SECONDS,
         interval_seconds: int = DEFAULT_WAIT_UNTIL_DELETED_INTERVAL_SECONDS,
     ) -> None:
-    """Waits until a DB cluster with a supplied ID is no longer returned from
-    the RDS API.
+    """Waits until an EKS cluster with the supplied name is no longer returned from
+    the EKS API.
 
     Usage:
         from e2e.common.waiter import wait_until_deleted
