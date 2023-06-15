@@ -26,6 +26,7 @@ from acktest.k8s import condition
 from acktest.resources import random_suffix_name
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_eks_resource
 from e2e.common.types import CLUSTER_RESOURCE_PLURAL
+from e2e.common.waiter import wait_until_deleted
 from e2e.replacement_values import REPLACEMENT_VALUES
 
 # Time to wait after modifying the CR for the status to change
@@ -37,16 +38,6 @@ CHECK_STATUS_WAIT_SECONDS = 30
 def wait_for_cluster_active(eks_client, cluster_name):
     waiter = eks_client.get_waiter('cluster_active')
     waiter.wait(name=cluster_name)
-
-def wait_for_cluster_deleted(eks_client, cluster_name):
-    waiter = eks_client.get_waiter('cluster_deleted')
-    return waiter.wait(
-        name=cluster_name,
-        WaiterConfig={
-            'Delay': 30,
-            'MaxAttempts': 40, # 20 minutes
-        },
-    )
 
 def get_and_assert_status(ref: k8s.CustomResourceReference, expected_status: str, expected_synced: bool):
     cr = k8s.get_resource(ref)
@@ -94,8 +85,7 @@ def simple_cluster(eks_client):
     try:
         _, deleted = k8s.delete_custom_resource(ref, 3, 10)
         assert deleted
-        err = wait_for_cluster_deleted(eks_client, cluster_name)
-        assert err is None
+        wait_until_deleted(cluster_name)
     except:
         pass
 
@@ -164,6 +154,4 @@ class TestCluster:
 
         # Delete the k8s resource on teardown of the module
         k8s.delete_custom_resource(ref)
-        err = wait_for_cluster_deleted(eks_client, cluster_name)
-
-        assert err is None
+        wait_until_deleted(cluster_name)
