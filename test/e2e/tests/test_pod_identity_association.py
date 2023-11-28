@@ -30,6 +30,9 @@ from .test_cluster import simple_cluster, wait_for_cluster_active
 
 RESOURCE_PLURAL = 'podidentityassociations'
 
+#TODO(a-hilaly): Dynamically create this role...
+PIA_ROLE = "arn:aws:iam::632556926448:role/ack-eks-controller-pia-role"
+
 CREATE_WAIT_AFTER_SECONDS = 10
 
 @pytest.fixture
@@ -48,6 +51,7 @@ def pod_identity_association(k8s_service_account, eks_client, simple_cluster) ->
     replacements["CR_NAME"] = cr_name
     replacements["CLUSTER_NAME"] = cluster_name
     replacements["NAMESPACE"] = namespace
+    replacements["ROLE_ARN"] = "arn:aws:iam::632556926448:role/ack-eks-controller-pia-role"
     replacements["SERVICE_ACCOUNT"] = service_account_name
 
     resource_data = load_eks_resource(

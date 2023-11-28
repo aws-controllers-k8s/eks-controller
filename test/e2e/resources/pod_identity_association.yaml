@@ -5,6 +5,5 @@ metadata:
 spec:
   clusterName: $CLUSTER_NAME
   namespace: $NAMESPACE
-  roleARN: $POD_IDENTITY_ASSOCIATION_ROLE
+  roleARN: $ROLE_ARN
   serviceAccount: $SERVICE_ACCOUNT
-  tags: {}

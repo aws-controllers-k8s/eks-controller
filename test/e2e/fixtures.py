@@ -15,7 +15,7 @@
 
 import dataclasses
 
-from acktest import k8s
+from acktest.k8s.resource import _get_k8s_api_client
 from kubernetes import client
 
 import pytest
@@ -34,16 +34,14 @@ def create_service_account(namespace: str, name: str):
     :param name: Name of the ServiceAccount
     :return: None
     """
-    _api_client = k8s._get_k8s_api_client()
+    _api_client = _get_k8s_api_client()
     service_account = client.V1ServiceAccount(
-        {
-            api_version: 'v1',
-            kind: 'ServiceAccount',
-            metadata: {
-                name: name,
-                namespace: namespace, 
-            },
-        }
+        api_version='v1',
+        kind='ServiceAccount',
+        metadata={
+            'name': name,
+            'namespace': namespace, 
+        },
     )
     service_account = _api_client.sanitize_for_serialization(service_account)
     client.CoreV1Api(_api_client).create_namespaced_service_account(namespace.lower(), service_account)
@@ -56,14 +54,11 @@ def delete_service_account(namespace: str, name: str):
     :param name: Name of the ServiceAccount
     :return: None
     """
-    _api_client = k8s._get_k8s_api_client()
+    _api_client = _get_k8s_api_client()
     client.CoreV1Api(_api_client).delete_namespaced_service_account(name.lower(), namespace.lower())
 
 @pytest.fixture(scope="module")
 def k8s_service_account():
-    """
-    """
-
     created = []
     def _k8s_service_account(ns, name):
         create_service_account(ns, name)
