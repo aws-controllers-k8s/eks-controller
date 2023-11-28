@@ -1,0 +1,10 @@
+apiVersion: eks.services.k8s.aws/v1alpha1
+kind: PodIdentityAssociation
+metadata:
+  name: $CR_NAME
+spec:
+  clusterName: $CLUSTER_NAME
+  namespace: $NAMESPACE
+  roleARN: $POD_IDENTITY_ASSOCIATION_ROLE
+  serviceAccount: $SERVICE_ACCOUNT
+  tags: {}

@@ -68,12 +68,25 @@ const (
 type ClusterIssueCode string
 
 const (
-	ClusterIssueCode_AccessDenied          ClusterIssueCode = "AccessDenied"
-	ClusterIssueCode_ClusterUnreachable    ClusterIssueCode = "ClusterUnreachable"
-	ClusterIssueCode_ConfigurationConflict ClusterIssueCode = "ConfigurationConflict"
-	ClusterIssueCode_InternalFailure       ClusterIssueCode = "InternalFailure"
-	ClusterIssueCode_ResourceLimitExceeded ClusterIssueCode = "ResourceLimitExceeded"
-	ClusterIssueCode_ResourceNotFound      ClusterIssueCode = "ResourceNotFound"
+	ClusterIssueCode_AccessDenied                ClusterIssueCode = "AccessDenied"
+	ClusterIssueCode_ClusterUnreachable          ClusterIssueCode = "ClusterUnreachable"
+	ClusterIssueCode_ConfigurationConflict       ClusterIssueCode = "ConfigurationConflict"
+	ClusterIssueCode_InternalFailure             ClusterIssueCode = "InternalFailure"
+	ClusterIssueCode_ResourceLimitExceeded       ClusterIssueCode = "ResourceLimitExceeded"
+	ClusterIssueCode_ResourceNotFound            ClusterIssueCode = "ResourceNotFound"
+	ClusterIssueCode_IamRoleNotFound             ClusterIssueCode = "IamRoleNotFound"
+	ClusterIssueCode_VpcNotFound                 ClusterIssueCode = "VpcNotFound"
+	ClusterIssueCode_InsufficientFreeAddresses   ClusterIssueCode = "InsufficientFreeAddresses"
+	ClusterIssueCode_Ec2ServiceNotSubscribed     ClusterIssueCode = "Ec2ServiceNotSubscribed"
+	ClusterIssueCode_Ec2SubnetNotFound           ClusterIssueCode = "Ec2SubnetNotFound"
+	ClusterIssueCode_Ec2SecurityGroupNotFound    ClusterIssueCode = "Ec2SecurityGroupNotFound"
+	ClusterIssueCode_KmsGrantRevoked             ClusterIssueCode = "KmsGrantRevoked"
+	ClusterIssueCode_KmsKeyNotFound              ClusterIssueCode = "KmsKeyNotFound"
+	ClusterIssueCode_KmsKeyMarkedForDeletion     ClusterIssueCode = "KmsKeyMarkedForDeletion"
+	ClusterIssueCode_KmsKeyDisabled              ClusterIssueCode = "KmsKeyDisabled"
+	ClusterIssueCode_StsRegionalEndpointDisabled ClusterIssueCode = "StsRegionalEndpointDisabled"
+	ClusterIssueCode_UnsupportedVersion          ClusterIssueCode = "UnsupportedVersion"
+	ClusterIssueCode_Other                       ClusterIssueCode = "Other"
 )
 
 type ClusterStatus_SDK string
@@ -107,6 +120,29 @@ const (
 	ConnectorConfigProvider_RANCHER      ConnectorConfigProvider = "RANCHER"
 	ConnectorConfigProvider_EC2          ConnectorConfigProvider = "EC2"
 	ConnectorConfigProvider_OTHER        ConnectorConfigProvider = "OTHER"
+)
+
+type EKSAnywhereSubscriptionLicenseType string
+
+const (
+	EKSAnywhereSubscriptionLicenseType_Cluster EKSAnywhereSubscriptionLicenseType = "Cluster"
+)
+
+type EKSAnywhereSubscriptionStatus string
+
+const (
+	EKSAnywhereSubscriptionStatus_CREATING EKSAnywhereSubscriptionStatus = "CREATING"
+	EKSAnywhereSubscriptionStatus_ACTIVE   EKSAnywhereSubscriptionStatus = "ACTIVE"
+	EKSAnywhereSubscriptionStatus_UPDATING EKSAnywhereSubscriptionStatus = "UPDATING"
+	EKSAnywhereSubscriptionStatus_EXPIRING EKSAnywhereSubscriptionStatus = "EXPIRING"
+	EKSAnywhereSubscriptionStatus_EXPIRED  EKSAnywhereSubscriptionStatus = "EXPIRED"
+	EKSAnywhereSubscriptionStatus_DELETING EKSAnywhereSubscriptionStatus = "DELETING"
+)
+
+type EKSAnywhereSubscriptionTermUnit string
+
+const (
+	EKSAnywhereSubscriptionTermUnit_MONTHS EKSAnywhereSubscriptionTermUnit = "MONTHS"
 )
 
 type ErrorCode string
@@ -161,25 +197,39 @@ const (
 type NodegroupIssueCode string
 
 const (
-	NodegroupIssueCode_AutoScalingGroupNotFound             NodegroupIssueCode = "AutoScalingGroupNotFound"
-	NodegroupIssueCode_AutoScalingGroupInvalidConfiguration NodegroupIssueCode = "AutoScalingGroupInvalidConfiguration"
-	NodegroupIssueCode_Ec2SecurityGroupNotFound             NodegroupIssueCode = "Ec2SecurityGroupNotFound"
-	NodegroupIssueCode_Ec2SecurityGroupDeletionFailure      NodegroupIssueCode = "Ec2SecurityGroupDeletionFailure"
-	NodegroupIssueCode_Ec2LaunchTemplateNotFound            NodegroupIssueCode = "Ec2LaunchTemplateNotFound"
-	NodegroupIssueCode_Ec2LaunchTemplateVersionMismatch     NodegroupIssueCode = "Ec2LaunchTemplateVersionMismatch"
-	NodegroupIssueCode_Ec2SubnetNotFound                    NodegroupIssueCode = "Ec2SubnetNotFound"
-	NodegroupIssueCode_Ec2SubnetInvalidConfiguration        NodegroupIssueCode = "Ec2SubnetInvalidConfiguration"
-	NodegroupIssueCode_IamInstanceProfileNotFound           NodegroupIssueCode = "IamInstanceProfileNotFound"
-	NodegroupIssueCode_IamLimitExceeded                     NodegroupIssueCode = "IamLimitExceeded"
-	NodegroupIssueCode_IamNodeRoleNotFound                  NodegroupIssueCode = "IamNodeRoleNotFound"
-	NodegroupIssueCode_NodeCreationFailure                  NodegroupIssueCode = "NodeCreationFailure"
-	NodegroupIssueCode_AsgInstanceLaunchFailures            NodegroupIssueCode = "AsgInstanceLaunchFailures"
-	NodegroupIssueCode_InstanceLimitExceeded                NodegroupIssueCode = "InstanceLimitExceeded"
-	NodegroupIssueCode_InsufficientFreeAddresses            NodegroupIssueCode = "InsufficientFreeAddresses"
-	NodegroupIssueCode_AccessDenied                         NodegroupIssueCode = "AccessDenied"
-	NodegroupIssueCode_InternalFailure                      NodegroupIssueCode = "InternalFailure"
-	NodegroupIssueCode_ClusterUnreachable                   NodegroupIssueCode = "ClusterUnreachable"
-	NodegroupIssueCode_Ec2SubnetMissingIpv6Assignment       NodegroupIssueCode = "Ec2SubnetMissingIpv6Assignment"
+	NodegroupIssueCode_AutoScalingGroupNotFound              NodegroupIssueCode = "AutoScalingGroupNotFound"
+	NodegroupIssueCode_AutoScalingGroupInvalidConfiguration  NodegroupIssueCode = "AutoScalingGroupInvalidConfiguration"
+	NodegroupIssueCode_Ec2SecurityGroupNotFound              NodegroupIssueCode = "Ec2SecurityGroupNotFound"
+	NodegroupIssueCode_Ec2SecurityGroupDeletionFailure       NodegroupIssueCode = "Ec2SecurityGroupDeletionFailure"
+	NodegroupIssueCode_Ec2LaunchTemplateNotFound             NodegroupIssueCode = "Ec2LaunchTemplateNotFound"
+	NodegroupIssueCode_Ec2LaunchTemplateVersionMismatch      NodegroupIssueCode = "Ec2LaunchTemplateVersionMismatch"
+	NodegroupIssueCode_Ec2SubnetNotFound                     NodegroupIssueCode = "Ec2SubnetNotFound"
+	NodegroupIssueCode_Ec2SubnetInvalidConfiguration         NodegroupIssueCode = "Ec2SubnetInvalidConfiguration"
+	NodegroupIssueCode_IamInstanceProfileNotFound            NodegroupIssueCode = "IamInstanceProfileNotFound"
+	NodegroupIssueCode_Ec2SubnetMissingIpv6Assignment        NodegroupIssueCode = "Ec2SubnetMissingIpv6Assignment"
+	NodegroupIssueCode_IamLimitExceeded                      NodegroupIssueCode = "IamLimitExceeded"
+	NodegroupIssueCode_IamNodeRoleNotFound                   NodegroupIssueCode = "IamNodeRoleNotFound"
+	NodegroupIssueCode_NodeCreationFailure                   NodegroupIssueCode = "NodeCreationFailure"
+	NodegroupIssueCode_AsgInstanceLaunchFailures             NodegroupIssueCode = "AsgInstanceLaunchFailures"
+	NodegroupIssueCode_InstanceLimitExceeded                 NodegroupIssueCode = "InstanceLimitExceeded"
+	NodegroupIssueCode_InsufficientFreeAddresses             NodegroupIssueCode = "InsufficientFreeAddresses"
+	NodegroupIssueCode_AccessDenied                          NodegroupIssueCode = "AccessDenied"
+	NodegroupIssueCode_InternalFailure                       NodegroupIssueCode = "InternalFailure"
+	NodegroupIssueCode_ClusterUnreachable                    NodegroupIssueCode = "ClusterUnreachable"
+	NodegroupIssueCode_AmiIdNotFound                         NodegroupIssueCode = "AmiIdNotFound"
+	NodegroupIssueCode_AutoScalingGroupOptInRequired         NodegroupIssueCode = "AutoScalingGroupOptInRequired"
+	NodegroupIssueCode_AutoScalingGroupRateLimitExceeded     NodegroupIssueCode = "AutoScalingGroupRateLimitExceeded"
+	NodegroupIssueCode_Ec2LaunchTemplateDeletionFailure      NodegroupIssueCode = "Ec2LaunchTemplateDeletionFailure"
+	NodegroupIssueCode_Ec2LaunchTemplateInvalidConfiguration NodegroupIssueCode = "Ec2LaunchTemplateInvalidConfiguration"
+	NodegroupIssueCode_Ec2LaunchTemplateMaxLimitExceeded     NodegroupIssueCode = "Ec2LaunchTemplateMaxLimitExceeded"
+	NodegroupIssueCode_Ec2SubnetListTooLong                  NodegroupIssueCode = "Ec2SubnetListTooLong"
+	NodegroupIssueCode_IamThrottling                         NodegroupIssueCode = "IamThrottling"
+	NodegroupIssueCode_NodeTerminationFailure                NodegroupIssueCode = "NodeTerminationFailure"
+	NodegroupIssueCode_PodEvictionFailure                    NodegroupIssueCode = "PodEvictionFailure"
+	NodegroupIssueCode_SourceEc2LaunchTemplateNotFound       NodegroupIssueCode = "SourceEc2LaunchTemplateNotFound"
+	NodegroupIssueCode_LimitExceeded                         NodegroupIssueCode = "LimitExceeded"
+	NodegroupIssueCode_Unknown                               NodegroupIssueCode = "Unknown"
+	NodegroupIssueCode_AutoScalingGroupInstanceRefreshActive NodegroupIssueCode = "AutoScalingGroupInstanceRefreshActive"
 )
 
 type NodegroupStatus_SDK string
@@ -236,6 +286,9 @@ const (
 	UpdateParamType_ResolveConflicts         UpdateParamType = "ResolveConflicts"
 	UpdateParamType_MaxUnavailable           UpdateParamType = "MaxUnavailable"
 	UpdateParamType_MaxUnavailablePercentage UpdateParamType = "MaxUnavailablePercentage"
+	UpdateParamType_ConfigurationValues      UpdateParamType = "ConfigurationValues"
+	UpdateParamType_SecurityGroups           UpdateParamType = "SecurityGroups"
+	UpdateParamType_Subnets                  UpdateParamType = "Subnets"
 )
 
 type UpdateStatus string
@@ -258,4 +311,5 @@ const (
 	UpdateType_DisassociateIdentityProviderConfig UpdateType = "DisassociateIdentityProviderConfig"
 	UpdateType_AssociateEncryptionConfig          UpdateType = "AssociateEncryptionConfig"
 	UpdateType_AddonUpdate                        UpdateType = "AddonUpdate"
+	UpdateType_VpcConfigUpdate                    UpdateType = "VpcConfigUpdate"
 )

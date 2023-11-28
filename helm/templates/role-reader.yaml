@@ -13,6 +13,7 @@ rules:
   - clusters
   - fargateprofiles
   - nodegroups
+  - podidentityassociations
   verbs:
   - get
   - list

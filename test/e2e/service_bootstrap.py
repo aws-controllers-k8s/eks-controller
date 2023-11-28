@@ -31,6 +31,13 @@ def service_bootstrap() -> Resources:
             "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
             "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
         ]),
+        PodIdentityAssociationRole=Role(
+            "ack-pod-identity-association-role",
+            "pods.eks.amazonaws.com",
+            managed_policies=[
+                "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess",
+            ]
+        ),
         ClusterVPC=VPC(name_prefix="cluster-vpc", num_public_subnet=2, num_private_subnet=2)
     )
 
