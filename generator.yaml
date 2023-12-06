@@ -168,6 +168,9 @@ resources:
           service_name: ec2
           resource: Subnet
           path: Status.SubnetID
+      Taints:
+        compare:
+          is_ignored: true
     renames:
       operations:
         CreateNodegroup:

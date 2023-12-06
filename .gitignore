@@ -6,3 +6,4 @@
 bin
 build
 .env
+vendor
