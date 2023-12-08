@@ -42,7 +42,7 @@ func newResourceDelta(
 		delta.Add("", a, b)
 		return delta
 	}
-	customPreCompare(a, b)
+	customPreCompare(delta, a, b)
 
 	if ackcompare.HasNilDifference(a.ko.Spec.AMIType, b.ko.Spec.AMIType) {
 		delta.Add("Spec.AMIType", a.ko.Spec.AMIType, b.ko.Spec.AMIType)
@@ -188,9 +188,6 @@ func newResourceDelta(
 	}
 	if !ackcompare.MapStringStringEqual(ToACKTags(a.ko.Spec.Tags), ToACKTags(b.ko.Spec.Tags)) {
 		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
-	}
-	if !reflect.DeepEqual(a.ko.Spec.Taints, b.ko.Spec.Taints) {
-		delta.Add("Spec.Taints", a.ko.Spec.Taints, b.ko.Spec.Taints)
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.UpdateConfig, b.ko.Spec.UpdateConfig) {
 		delta.Add("Spec.UpdateConfig", a.ko.Spec.UpdateConfig, b.ko.Spec.UpdateConfig)
