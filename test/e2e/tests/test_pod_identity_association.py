@@ -97,7 +97,7 @@ class TestPodIdentityAssociation:
             assert aws_res is not None
 
             assert aws_res["association"]["namespace"] == namespace
-            assert aws_res["association"]["role_arn"] == role_arn
+            assert aws_res["association"]["roleArn"] == role_arn
             assert aws_res["association"]["associationId"] == association_id
         except eks_client.exceptions.ResourceNotFoundException:
             pytest.fail(f"Could not find PodIdentityAssociation '{ref.name}' in EKS")
