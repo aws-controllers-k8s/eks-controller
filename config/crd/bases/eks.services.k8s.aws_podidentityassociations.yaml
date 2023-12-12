@@ -71,6 +71,19 @@ spec:
                   to assume this role for applications in the containers in the pods
                   that use this service account.
                 type: string
+              roleRef:
+                description: "AWSResourceReferenceWrapper provides a wrapper around
+                  *AWSResourceReference type to provide more user friendly syntax
+                  for references using 'from' field Ex: APIIDRef: \n from: name: my-api"
+                properties:
+                  from:
+                    description: AWSResourceReference provides all the values necessary
+                      to reference another k8s resource for finding the identifier(Id/ARN/Name)
+                    properties:
+                      name:
+                        type: string
+                    type: object
+                type: object
               serviceAccount:
                 description: The name of the Kubernetes service account inside the
                   cluster to associate the IAM credentials with.
@@ -98,7 +111,6 @@ spec:
                 type: object
             required:
             - namespace
-            - roleARN
             - serviceAccount
             type: object
           status:

@@ -38,10 +38,10 @@ github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuy
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d/go.mod h1:rBZYJk541a8SKzHPHnH3zbiI+7dagKZ0cgpgrD7Fyho=
-github.com/aws-controllers-k8s/ec2-controller v0.0.10 h1:RVGezMt5aySJZSj+h77SrHZnMjE8Gki2UI0tqLqdgEQ=
-github.com/aws-controllers-k8s/ec2-controller v0.0.10/go.mod h1:N8vii7yTsYHmMjOhs4kl8MpJlBWIEHQFm11HO16J9C4=
-github.com/aws-controllers-k8s/iam-controller v0.0.8 h1:7F4W45I7l30jZZGS8FEesScJmOcnPASCoa1sHBcTLNI=
-github.com/aws-controllers-k8s/iam-controller v0.0.8/go.mod h1:IibRVHZc+MEISws4FXQVC0rGwTeePm/O1Pk4kpXq5x0=
+github.com/aws-controllers-k8s/ec2-controller v1.1.0 h1:SSutBopBi2nYWqNNZfkVgv7k4VPcGFdWab39uMK75xw=
+github.com/aws-controllers-k8s/ec2-controller v1.1.0/go.mod h1:PvsQehgncHgcu9FiY13M45+GkVsKI98g7G83SrgH7vY=
+github.com/aws-controllers-k8s/iam-controller v1.3.1 h1:/3yH3tAtSVAAt2ulIqsmutjWXhbKWXSaEZ1pph358GE=
+github.com/aws-controllers-k8s/iam-controller v1.3.1/go.mod h1:7nZzMtEN8xEL5fYhL9FKkBhqoP4QMmMp5x5dXDGwfYM=
 github.com/aws-controllers-k8s/runtime v0.27.1 h1:tvJRQDioBFkob0kF4DwgS7MsoXZKwkG5QCHWxFEh+2o=
 github.com/aws-controllers-k8s/runtime v0.27.1/go.mod h1:oSCqCzbzJLUrzv+cx4TIxCuSUvL75ABJmhxBc87IRqc=
 github.com/aws/aws-sdk-go v1.48.4 h1:HS2L7ynVhkcRrQRro9CLJZ/xLRb4UOzDEfPzgevZwXM=

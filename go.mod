@@ -3,8 +3,8 @@ module github.com/aws-controllers-k8s/eks-controller
 go 1.19
 
 require (
-	github.com/aws-controllers-k8s/ec2-controller v0.0.10
-	github.com/aws-controllers-k8s/iam-controller v0.0.8
+	github.com/aws-controllers-k8s/ec2-controller v1.1.0
+	github.com/aws-controllers-k8s/iam-controller v1.3.1
 	github.com/aws-controllers-k8s/runtime v0.27.1
 	github.com/aws/aws-sdk-go v1.48.4
 	github.com/go-logr/logr v1.2.3

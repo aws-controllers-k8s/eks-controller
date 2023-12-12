@@ -41,8 +41,8 @@ type PodIdentityAssociationSpec struct {
 	// The Amazon Resource Name (ARN) of the IAM role to associate with the service
 	// account. The EKS Pod Identity agent manages credentials to assume this role
 	// for applications in the containers in the pods that use this service account.
-	// +kubebuilder:validation:Required
-	RoleARN *string `json:"roleARN"`
+	RoleARN *string                                  `json:"roleARN,omitempty"`
+	RoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"roleRef,omitempty"`
 	// The name of the Kubernetes service account inside the cluster to associate
 	// the IAM credentials with.
 	// +kubebuilder:validation:Required

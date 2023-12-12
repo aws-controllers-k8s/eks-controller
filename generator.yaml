@@ -216,6 +216,11 @@ resources:
           resource: Cluster
           path: Spec.Name
         is_primary_key: true
+      RoleARN:
+        references:
+          service_name: iam
+          resource: Role
+          path: Status.ACKResourceMetadata.ARN
 ignore:
   resource_names:
    - EksAnywhereSubscription
