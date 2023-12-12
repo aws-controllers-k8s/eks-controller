@@ -75,7 +75,32 @@ type Addon_SDK struct {
 	Publisher              *string                 `json:"publisher,omitempty"`
 	ServiceAccountRoleARN  *string                 `json:"serviceAccountRoleARN,omitempty"`
 	Status                 *string                 `json:"status,omitempty"`
-	Tags                   map[string]*string      `json:"tags,omitempty"`
+	// The metadata that you apply to a resource to help you categorize and organize
+	// them. Each tag consists of a key and an optional value. You define them.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource – 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length – 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length – 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for Amazon Web
+	//    Services use. You cannot edit or delete tag keys or values with this prefix.
+	//    Tags with this prefix do not count against your tags per resource limit.
+	Tags map[string]*string `json:"tags,omitempty"`
 }
 
 // An Auto Scaling group that is associated with an Amazon EKS managed node
@@ -138,8 +163,33 @@ type Cluster_SDK struct {
 	ResourcesVPCConfig *VPCConfigResponse `json:"resourcesVPCConfig,omitempty"`
 	RoleARN            *string            `json:"roleARN,omitempty"`
 	Status             *string            `json:"status,omitempty"`
-	Tags               map[string]*string `json:"tags,omitempty"`
-	Version            *string            `json:"version,omitempty"`
+	// The metadata that you apply to a resource to help you categorize and organize
+	// them. Each tag consists of a key and an optional value. You define them.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource – 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length – 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length – 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for Amazon Web
+	//    Services use. You cannot edit or delete tag keys or values with this prefix.
+	//    Tags with this prefix do not count against your tags per resource limit.
+	Tags    map[string]*string `json:"tags,omitempty"`
+	Version *string            `json:"version,omitempty"`
 }
 
 // Compatibility information.
@@ -166,7 +216,7 @@ type ConnectorConfigResponse struct {
 // The placement configuration for all the control plane instances of your local
 // Amazon EKS cluster on an Amazon Web Services Outpost. For more information,
 // see Capacity considerations (https://docs.aws.amazon.com/eks/latest/userguide/eks-outposts-capacity-considerations.html)
-// in the Amazon EKS User Guide
+// in the Amazon EKS User Guide.
 type ControlPlanePlacementRequest struct {
 	GroupName *string `json:"groupName,omitempty"`
 }
@@ -177,6 +227,45 @@ type ControlPlanePlacementRequest struct {
 // in the Amazon EKS User Guide.
 type ControlPlanePlacementResponse struct {
 	GroupName *string `json:"groupName,omitempty"`
+}
+
+// An EKS Anywhere subscription authorizing the customer to support for licensed
+// clusters and access to EKS Anywhere Curated Packages.
+type EKSAnywhereSubscription struct {
+	ARN            *string      `json:"arn,omitempty"`
+	AutoRenew      *bool        `json:"autoRenew,omitempty"`
+	CreatedAt      *metav1.Time `json:"createdAt,omitempty"`
+	EffectiveDate  *metav1.Time `json:"effectiveDate,omitempty"`
+	ExpirationDate *metav1.Time `json:"expirationDate,omitempty"`
+	ID             *string      `json:"id,omitempty"`
+	LicenseARNs    []*string    `json:"licenseARNs,omitempty"`
+	Status         *string      `json:"status,omitempty"`
+	// The metadata that you apply to a resource to help you categorize and organize
+	// them. Each tag consists of a key and an optional value. You define them.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource – 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length – 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length – 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for Amazon Web
+	//    Services use. You cannot edit or delete tag keys or values with this prefix.
+	//    Tags with this prefix do not count against your tags per resource limit.
+	Tags map[string]*string `json:"tags,omitempty"`
 }
 
 // The encryption configuration for the cluster.
@@ -209,7 +298,32 @@ type FargateProfile_SDK struct {
 	Selectors           []*FargateProfileSelector `json:"selectors,omitempty"`
 	Status              *string                   `json:"status,omitempty"`
 	Subnets             []*string                 `json:"subnets,omitempty"`
-	Tags                map[string]*string        `json:"tags,omitempty"`
+	// The metadata that you apply to a resource to help you categorize and organize
+	// them. Each tag consists of a key and an optional value. You define them.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource – 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length – 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length – 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for Amazon Web
+	//    Services use. You cannot edit or delete tag keys or values with this prefix.
+	//    Tags with this prefix do not count against your tags per resource limit.
+	Tags map[string]*string `json:"tags,omitempty"`
 }
 
 // An object representing an identity provider.
@@ -356,8 +470,33 @@ type Nodegroup_SDK struct {
 	ScalingConfig *NodegroupScalingConfig `json:"scalingConfig,omitempty"`
 	Status        *string                 `json:"status,omitempty"`
 	Subnets       []*string               `json:"subnets,omitempty"`
-	Tags          map[string]*string      `json:"tags,omitempty"`
-	Taints        []*Taint                `json:"taints,omitempty"`
+	// The metadata that you apply to a resource to help you categorize and organize
+	// them. Each tag consists of a key and an optional value. You define them.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource – 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length – 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length – 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for Amazon Web
+	//    Services use. You cannot edit or delete tag keys or values with this prefix.
+	//    Tags with this prefix do not count against your tags per resource limit.
+	Tags   map[string]*string `json:"tags,omitempty"`
+	Taints []*Taint           `json:"taints,omitempty"`
 	// The node group update configuration.
 	UpdateConfig *NodegroupUpdateConfig `json:"updateConfig,omitempty"`
 	Version      *string                `json:"version,omitempty"`
@@ -372,16 +511,41 @@ type OIDC struct {
 // An object representing the configuration for an OpenID Connect (OIDC) identity
 // provider.
 type OIDCIdentityProviderConfig struct {
-	ClientID                   *string            `json:"clientID,omitempty"`
-	ClusterName                *string            `json:"clusterName,omitempty"`
-	GroupsClaim                *string            `json:"groupsClaim,omitempty"`
-	GroupsPrefix               *string            `json:"groupsPrefix,omitempty"`
-	IdentityProviderConfigARN  *string            `json:"identityProviderConfigARN,omitempty"`
-	IdentityProviderConfigName *string            `json:"identityProviderConfigName,omitempty"`
-	IssuerURL                  *string            `json:"issuerURL,omitempty"`
-	Tags                       map[string]*string `json:"tags,omitempty"`
-	UsernameClaim              *string            `json:"usernameClaim,omitempty"`
-	UsernamePrefix             *string            `json:"usernamePrefix,omitempty"`
+	ClientID                   *string `json:"clientID,omitempty"`
+	ClusterName                *string `json:"clusterName,omitempty"`
+	GroupsClaim                *string `json:"groupsClaim,omitempty"`
+	GroupsPrefix               *string `json:"groupsPrefix,omitempty"`
+	IdentityProviderConfigARN  *string `json:"identityProviderConfigARN,omitempty"`
+	IdentityProviderConfigName *string `json:"identityProviderConfigName,omitempty"`
+	IssuerURL                  *string `json:"issuerURL,omitempty"`
+	// The metadata that you apply to a resource to help you categorize and organize
+	// them. Each tag consists of a key and an optional value. You define them.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource – 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length – 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length – 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for Amazon Web
+	//    Services use. You cannot edit or delete tag keys or values with this prefix.
+	//    Tags with this prefix do not count against your tags per resource limit.
+	Tags           map[string]*string `json:"tags,omitempty"`
+	UsernameClaim  *string            `json:"usernameClaim,omitempty"`
+	UsernamePrefix *string            `json:"usernamePrefix,omitempty"`
 }
 
 // An object representing an OpenID Connect (OIDC) configuration. Before associating
@@ -408,7 +572,7 @@ type OutpostConfigRequest struct {
 	// The placement configuration for all the control plane instances of your local
 	// Amazon EKS cluster on an Amazon Web Services Outpost. For more information,
 	// see Capacity considerations (https://docs.aws.amazon.com/eks/latest/userguide/eks-outposts-capacity-considerations.html)
-	// in the Amazon EKS User Guide
+	// in the Amazon EKS User Guide.
 	ControlPlanePlacement *ControlPlanePlacementRequest `json:"controlPlanePlacement,omitempty"`
 	OutpostARNs           []*string                     `json:"outpostARNs,omitempty"`
 }
@@ -424,6 +588,66 @@ type OutpostConfigResponse struct {
 	// in the Amazon EKS User Guide.
 	ControlPlanePlacement *ControlPlanePlacementResponse `json:"controlPlanePlacement,omitempty"`
 	OutpostARNs           []*string                      `json:"outpostARNs,omitempty"`
+}
+
+// The summarized description of the association.
+//
+// Each summary is simplified by removing these fields compared to the full
+// PodIdentityAssociation :
+//
+//   - The IAM role: roleArn
+//
+//   - The timestamp that the association was created at: createdAt
+//
+//   - The most recent timestamp that the association was modified at:. modifiedAt
+//
+//   - The tags on the association: tags
+type PodIdentityAssociationSummary struct {
+	AssociationARN *string `json:"associationARN,omitempty"`
+	AssociationID  *string `json:"associationID,omitempty"`
+	ClusterName    *string `json:"clusterName,omitempty"`
+	Namespace      *string `json:"namespace,omitempty"`
+	ServiceAccount *string `json:"serviceAccount,omitempty"`
+}
+
+// Amazon EKS Pod Identity associations provide the ability to manage credentials
+// for your applications, similar to the way that 7EC2l instance profiles provide
+// credentials to Amazon EC2 instances.
+type PodIdentityAssociation_SDK struct {
+	AssociationARN *string      `json:"associationARN,omitempty"`
+	AssociationID  *string      `json:"associationID,omitempty"`
+	ClusterName    *string      `json:"clusterName,omitempty"`
+	CreatedAt      *metav1.Time `json:"createdAt,omitempty"`
+	ModifiedAt     *metav1.Time `json:"modifiedAt,omitempty"`
+	Namespace      *string      `json:"namespace,omitempty"`
+	RoleARN        *string      `json:"roleARN,omitempty"`
+	ServiceAccount *string      `json:"serviceAccount,omitempty"`
+	// The metadata that you apply to a resource to help you categorize and organize
+	// them. Each tag consists of a key and an optional value. You define them.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource – 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length – 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length – 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for Amazon Web
+	//    Services use. You cannot edit or delete tag keys or values with this prefix.
+	//    Tags with this prefix do not count against your tags per resource limit.
+	Tags map[string]*string `json:"tags,omitempty"`
 }
 
 // Identifies the Key Management Service (KMS) key used to encrypt the secrets.

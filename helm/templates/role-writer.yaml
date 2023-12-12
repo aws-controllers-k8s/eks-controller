@@ -17,6 +17,8 @@ rules:
 
   - nodegroups
 
+  - podidentityassociations
+
   verbs:
   - create
   - delete
@@ -32,6 +34,7 @@ rules:
   - clusters
   - fargateprofiles
   - nodegroups
+  - podidentityassociations
   verbs:
   - get
   - patch
