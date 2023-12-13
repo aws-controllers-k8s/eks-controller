@@ -1,0 +1,191 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.9.2
+  creationTimestamp: null
+  name: eksanywheresubscriptions.eks.services.k8s.aws
+spec:
+  group: eks.services.k8s.aws
+  names:
+    kind: EKSAnywhereSubscription
+    listKind: EKSAnywhereSubscriptionList
+    plural: eksanywheresubscriptions
+    singular: eksanywheresubscription
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: EKSAnywhereSubscription is the Schema for the EKSAnywhereSubscriptions
+          API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: "EksAnywhereSubscriptionSpec defines the desired state of
+              EksAnywhereSubscription. \n An EKS Anywhere subscription authorizing
+              the customer to support for licensed clusters and access to EKS Anywhere
+              Curated Packages."
+            properties:
+              autoRenew:
+                description: A boolean indicating whether the subscription auto renews
+                  at the end of the term.
+                type: boolean
+              clientRequestToken:
+                description: Unique, case-sensitive identifier that you provide to
+                  ensure the idempotency of the request.
+                type: string
+              licenseQuantity:
+                description: The number of licenses to purchase with the subscription.
+                  Valid values are between 1 and 100. This value can't be changed
+                  after creating the subscription.
+                format: int64
+                type: integer
+              licenseType:
+                description: The license type for all licenses in the subscription.
+                  Valid value is CLUSTER. With the CLUSTER license type, each license
+                  covers support for a single EKS Anywhere cluster.
+                type: string
+              name:
+                description: The unique name for your subscription. It must be unique
+                  in your Amazon Web Services account in the Amazon Web Services Region
+                  you're creating the subscription in. The name can contain only alphanumeric
+                  characters (case-sensitive), hyphens, and underscores. It must start
+                  with an alphabetic character and can't be longer than 100 characters.
+                type: string
+              tags:
+                additionalProperties:
+                  type: string
+                description: The metadata for a subscription to assist with categorization
+                  and organization. Each tag consists of a key and an optional value.
+                  Subscription tags don't propagate to any other resources associated
+                  with the subscription.
+                type: object
+              term:
+                description: An object representing the term duration and term unit
+                  type of your subscription. This determines the term length of your
+                  subscription. Valid values are MONTHS for term unit and 12 or 36
+                  for term duration, indicating a 12 month or 36 month subscription.
+                  This value cannot be changed after creating the subscription.
+                properties:
+                  duration:
+                    format: int64
+                    type: integer
+                  unit:
+                    type: string
+                type: object
+            required:
+            - name
+            - term
+            type: object
+          status:
+            description: EKSAnywhereSubscriptionStatus defines the observed state
+              of EKSAnywhereSubscription
+            properties:
+              ackResourceMetadata:
+                description: All CRs managed by ACK have a common `Status.ACKResourceMetadata`
+                  member that is used to contain resource sync state, account ownership,
+                  constructed ARN for the resource
+                properties:
+                  arn:
+                    description: 'ARN is the Amazon Resource Name for the resource.
+                      This is a globally-unique identifier and is set only by the
+                      ACK service controller once the controller has orchestrated
+                      the creation of the resource OR when it has verified that an
+                      "adopted" resource (a resource where the ARN annotation was
+                      set by the Kubernetes user on the CR) exists and matches the
+                      supplied CR''s Spec field values. TODO(vijat@): Find a better
+                      strategy for resources that do not have ARN in CreateOutputResponse
+                      https://github.com/aws/aws-controllers-k8s/issues/270'
+                    type: string
+                  ownerAccountID:
+                    description: OwnerAccountID is the AWS Account ID of the account
+                      that owns the backend AWS service API resource.
+                    type: string
+                  region:
+                    description: Region is the AWS region in which the resource exists
+                      or will exist.
+                    type: string
+                required:
+                - ownerAccountID
+                - region
+                type: object
+              conditions:
+                description: All CRS managed by ACK have a common `Status.Conditions`
+                  member that contains a collection of `ackv1alpha1.Condition` objects
+                  that describe the various terminal states of the CR and its backend
+                  AWS service API resource
+                items:
+                  description: Condition is the common struct used by all CRDs managed
+                    by ACK service controllers to indicate terminal states  of the
+                    CR and its backend AWS service API resource
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      format: date-time
+                      type: string
+                    message:
+                      description: A human readable message indicating details about
+                        the transition.
+                      type: string
+                    reason:
+                      description: The reason for the condition's last transition.
+                      type: string
+                    status:
+                      description: Status of the condition, one of True, False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the Condition
+                      type: string
+                  required:
+                  - status
+                  - type
+                  type: object
+                type: array
+              createdAt:
+                description: The Unix timestamp in seconds for when the subscription
+                  was created.
+                format: date-time
+                type: string
+              effectiveDate:
+                description: The Unix timestamp in seconds for when the subscription
+                  is effective.
+                format: date-time
+                type: string
+              expirationDate:
+                description: The Unix timestamp in seconds for when the subscription
+                  will expire or auto renew, depending on the auto renew configuration
+                  of the subscription object.
+                format: date-time
+                type: string
+              id:
+                description: UUID identifying a subscription.
+                type: string
+              licenseARNs:
+                description: Amazon Web Services License Manager ARN associated with
+                  the subscription.
+                items:
+                  type: string
+                type: array
+              status:
+                description: The status of a subscription.
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

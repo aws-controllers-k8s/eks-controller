@@ -6,3 +6,4 @@ resources:
   - bases/eks.services.k8s.aws_clusters.yaml
   - bases/eks.services.k8s.aws_fargateprofiles.yaml
   - bases/eks.services.k8s.aws_nodegroups.yaml
+  - bases/eks.services.k8s.aws_podidentityassociations.yaml

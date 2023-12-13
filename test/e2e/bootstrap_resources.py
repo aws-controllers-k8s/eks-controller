@@ -27,6 +27,7 @@ class BootstrapResources(Resources):
     ClusterRole: Role
     FargatePodRole: Role
     NodegroupRole: Role
+    PodIdentityAssociationRole: Role
 
 _bootstrap_resources = None
 

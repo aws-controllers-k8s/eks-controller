@@ -153,6 +153,11 @@ class TestNodegroup:
                         "value": "noexecuted",
                         "effect": "NO_EXECUTE"
                     },
+                    {
+                        "key": "owner",
+                        "value": "teamone",
+                        "effect": "NO_SCHEDULE"
+                    },
                 ],
             }
         }
@@ -171,10 +176,13 @@ class TestNodegroup:
         assert aws_res["nodegroup"]["labels"]["toot"] == "shoot"
         assert aws_res["nodegroup"]["labels"]["boot"] == "snoot"
 
-        assert len(aws_res["nodegroup"]["taints"]) == 1
-        assert aws_res["nodegroup"]["taints"][0]["key"] == "ifbooted"
-        assert aws_res["nodegroup"]["taints"][0]["value"] == "noexecuted"
-        assert aws_res["nodegroup"]["taints"][0]["effect"] == "NO_EXECUTE"
+        assert len(aws_res["nodegroup"]["taints"]) == 2
+        assert aws_res["nodegroup"]["taints"][0]["key"] in ["ifbooted", "owner"]
+        assert aws_res["nodegroup"]["taints"][0]["value"] in ["noexecuted", "teamone"]
+        assert aws_res["nodegroup"]["taints"][0]["effect"] in ["NO_EXECUTE", "NO_SCHEDULE"]
+        assert aws_res["nodegroup"]["taints"][1]["key"] in ["ifbooted", "owner"]
+        assert aws_res["nodegroup"]["taints"][1]["value"] in ["noexecuted", "teamone"]
+        assert aws_res["nodegroup"]["taints"][1]["effect"] in ["NO_EXECUTE", "NO_SCHEDULE"]
 
         # Remove a label, update a label and remove a taint
         updates = {
@@ -183,7 +191,13 @@ class TestNodegroup:
                     "toot": "updooted",
                     "boot": None
                 },
-                "taints": [],
+                "taints": [
+                    {
+                        "key": "ifbooted",
+                        "value": "noexecuted",
+                        "effect": "NO_EXECUTE"
+                    }
+                ],
             }
         }
 
@@ -200,5 +214,27 @@ class TestNodegroup:
         assert len(aws_res["nodegroup"]["labels"]) == 1
         assert aws_res["nodegroup"]["labels"]["toot"] == "updooted"
         assert "boot" not in aws_res["nodegroup"]["labels"]
+
+        assert len(aws_res["nodegroup"]["taints"]) == 1
+        assert aws_res["nodegroup"]["taints"][0]["key"] == "ifbooted"
+        assert aws_res["nodegroup"]["taints"][0]["value"] == "noexecuted"
+        assert aws_res["nodegroup"]["taints"][0]["effect"] == "NO_EXECUTE"
+
+        # Remove last taint
+        updates = {
+            "spec": {
+                "taints": [],
+            }
+        }
+
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
+
+        aws_res = eks_client.describe_nodegroup(
+            clusterName=cluster_name,
+            nodegroupName=nodegroup_name
+        )
 
         assert "taints" not in aws_res["nodegroup"]

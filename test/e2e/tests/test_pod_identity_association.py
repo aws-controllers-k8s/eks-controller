@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-"""Integration tests for the EKS Addon resource
+"""Integration tests for the EKS PodIdentityAssociation resource
 """
 
 import json
@@ -24,44 +24,38 @@ from acktest.k8s import resource as k8s
 from acktest.resources import random_suffix_name
 from e2e import CRD_VERSION, service_marker, CRD_GROUP, load_eks_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
+from e2e.fixtures import k8s_service_account
 
 from .test_cluster import simple_cluster, wait_for_cluster_active
 
-RESOURCE_PLURAL = 'addons'
+RESOURCE_PLURAL = 'podidentityassociations'
+
+#TODO(a-hilaly): Dynamically create this role...
+PIA_ROLE = "arn:aws:iam::632556926448:role/ack-eks-controller-pia-role"
 
 CREATE_WAIT_AFTER_SECONDS = 10
 
-
-def wait_for_addon_deleted(eks_client, cluster_name, addon_name):
-    waiter = eks_client.get_waiter('addon_deleted')
-    waiter.wait(clusterName=cluster_name, addonName=addon_name)
-
-
 @pytest.fixture
-def coredns_addon(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceReference, Dict]:
-    addon_name = "coredns"
-    addon_version = "v1.10.1-eksbuild.4"
-    configuration_values = json.dumps(
-        {"resources": {"limits": {"memory": "64Mi"}, "requests": {"cpu": "10m", "memory": "64Mi"}}})
-    resolve_conflicts = "OVERWRITE"
-
+def pod_identity_association(k8s_service_account, eks_client, simple_cluster) -> Tuple[k8s.CustomResourceReference, Dict]:
+    cr_name = random_suffix_name("s3-readonly-pia", 24)
+    namespace = "default"
+    service_account_name = "s3-readonly-service-account"
+    _ = k8s_service_account(namespace, service_account_name)
+    
     (ref, cr) = simple_cluster
     cluster_name = cr["spec"]["name"]
 
     wait_for_cluster_active(eks_client, cluster_name)
 
-    cr_name = random_suffix_name("addon", 32)
-
     replacements = REPLACEMENT_VALUES.copy()
-    replacements["CLUSTER_NAME"] = cluster_name
     replacements["CR_NAME"] = cr_name
-    replacements["ADDON_NAME"] = addon_name
-    replacements["ADDON_VERSION"] = addon_version
-    replacements["CONFIGURATION_VALUES"] = configuration_values
-    replacements["RESOLVE_CONFLICTS"] = resolve_conflicts
+    replacements["CLUSTER_NAME"] = cluster_name
+    replacements["NAMESPACE"] = namespace
+    replacements["ROLE_ARN"] = "arn:aws:iam::632556926448:role/ack-eks-controller-pia-role"
+    replacements["SERVICE_ACCOUNT"] = service_account_name
 
     resource_data = load_eks_resource(
-        "addon_simple",
+        "pod_identity_association",
         additional_replacements=replacements,
     )
     logging.debug(resource_data)
@@ -84,29 +78,26 @@ def coredns_addon(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceReferen
     _, deleted = k8s.delete_custom_resource(ref, 3, 10)
     assert deleted
 
-    wait_for_addon_deleted(eks_client, cluster_name, cr_name)
-
 
 @service_marker
-class TestAddon:
-    def test_create_delete_addon(self, coredns_addon, eks_client):
-        (ref, cr) = coredns_addon
+class TestPodIdentityAssociation:
+    def test_create_delete_pod_identity_association(self, pod_identity_association, eks_client):
+        (ref, cr) = pod_identity_association
 
         cluster_name = cr["spec"]["clusterName"]
-        cr_name = ref.name
-
-        addon_name = cr["spec"]["name"]
-        configuration_values = cr["spec"]["configurationValues"]
+        association_id = cr["status"]["associationID"]
+        namespace = cr["spec"]["namespace"]
+        role_arn = cr["spec"]["roleARN"]
 
         try:
-            aws_res = eks_client.describe_addon(
+            aws_res = eks_client.describe_pod_identity_association(
                 clusterName=cluster_name,
-                addonName=addon_name
+                associationId=association_id
             )
             assert aws_res is not None
 
-            assert aws_res["addon"]["addonName"] == addon_name
-            assert aws_res["addon"]["configurationValues"] == configuration_values
-            assert aws_res["addon"]["addonArn"] is not None
+            assert aws_res["association"]["namespace"] == namespace
+            assert aws_res["association"]["roleArn"] == role_arn
+            assert aws_res["association"]["associationId"] == association_id
         except eks_client.exceptions.ResourceNotFoundException:
-            pytest.fail(f"Could not find Addon '{cr_name}' in EKS")
+            pytest.fail(f"Could not find PodIdentityAssociation '{ref.name}' in EKS")

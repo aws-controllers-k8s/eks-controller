@@ -5,20 +5,21 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
-  name: addons.eks.services.k8s.aws
+  name: podidentityassociations.eks.services.k8s.aws
 spec:
   group: eks.services.k8s.aws
   names:
-    kind: Addon
-    listKind: AddonList
-    plural: addons
-    singular: addon
+    kind: PodIdentityAssociation
+    listKind: PodIdentityAssociationList
+    plural: podidentityassociations
+    singular: podidentityassociation
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Addon is the Schema for the Addons API
+        description: PodIdentityAssociation is the Schema for the PodIdentityAssociations
+          API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,20 +34,18 @@ spec:
           metadata:
             type: object
           spec:
-            description: "AddonSpec defines the desired state of Addon. \n An Amazon
-              EKS add-on. For more information, see Amazon EKS add-ons (https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html)
-              in the Amazon EKS User Guide."
+            description: "PodIdentityAssociationSpec defines the desired state of
+              PodIdentityAssociation. \n Amazon EKS Pod Identity associations provide
+              the ability to manage credentials for your applications, similar to
+              the way that 7EC2l instance profiles provide credentials to Amazon EC2
+              instances."
             properties:
-              addonVersion:
-                description: The version of the add-on. The version must match one
-                  of the versions returned by DescribeAddonVersions (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonVersions.html).
-                type: string
               clientRequestToken:
-                description: A unique, case-sensitive identifier that you provide
-                  to ensure the idempotency of the request.
+                description: Unique, case-sensitive identifier that you provide to
+                  ensure the idempotency of the request.
                 type: string
               clusterName:
-                description: The name of the cluster to create the add-on for.
+                description: The name of the cluster to create the association in.
                 type: string
               clusterRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
@@ -61,49 +60,18 @@ spec:
                         type: string
                     type: object
                 type: object
-              configurationValues:
-                description: The set of configuration values for the add-on that's
-                  created. The values that you provide are validated against the schema
-                  in DescribeAddonConfiguration (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonConfiguration.html).
+              namespace:
+                description: The name of the Kubernetes namespace inside the cluster
+                  to create the association in. The service account and the pods that
+                  use the service account must be in this namespace.
                 type: string
-              name:
-                description: The name of the add-on. The name must match one of the
-                  names that DescribeAddonVersions (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonVersions.html)
-                  returns.
+              roleARN:
+                description: The Amazon Resource Name (ARN) of the IAM role to associate
+                  with the service account. The EKS Pod Identity agent manages credentials
+                  to assume this role for applications in the containers in the pods
+                  that use this service account.
                 type: string
-              resolveConflicts:
-                description: "How to resolve field value conflicts for an Amazon EKS
-                  add-on. Conflicts are handled based on the value you choose: \n
-                  * None – If the self-managed version of the add-on is installed
-                  on your cluster, Amazon EKS doesn't change the value. Creation of
-                  the add-on might fail. \n * Overwrite – If the self-managed version
-                  of the add-on is installed on your cluster and the Amazon EKS default
-                  value is different than the existing value, Amazon EKS changes the
-                  value to the Amazon EKS default value. \n * Preserve – This is similar
-                  to the NONE option. If the self-managed version of the add-on is
-                  installed on your cluster Amazon EKS doesn't change the add-on resource
-                  properties. Creation of the add-on might fail if conflicts are detected.
-                  This option works differently during the update operation. For more
-                  information, see UpdateAddon (https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html).
-                  \n If you don't currently have the self-managed version of the add-on
-                  installed on your cluster, the Amazon EKS add-on is installed. Amazon
-                  EKS sets all values to default values, regardless of the option
-                  that you specify."
-                type: string
-              serviceAccountRoleARN:
-                description: "The Amazon Resource Name (ARN) of an existing IAM role
-                  to bind to the add-on's service account. The role must be assigned
-                  the IAM permissions required by the add-on. If you don't specify
-                  an existing IAM role, then the add-on uses the permissions assigned
-                  to the node IAM role. For more information, see Amazon EKS node
-                  IAM role (https://docs.aws.amazon.com/eks/latest/userguide/create-node-role.html)
-                  in the Amazon EKS User Guide. \n To specify an existing IAM role,
-                  you must have an IAM OpenID Connect (OIDC) provider created for
-                  your cluster. For more information, see Enabling IAM roles for service
-                  accounts on your cluster (https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html)
-                  in the Amazon EKS User Guide."
-                type: string
-              serviceAccountRoleRef:
+              roleRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
                   *AWSResourceReference type to provide more user friendly syntax
                   for references using 'from' field Ex: APIIDRef: \n from: name: my-api"
@@ -116,18 +84,38 @@ spec:
                         type: string
                     type: object
                 type: object
+              serviceAccount:
+                description: The name of the Kubernetes service account inside the
+                  cluster to associate the IAM credentials with.
+                type: string
               tags:
                 additionalProperties:
                   type: string
-                description: The metadata to apply to the cluster to assist with categorization
-                  and organization. Each tag consists of a key and an optional value.
-                  You define both.
+                description: "The metadata that you apply to a resource to assist
+                  with categorization and organization. Each tag consists of a key
+                  and an optional value. You define both. \n The following basic restrictions
+                  apply to tags: \n * Maximum number of tags per resource – 50 \n
+                  * For each resource, each tag key must be unique, and each tag key
+                  can have only one value. \n * Maximum key length – 128 Unicode characters
+                  in UTF-8 \n * Maximum value length – 256 Unicode characters in UTF-8
+                  \n * If your tagging schema is used across multiple services and
+                  resources, remember that other services may have restrictions on
+                  allowed characters. Generally allowed characters are: letters, numbers,
+                  and spaces representable in UTF-8, and the following characters:
+                  + - = . _ : / @. \n * Tag keys and values are case-sensitive. \n
+                  * Do not use aws:, AWS:, or any upper or lowercase combination of
+                  such as a prefix for either keys or values as it is reserved for
+                  Amazon Web Services use. You cannot edit or delete tag keys or values
+                  with this prefix. Tags with this prefix do not count against your
+                  tags per resource limit."
                 type: object
             required:
-            - name
+            - namespace
+            - serviceAccount
             type: object
           status:
-            description: AddonStatus defines the observed state of Addon
+            description: PodIdentityAssociationStatus defines the observed state of
+              PodIdentityAssociation
             properties:
               ackResourceMetadata:
                 description: All CRs managed by ACK have a common `Status.ACKResourceMetadata`
@@ -157,6 +145,12 @@ spec:
                 - ownerAccountID
                 - region
                 type: object
+              associationARN:
+                description: The Amazon Resource Name (ARN) of the association.
+                type: string
+              associationID:
+                description: The ID of the association.
+                type: string
               conditions:
                 description: All CRS managed by ACK have a common `Status.Conditions`
                   member that contains a collection of `ackv1alpha1.Condition` objects
@@ -191,48 +185,13 @@ spec:
                   type: object
                 type: array
               createdAt:
-                description: The date and time that the add-on was created.
+                description: The timestamp that the association was created at.
                 format: date-time
                 type: string
-              health:
-                description: An object that represents the health of the add-on.
-                properties:
-                  issues:
-                    items:
-                      description: An issue related to an add-on.
-                      properties:
-                        code:
-                          type: string
-                        message:
-                          type: string
-                        resourceIDs:
-                          items:
-                            type: string
-                          type: array
-                      type: object
-                    type: array
-                type: object
-              marketplaceInformation:
-                description: Information about an Amazon EKS add-on from the Amazon
-                  Web Services Marketplace.
-                properties:
-                  productID:
-                    type: string
-                  productURL:
-                    type: string
-                type: object
               modifiedAt:
-                description: The date and time that the add-on was last modified.
+                description: The most recent timestamp that the association was modified
+                  at
                 format: date-time
-                type: string
-              owner:
-                description: The owner of the add-on.
-                type: string
-              publisher:
-                description: The publisher of the add-on.
-                type: string
-              status:
-                description: The status of the add-on.
                 type: string
             type: object
         type: object
