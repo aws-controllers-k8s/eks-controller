@@ -168,6 +168,9 @@ resources:
           service_name: ec2
           resource: Subnet
           path: Status.SubnetID
+      Taints:
+        compare:
+          is_ignored: true
     renames:
       operations:
         CreateNodegroup:
@@ -198,7 +201,7 @@ resources:
         - ValidationError
     hooks:
       delta_pre_compare:
-        code: customPreCompare(a, b)
+        code: customPreCompare(delta, a, b)
       sdk_create_post_set_output:
         template_path: hooks/nodegroup/sdk_create_post_set_output.go.tpl
       sdk_read_one_post_set_output:

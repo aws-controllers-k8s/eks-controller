@@ -16,6 +16,7 @@ package nodegroup
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	svcapitypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
@@ -61,6 +62,7 @@ var (
 // appropriately replaced with empty maps or structs depending on the default
 // output of the SDK.
 func customPreCompare(
+	delta *ackcompare.Delta,
 	a *resource,
 	b *resource,
 ) {
@@ -76,6 +78,27 @@ func customPreCompare(
 	}
 	if a.ko.Spec.Tags == nil && b.ko.Spec.Tags != nil {
 		a.ko.Spec.Tags = map[string]*string{}
+	}
+	if a.ko.Spec.Taints != nil && a.ko.Spec.Taints == nil || a.ko.Spec.Taints == nil && a.ko.Spec.Taints != nil {
+		delta.Add("Spec.Taints", a.ko.Spec.Taints, b.ko.Spec.Taints)
+	} else if a.ko.Spec.Taints != nil {
+		if len(a.ko.Spec.Taints) != len(b.ko.Spec.Taints) {
+			delta.Add("Spec.Taints", a.ko.Spec.Taints, b.ko.Spec.Taints)
+		} else {
+			for _, taintA := range a.ko.Spec.Taints {
+				var matched = false
+				for _, taintB := range b.ko.Spec.Taints {
+					if reflect.DeepEqual(taintA, taintB) {
+						matched = true
+						break
+					}
+				}
+				if !matched {
+					delta.Add("Spec.Taints", a.ko.Spec.Taints, b.ko.Spec.Taints)
+					break
+				}
+			}
+		}
 	}
 }
 
