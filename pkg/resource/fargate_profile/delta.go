@@ -78,14 +78,22 @@ func newResourceDelta(
 	if !reflect.DeepEqual(a.ko.Spec.PodExecutionRoleRef, b.ko.Spec.PodExecutionRoleRef) {
 		delta.Add("Spec.PodExecutionRoleRef", a.ko.Spec.PodExecutionRoleRef, b.ko.Spec.PodExecutionRoleRef)
 	}
-	if !reflect.DeepEqual(a.ko.Spec.Selectors, b.ko.Spec.Selectors) {
+	if len(a.ko.Spec.Selectors) != len(b.ko.Spec.Selectors) {
 		delta.Add("Spec.Selectors", a.ko.Spec.Selectors, b.ko.Spec.Selectors)
+	} else if len(a.ko.Spec.Selectors) > 0 {
+		if !reflect.DeepEqual(a.ko.Spec.Selectors, b.ko.Spec.Selectors) {
+			delta.Add("Spec.Selectors", a.ko.Spec.Selectors, b.ko.Spec.Selectors)
+		}
 	}
 	if !reflect.DeepEqual(a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs) {
 		delta.Add("Spec.SubnetRefs", a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs)
 	}
-	if !ackcompare.SliceStringPEqual(a.ko.Spec.Subnets, b.ko.Spec.Subnets) {
+	if len(a.ko.Spec.Subnets) != len(b.ko.Spec.Subnets) {
 		delta.Add("Spec.Subnets", a.ko.Spec.Subnets, b.ko.Spec.Subnets)
+	} else if len(a.ko.Spec.Subnets) > 0 {
+		if !ackcompare.SliceStringPEqual(a.ko.Spec.Subnets, b.ko.Spec.Subnets) {
+			delta.Add("Spec.Subnets", a.ko.Spec.Subnets, b.ko.Spec.Subnets)
+		}
 	}
 	if !ackcompare.MapStringStringEqual(ToACKTags(a.ko.Spec.Tags), ToACKTags(b.ko.Spec.Tags)) {
 		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)

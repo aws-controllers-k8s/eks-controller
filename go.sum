@@ -42,10 +42,10 @@ github.com/aws-controllers-k8s/ec2-controller v1.1.0 h1:SSutBopBi2nYWqNNZfkVgv7k
 github.com/aws-controllers-k8s/ec2-controller v1.1.0/go.mod h1:PvsQehgncHgcu9FiY13M45+GkVsKI98g7G83SrgH7vY=
 github.com/aws-controllers-k8s/iam-controller v1.3.1 h1:/3yH3tAtSVAAt2ulIqsmutjWXhbKWXSaEZ1pph358GE=
 github.com/aws-controllers-k8s/iam-controller v1.3.1/go.mod h1:7nZzMtEN8xEL5fYhL9FKkBhqoP4QMmMp5x5dXDGwfYM=
-github.com/aws-controllers-k8s/runtime v0.27.1 h1:tvJRQDioBFkob0kF4DwgS7MsoXZKwkG5QCHWxFEh+2o=
-github.com/aws-controllers-k8s/runtime v0.27.1/go.mod h1:oSCqCzbzJLUrzv+cx4TIxCuSUvL75ABJmhxBc87IRqc=
-github.com/aws/aws-sdk-go v1.48.4 h1:HS2L7ynVhkcRrQRro9CLJZ/xLRb4UOzDEfPzgevZwXM=
-github.com/aws/aws-sdk-go v1.48.4/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws-controllers-k8s/runtime v0.28.0 h1:QhtZDwF4TId5rBW924FMMKWFb0PGTtclVj+Cyj3bRaI=
+github.com/aws-controllers-k8s/runtime v0.28.0/go.mod h1:OYbm782YcAQDN1M5k3lttI16FcLoiRqrIQL0DvU3+Lg=
+github.com/aws/aws-sdk-go v1.49.0 h1:g9BkW1fo9GqKfwg2+zCD+TW/D36Ux+vtfJ8guF4AYmY=
+github.com/aws/aws-sdk-go v1.49.0/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/benbjohnson/clock v1.1.0 h1:Q92kusRqC1XV2MjkWETPvjJVqKetz1OzxZB7mHJLju8=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=

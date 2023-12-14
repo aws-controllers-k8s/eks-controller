@@ -82,12 +82,16 @@ func newResourceDelta(
 			delta.Add("Spec.DiskSize", a.ko.Spec.DiskSize, b.ko.Spec.DiskSize)
 		}
 	}
-	if !ackcompare.SliceStringPEqual(a.ko.Spec.InstanceTypes, b.ko.Spec.InstanceTypes) {
+	if len(a.ko.Spec.InstanceTypes) != len(b.ko.Spec.InstanceTypes) {
 		delta.Add("Spec.InstanceTypes", a.ko.Spec.InstanceTypes, b.ko.Spec.InstanceTypes)
+	} else if len(a.ko.Spec.InstanceTypes) > 0 {
+		if !ackcompare.SliceStringPEqual(a.ko.Spec.InstanceTypes, b.ko.Spec.InstanceTypes) {
+			delta.Add("Spec.InstanceTypes", a.ko.Spec.InstanceTypes, b.ko.Spec.InstanceTypes)
+		}
 	}
-	if ackcompare.HasNilDifference(a.ko.Spec.Labels, b.ko.Spec.Labels) {
+	if len(a.ko.Spec.Labels) != len(b.ko.Spec.Labels) {
 		delta.Add("Spec.Labels", a.ko.Spec.Labels, b.ko.Spec.Labels)
-	} else if a.ko.Spec.Labels != nil && b.ko.Spec.Labels != nil {
+	} else if len(a.ko.Spec.Labels) > 0 {
 		if !ackcompare.MapStringStringPEqual(a.ko.Spec.Labels, b.ko.Spec.Labels) {
 			delta.Add("Spec.Labels", a.ko.Spec.Labels, b.ko.Spec.Labels)
 		}
@@ -151,8 +155,12 @@ func newResourceDelta(
 				delta.Add("Spec.RemoteAccess.EC2SshKey", a.ko.Spec.RemoteAccess.EC2SshKey, b.ko.Spec.RemoteAccess.EC2SshKey)
 			}
 		}
-		if !ackcompare.SliceStringPEqual(a.ko.Spec.RemoteAccess.SourceSecurityGroups, b.ko.Spec.RemoteAccess.SourceSecurityGroups) {
+		if len(a.ko.Spec.RemoteAccess.SourceSecurityGroups) != len(b.ko.Spec.RemoteAccess.SourceSecurityGroups) {
 			delta.Add("Spec.RemoteAccess.SourceSecurityGroups", a.ko.Spec.RemoteAccess.SourceSecurityGroups, b.ko.Spec.RemoteAccess.SourceSecurityGroups)
+		} else if len(a.ko.Spec.RemoteAccess.SourceSecurityGroups) > 0 {
+			if !ackcompare.SliceStringPEqual(a.ko.Spec.RemoteAccess.SourceSecurityGroups, b.ko.Spec.RemoteAccess.SourceSecurityGroups) {
+				delta.Add("Spec.RemoteAccess.SourceSecurityGroups", a.ko.Spec.RemoteAccess.SourceSecurityGroups, b.ko.Spec.RemoteAccess.SourceSecurityGroups)
+			}
 		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.ScalingConfig, b.ko.Spec.ScalingConfig) {
@@ -183,8 +191,12 @@ func newResourceDelta(
 	if !reflect.DeepEqual(a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs) {
 		delta.Add("Spec.SubnetRefs", a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs)
 	}
-	if !ackcompare.SliceStringPEqual(a.ko.Spec.Subnets, b.ko.Spec.Subnets) {
+	if len(a.ko.Spec.Subnets) != len(b.ko.Spec.Subnets) {
 		delta.Add("Spec.Subnets", a.ko.Spec.Subnets, b.ko.Spec.Subnets)
+	} else if len(a.ko.Spec.Subnets) > 0 {
+		if !ackcompare.SliceStringPEqual(a.ko.Spec.Subnets, b.ko.Spec.Subnets) {
+			delta.Add("Spec.Subnets", a.ko.Spec.Subnets, b.ko.Spec.Subnets)
+		}
 	}
 	if !ackcompare.MapStringStringEqual(ToACKTags(a.ko.Spec.Tags), ToACKTags(b.ko.Spec.Tags)) {
 		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
