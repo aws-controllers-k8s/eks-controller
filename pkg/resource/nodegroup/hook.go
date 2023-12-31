@@ -102,6 +102,48 @@ func customPreCompare(
 	}
 }
 
+func getDesiredSizeManagedByAnnotation(nodegroup *svcapitypes.Nodegroup) (string, bool) {
+	if nodegroup.Annotations == nil {
+		return "", false
+	}
+	managedBy, ok := nodegroup.Annotations[svcapitypes.DesiredSizeManagedByAnnotation]
+	return managedBy, ok
+}
+
+func isManagedExternally(nodegroup *svcapitypes.Nodegroup) bool {
+	managedBy, ok := getDesiredSizeManagedByAnnotation(nodegroup)
+	if !ok {
+		return false
+	}
+	return managedBy == svcapitypes.DesiredSizeManagedByExternalAutoscaler
+}
+
+func customPostCompare(
+	delta *ackcompare.Delta,
+	a *resource,
+	b *resource,
+) {
+	// We only want to compare the desiredSize field if and only if the
+	// desiredSize is managed by the controller, meaning that in the case
+	// where the desiredSize is managed by an external entity, we do not
+	// want to compare the desiredSize field.
+	// When managed by an external entity, an annotation is set on the
+	// nodegroup resource to indicate that the desiredSize is managed
+	// externally.
+	if isManagedExternally(a.ko) && delta.DifferentAt("Spec.ScalingConfig.DesiredSize") {
+		// We need to unset the desiredSize field in the delta so that the
+		// controller does not attempt to reconcile the desiredSize of the
+		// nodegroup.
+		newDiffs := make([]*ackcompare.Difference, 0)
+		for _, d := range delta.Differences {
+			if !d.Path.Contains("Spec.ScalingConfig.DesiredSize") {
+				newDiffs = append(newDiffs, d)
+			}
+		}
+		delta.Differences = newDiffs
+	}
+}
+
 // requeueWaitUntilCanModify returns a `ackrequeue.RequeueNeededAfter` struct
 // explaining the nodegroup cannot be modified until it reaches an active
 // status.
@@ -218,7 +260,7 @@ func (rm *resourceManager) customUpdate(
 
 	if delta.DifferentAt("Spec.Labels") || delta.DifferentAt("Spec.Taints") ||
 		delta.DifferentAt("Spec.ScalingConfig") || delta.DifferentAt("Spec.UpdateConfig") {
-		if err := rm.updateConfig(ctx, desired, latest); err != nil {
+		if err := rm.updateConfig(ctx, delta, desired, latest); err != nil {
 			return nil, err
 		}
 		return returnNodegroupUpdating(updatedRes)
@@ -344,6 +386,7 @@ func (rm *resourceManager) updateVersion(
 
 func (rm *resourceManager) updateConfig(
 	ctx context.Context,
+	delta *ackcompare.Delta,
 	desired *resource,
 	latest *resource,
 ) (err error) {
@@ -359,7 +402,13 @@ func (rm *resourceManager) updateConfig(
 	}
 
 	if desired.ko.Spec.ScalingConfig != nil {
-		input.SetScalingConfig(rm.newNodegroupScalingConfig(desired))
+		sc := rm.newNodegroupScalingConfig(desired)
+		// We need to default the desiredSize to the current observed
+		// value in the case where the desiredSize is managed externally.
+		if isManagedExternally(desired.ko) && latest.ko.Spec.ScalingConfig != nil {
+			sc.DesiredSize = latest.ko.Spec.ScalingConfig.DesiredSize
+		}
+		input.SetScalingConfig(sc)
 	}
 
 	if desired.ko.Spec.UpdateConfig != nil {
