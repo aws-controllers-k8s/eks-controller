@@ -43,6 +43,17 @@ func newResourceDelta(
 		return delta
 	}
 
+	if ackcompare.HasNilDifference(a.ko.Spec.AccessConfig, b.ko.Spec.AccessConfig) {
+		delta.Add("Spec.AccessConfig", a.ko.Spec.AccessConfig, b.ko.Spec.AccessConfig)
+	} else if a.ko.Spec.AccessConfig != nil && b.ko.Spec.AccessConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.AccessConfig.AuthenticationMode, b.ko.Spec.AccessConfig.AuthenticationMode) {
+			delta.Add("Spec.AccessConfig.AuthenticationMode", a.ko.Spec.AccessConfig.AuthenticationMode, b.ko.Spec.AccessConfig.AuthenticationMode)
+		} else if a.ko.Spec.AccessConfig.AuthenticationMode != nil && b.ko.Spec.AccessConfig.AuthenticationMode != nil {
+			if *a.ko.Spec.AccessConfig.AuthenticationMode != *b.ko.Spec.AccessConfig.AuthenticationMode {
+				delta.Add("Spec.AccessConfig.AuthenticationMode", a.ko.Spec.AccessConfig.AuthenticationMode, b.ko.Spec.AccessConfig.AuthenticationMode)
+			}
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.ClientRequestToken, b.ko.Spec.ClientRequestToken) {
 		delta.Add("Spec.ClientRequestToken", a.ko.Spec.ClientRequestToken, b.ko.Spec.ClientRequestToken)
 	} else if a.ko.Spec.ClientRequestToken != nil && b.ko.Spec.ClientRequestToken != nil {

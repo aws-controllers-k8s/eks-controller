@@ -35,10 +35,10 @@ type NodegroupSpec struct {
 	AMIType *string `json:"amiType,omitempty"`
 	// The capacity type for your node group.
 	CapacityType *string `json:"capacityType,omitempty"`
-	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// A unique, case-sensitive identifier that you provide to ensure the idempotency
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
-	// The name of the cluster to create the node group in.
+	// The name of your cluster.
 	ClusterName *string                                  `json:"clusterName,omitempty"`
 	ClusterRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
 	// The root device disk size (in GiB) for your node group instances. The default
@@ -61,8 +61,8 @@ type NodegroupSpec struct {
 	// and Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
 	InstanceTypes []*string `json:"instanceTypes,omitempty"`
-	// The Kubernetes labels to be applied to the nodes in the node group when they
-	// are created.
+	// The Kubernetes labels to apply to the nodes in the node group when they are
+	// created.
 	Labels map[string]*string `json:"labels,omitempty"`
 	// An object representing a node group's launch template specification. If specified,
 	// then do not specify instanceTypes, diskSize, or remoteAccess and make sure
@@ -119,10 +119,9 @@ type NodegroupSpec struct {
 	// support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
 	Subnets []*string `json:"subnets,omitempty"`
-	// The metadata to apply to the node group to assist with categorization and
-	// organization. Each tag consists of a key and an optional value. You define
-	// both. Node group tags do not propagate to any other resources associated
-	// with the node group, such as the Amazon EC2 instances or subnets.
+	// Metadata that assists with categorization and organization. Each tag consists
+	// of a key and an optional value. You define both. Tags don't propagate to
+	// any other cluster or Amazon Web Services resources.
 	Tags map[string]*string `json:"tags,omitempty"`
 	// The Kubernetes taints to be applied to the nodes in the node group. For more
 	// information, see Node taints on managed node groups (https://docs.aws.amazon.com/eks/latest/userguide/node-taints-managed-node-groups.html).
@@ -152,15 +151,14 @@ type NodegroupStatus struct {
 	// resource
 	// +kubebuilder:validation:Optional
 	Conditions []*ackv1alpha1.Condition `json:"conditions"`
-	// The Unix epoch timestamp in seconds for when the managed node group was created.
+	// The Unix epoch timestamp at object creation.
 	// +kubebuilder:validation:Optional
 	CreatedAt *metav1.Time `json:"createdAt,omitempty"`
 	// The health status of the node group. If there are issues with your node group's
 	// health, they are listed here.
 	// +kubebuilder:validation:Optional
 	Health *NodegroupHealth `json:"health,omitempty"`
-	// The Unix epoch timestamp in seconds for when the managed node group was last
-	// modified.
+	// The Unix epoch timestamp for the last modification to the object.
 	// +kubebuilder:validation:Optional
 	ModifiedAt *metav1.Time `json:"modifiedAt,omitempty"`
 	// The resources associated with the node group, such as Auto Scaling groups

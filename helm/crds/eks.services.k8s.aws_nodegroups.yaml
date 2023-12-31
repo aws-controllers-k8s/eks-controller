@@ -50,11 +50,11 @@ spec:
                 description: The capacity type for your node group.
                 type: string
               clientRequestToken:
-                description: Unique, case-sensitive identifier that you provide to
-                  ensure the idempotency of the request.
+                description: A unique, case-sensitive identifier that you provide
+                  to ensure the idempotency of the request.
                 type: string
               clusterName:
-                description: The name of the cluster to create the node group in.
+                description: The name of your cluster.
                 type: string
               clusterRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
@@ -99,8 +99,8 @@ spec:
               labels:
                 additionalProperties:
                   type: string
-                description: The Kubernetes labels to be applied to the nodes in the
-                  node group when they are created.
+                description: The Kubernetes labels to apply to the nodes in the node
+                  group when they are created.
                 type: object
               launchTemplate:
                 description: An object representing a node group's launch template
@@ -242,19 +242,19 @@ spec:
               tags:
                 additionalProperties:
                   type: string
-                description: The metadata to apply to the node group to assist with
-                  categorization and organization. Each tag consists of a key and
-                  an optional value. You define both. Node group tags do not propagate
-                  to any other resources associated with the node group, such as the
-                  Amazon EC2 instances or subnets.
+                description: Metadata that assists with categorization and organization.
+                  Each tag consists of a key and an optional value. You define both.
+                  Tags don't propagate to any other cluster or Amazon Web Services
+                  resources.
                 type: object
               taints:
                 description: The Kubernetes taints to be applied to the nodes in the
                   node group. For more information, see Node taints on managed node
                   groups (https://docs.aws.amazon.com/eks/latest/userguide/node-taints-managed-node-groups.html).
                 items:
-                  description: A property that allows a node to repel a set of pods.
-                    For more information, see Node taints on managed node groups (https://docs.aws.amazon.com/eks/latest/userguide/node-taints-managed-node-groups.html).
+                  description: A property that allows a node to repel a Pod. For more
+                    information, see Node taints on managed node groups (https://docs.aws.amazon.com/eks/latest/userguide/node-taints-managed-node-groups.html)
+                    in the Amazon EKS User Guide.
                   properties:
                     effect:
                       type: string
@@ -352,8 +352,7 @@ spec:
                   type: object
                 type: array
               createdAt:
-                description: The Unix epoch timestamp in seconds for when the managed
-                  node group was created.
+                description: The Unix epoch timestamp at object creation.
                 format: date-time
                 type: string
               health:
@@ -377,8 +376,8 @@ spec:
                     type: array
                 type: object
               modifiedAt:
-                description: The Unix epoch timestamp in seconds for when the managed
-                  node group was last modified.
+                description: The Unix epoch timestamp for the last modification to
+                  the object.
                 format: date-time
                 type: string
               resources:

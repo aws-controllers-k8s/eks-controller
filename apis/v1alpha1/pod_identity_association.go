@@ -23,11 +23,11 @@ import (
 // PodIdentityAssociationSpec defines the desired state of PodIdentityAssociation.
 //
 // Amazon EKS Pod Identity associations provide the ability to manage credentials
-// for your applications, similar to the way that 7EC2l instance profiles provide
-// credentials to Amazon EC2 instances.
+// for your applications, similar to the way that Amazon EC2 instance profiles
+// provide credentials to Amazon EC2 instances.
 type PodIdentityAssociationSpec struct {
 
-	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// A unique, case-sensitive identifier that you provide to ensure the idempotency
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The name of the cluster to create the association in.
@@ -47,9 +47,9 @@ type PodIdentityAssociationSpec struct {
 	// the IAM credentials with.
 	// +kubebuilder:validation:Required
 	ServiceAccount *string `json:"serviceAccount"`
-	// The metadata that you apply to a resource to assist with categorization and
-	// organization. Each tag consists of a key and an optional value. You define
-	// both.
+	// Metadata that assists with categorization and organization. Each tag consists
+	// of a key and an optional value. You define both. Tags don't propagate to
+	// any other cluster or Amazon Web Services resources.
 	//
 	// The following basic restrictions apply to tags:
 	//

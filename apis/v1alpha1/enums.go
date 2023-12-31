@@ -32,6 +32,13 @@ const (
 	AMITypes_WINDOWS_FULL_2022_x86_64   AMITypes = "WINDOWS_FULL_2022_x86_64"
 )
 
+type AccessScopeType string
+
+const (
+	AccessScopeType_cluster   AccessScopeType = "cluster"
+	AccessScopeType_namespace AccessScopeType = "namespace"
+)
+
 type AddonIssueCode string
 
 const (
@@ -58,11 +65,25 @@ const (
 	AddonStatus_SDK_UPDATE_FAILED AddonStatus_SDK = "UPDATE_FAILED"
 )
 
+type AuthenticationMode string
+
+const (
+	AuthenticationMode_API                AuthenticationMode = "API"
+	AuthenticationMode_API_AND_CONFIG_MAP AuthenticationMode = "API_AND_CONFIG_MAP"
+	AuthenticationMode_CONFIG_MAP         AuthenticationMode = "CONFIG_MAP"
+)
+
 type CapacityTypes string
 
 const (
 	CapacityTypes_ON_DEMAND CapacityTypes = "ON_DEMAND"
 	CapacityTypes_SPOT      CapacityTypes = "SPOT"
+)
+
+type Category string
+
+const (
+	Category_UPGRADE_READINESS Category = "UPGRADE_READINESS"
 )
 
 type ClusterIssueCode string
@@ -184,6 +205,15 @@ const (
 	IPFamily_ipv6 IPFamily = "ipv6"
 )
 
+type InsightStatusValue string
+
+const (
+	InsightStatusValue_PASSING InsightStatusValue = "PASSING"
+	InsightStatusValue_WARNING InsightStatusValue = "WARNING"
+	InsightStatusValue_ERROR   InsightStatusValue = "ERROR"
+	InsightStatusValue_UNKNOWN InsightStatusValue = "UNKNOWN"
+)
+
 type LogType string
 
 const (
@@ -289,6 +319,7 @@ const (
 	UpdateParamType_ConfigurationValues      UpdateParamType = "ConfigurationValues"
 	UpdateParamType_SecurityGroups           UpdateParamType = "SecurityGroups"
 	UpdateParamType_Subnets                  UpdateParamType = "Subnets"
+	UpdateParamType_AuthenticationMode       UpdateParamType = "AuthenticationMode"
 )
 
 type UpdateStatus string
@@ -312,4 +343,5 @@ const (
 	UpdateType_AssociateEncryptionConfig          UpdateType = "AssociateEncryptionConfig"
 	UpdateType_AddonUpdate                        UpdateType = "AddonUpdate"
 	UpdateType_VpcConfigUpdate                    UpdateType = "VpcConfigUpdate"
+	UpdateType_AccessConfigUpdate                 UpdateType = "AccessConfigUpdate"
 )

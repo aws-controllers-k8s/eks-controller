@@ -25,7 +25,9 @@ import (
 // An object representing an Amazon EKS cluster.
 type ClusterSpec struct {
 
-	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// The access configuration for the cluster.
+	AccessConfig *CreateAccessConfigRequest `json:"accessConfig,omitempty"`
+	// A unique, case-sensitive identifier that you provide to ensure the idempotency
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The encryption configuration for the cluster.
@@ -68,8 +70,9 @@ type ClusterSpec struct {
 	// in the Amazon EKS User Guide .
 	RoleARN *string                                  `json:"roleARN,omitempty"`
 	RoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"roleRef,omitempty"`
-	// The metadata to apply to the cluster to assist with categorization and organization.
-	// Each tag consists of a key and an optional value. You define both.
+	// Metadata that assists with categorization and organization. Each tag consists
+	// of a key and an optional value. You define both. Tags don't propagate to
+	// any other cluster or Amazon Web Services resources.
 	Tags map[string]*string `json:"tags,omitempty"`
 	// The desired Kubernetes version for your cluster. If you don't specify a value
 	// here, the default version available in Amazon EKS is used.
@@ -97,7 +100,7 @@ type ClusterStatus struct {
 	// The configuration used to connect to a cluster for registration.
 	// +kubebuilder:validation:Optional
 	ConnectorConfig *ConnectorConfigResponse `json:"connectorConfig,omitempty"`
-	// The Unix epoch timestamp in seconds for when the cluster was created.
+	// The Unix epoch timestamp at object creation.
 	// +kubebuilder:validation:Optional
 	CreatedAt *metav1.Time `json:"createdAt,omitempty"`
 	// The endpoint for your Kubernetes API server.
@@ -116,8 +119,11 @@ type ClusterStatus struct {
 	// The identity provider information for the cluster.
 	// +kubebuilder:validation:Optional
 	Identity *Identity `json:"identity,omitempty"`
-	// The platform version of your Amazon EKS cluster. For more information, see
-	// Platform Versions (https://docs.aws.amazon.com/eks/latest/userguide/platform-versions.html)
+	// The platform version of your Amazon EKS cluster. For more information about
+	// clusters deployed on the Amazon Web Services Cloud, see Platform versions
+	// (https://docs.aws.amazon.com/eks/latest/userguide/platform-versions.html)
+	// in the Amazon EKS User Guide . For more information about local clusters
+	// deployed on an Outpost, see Amazon EKS local cluster platform versions (https://docs.aws.amazon.com/eks/latest/userguide/eks-outposts-platform-versions.html)
 	// in the Amazon EKS User Guide .
 	// +kubebuilder:validation:Optional
 	PlatformVersion *string `json:"platformVersion,omitempty"`

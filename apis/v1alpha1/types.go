@@ -28,6 +28,74 @@ var (
 	_ = ackv1alpha1.AWSAccountID("")
 )
 
+// The access configuration for the cluster.
+type AccessConfigResponse struct {
+	AuthenticationMode                      *string `json:"authenticationMode,omitempty"`
+	BootstrapClusterCreatorAdminPermissions *bool   `json:"bootstrapClusterCreatorAdminPermissions,omitempty"`
+}
+
+// An access entry allows an IAM principal (user or role) to access your cluster.
+// Access entries can replace the need to maintain the aws-auth ConfigMap for
+// authentication. For more information about access entries, see Access entries
+// (https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html) in
+// the Amazon EKS User Guide.
+type AccessEntry struct {
+	AccessEntryARN   *string      `json:"accessEntryARN,omitempty"`
+	ClusterName      *string      `json:"clusterName,omitempty"`
+	CreatedAt        *metav1.Time `json:"createdAt,omitempty"`
+	KubernetesGroups []*string    `json:"kubernetesGroups,omitempty"`
+	ModifiedAt       *metav1.Time `json:"modifiedAt,omitempty"`
+	PrincipalARN     *string      `json:"principalARN,omitempty"`
+	// The metadata that you apply to a resource to help you categorize and organize
+	// them. Each tag consists of a key and an optional value. You define them.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource – 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length – 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length – 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for Amazon Web
+	//    Services use. You cannot edit or delete tag keys or values with this prefix.
+	//    Tags with this prefix do not count against your tags per resource limit.
+	Tags     map[string]*string `json:"tags,omitempty"`
+	Type     *string            `json:"type_,omitempty"`
+	Username *string            `json:"username,omitempty"`
+}
+
+// An access policy includes permissions that allow Amazon EKS to authorize
+// an IAM principal to work with Kubernetes objects on your cluster. The policies
+// are managed by Amazon EKS, but they're not IAM policies. You can't view the
+// permissions in the policies using the API. The permissions for many of the
+// policies are similar to the Kubernetes cluster-admin, admin, edit, and view
+// cluster roles. For more information about these cluster roles, see User-facing
+// roles (https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles)
+// in the Kubernetes documentation. To view the contents of the policies, see
+// Access policy permissions (https://docs.aws.amazon.com/eks/latest/userguide/access-policies.html#access-policy-permissions)
+// in the Amazon EKS User Guide.
+type AccessPolicy struct {
+	ARN  *string `json:"arn,omitempty"`
+	Name *string `json:"name,omitempty"`
+}
+
+// The scope of an AccessPolicy that's associated to an AccessEntry.
+type AccessScope struct {
+	Namespaces []*string `json:"namespaces,omitempty"`
+}
+
 // The health of the add-on.
 type AddonHealth struct {
 	Issues []*AddonIssue `json:"issues,omitempty"`
@@ -103,6 +171,13 @@ type Addon_SDK struct {
 	Tags map[string]*string `json:"tags,omitempty"`
 }
 
+// An access policy association.
+type AssociatedAccessPolicy struct {
+	AssociatedAt *metav1.Time `json:"associatedAt,omitempty"`
+	ModifiedAt   *metav1.Time `json:"modifiedAt,omitempty"`
+	PolicyARN    *string      `json:"policyARN,omitempty"`
+}
+
 // An Auto Scaling group that is associated with an Amazon EKS managed node
 // group.
 type AutoScalingGroup struct {
@@ -112,6 +187,12 @@ type AutoScalingGroup struct {
 // An object representing the certificate-authority-data for your cluster.
 type Certificate struct {
 	Data *string `json:"data,omitempty"`
+}
+
+// Details about clients using the deprecated resources.
+type ClientStat struct {
+	LastRequestTime *metav1.Time `json:"lastRequestTime,omitempty"`
+	UserAgent       *string      `json:"userAgent,omitempty"`
 }
 
 // An object representing the health of your local Amazon EKS cluster on an
@@ -132,7 +213,9 @@ type ClusterIssue struct {
 
 // An object representing an Amazon EKS cluster.
 type Cluster_SDK struct {
-	ARN *string `json:"arn,omitempty"`
+	// The access configuration for the cluster.
+	AccessConfig *AccessConfigResponse `json:"accessConfig,omitempty"`
+	ARN          *string               `json:"arn,omitempty"`
 	// An object representing the certificate-authority-data for your cluster.
 	CertificateAuthority *Certificate `json:"certificateAuthority,omitempty"`
 	ClientRequestToken   *string      `json:"clientRequestToken,omitempty"`
@@ -227,6 +310,21 @@ type ControlPlanePlacementRequest struct {
 // in the Amazon EKS User Guide.
 type ControlPlanePlacementResponse struct {
 	GroupName *string `json:"groupName,omitempty"`
+}
+
+// The access configuration information for the cluster.
+type CreateAccessConfigRequest struct {
+	AuthenticationMode                      *string `json:"authenticationMode,omitempty"`
+	BootstrapClusterCreatorAdminPermissions *bool   `json:"bootstrapClusterCreatorAdminPermissions,omitempty"`
+}
+
+// The summary information about deprecated resource usage for an insight check
+// in the UPGRADE_READINESS category.
+type DeprecationDetail struct {
+	ReplacedWith                   *string `json:"replacedWith,omitempty"`
+	StartServingReplacementVersion *string `json:"startServingReplacementVersion,omitempty"`
+	StopServingVersion             *string `json:"stopServingVersion,omitempty"`
+	Usage                          *string `json:"usage,omitempty"`
 }
 
 // An EKS Anywhere subscription authorizing the customer to support for licensed
@@ -337,6 +435,44 @@ type Identity struct {
 type IdentityProviderConfig struct {
 	Name *string `json:"name,omitempty"`
 	Type *string `json:"type_,omitempty"`
+}
+
+// A check that provides recommendations to remedy potential upgrade-impacting
+// issues.
+type Insight struct {
+	Description        *string      `json:"description,omitempty"`
+	ID                 *string      `json:"id,omitempty"`
+	KubernetesVersion  *string      `json:"kubernetesVersion,omitempty"`
+	LastRefreshTime    *metav1.Time `json:"lastRefreshTime,omitempty"`
+	LastTransitionTime *metav1.Time `json:"lastTransitionTime,omitempty"`
+	Name               *string      `json:"name,omitempty"`
+	Recommendation     *string      `json:"recommendation,omitempty"`
+}
+
+// Returns information about the resource being evaluated.
+type InsightResourceDetail struct {
+	ARN                   *string `json:"arn,omitempty"`
+	KubernetesResourceURI *string `json:"kubernetesResourceURI,omitempty"`
+}
+
+// The status of the insight.
+type InsightStatus struct {
+	Reason *string `json:"reason,omitempty"`
+}
+
+// The summarized description of the insight.
+type InsightSummary struct {
+	Description        *string      `json:"description,omitempty"`
+	ID                 *string      `json:"id,omitempty"`
+	KubernetesVersion  *string      `json:"kubernetesVersion,omitempty"`
+	LastRefreshTime    *metav1.Time `json:"lastRefreshTime,omitempty"`
+	LastTransitionTime *metav1.Time `json:"lastTransitionTime,omitempty"`
+	Name               *string      `json:"name,omitempty"`
+}
+
+// The criteria to use for the insights.
+type InsightsFilter struct {
+	KubernetesVersions []*string `json:"kubernetesVersions,omitempty"`
 }
 
 // An object representing an issue with an Amazon EKS resource.
@@ -550,7 +686,7 @@ type OIDCIdentityProviderConfig struct {
 
 // An object representing an OpenID Connect (OIDC) configuration. Before associating
 // an OIDC identity provider to your cluster, review the considerations in Authenticating
-// users for your cluster from an OpenID Connect identity provider (https://docs.aws.amazon.com/eks/latest/userguide/authenticate-oidc-identity-provider.html)
+// users for your cluster from an OIDC identity provider (https://docs.aws.amazon.com/eks/latest/userguide/authenticate-oidc-identity-provider.html)
 // in the Amazon EKS User Guide.
 type OIDCIdentityProviderConfigRequest struct {
 	ClientID                   *string `json:"clientID,omitempty"`
@@ -611,8 +747,8 @@ type PodIdentityAssociationSummary struct {
 }
 
 // Amazon EKS Pod Identity associations provide the ability to manage credentials
-// for your applications, similar to the way that 7EC2l instance profiles provide
-// credentials to Amazon EC2 instances.
+// for your applications, similar to the way that Amazon EC2 instance profiles
+// provide credentials to Amazon EC2 instances.
 type PodIdentityAssociation_SDK struct {
 	AssociationARN *string      `json:"associationARN,omitempty"`
 	AssociationID  *string      `json:"associationID,omitempty"`
@@ -664,8 +800,9 @@ type RemoteAccessConfig struct {
 	SourceSecurityGroups    []*string                                  `json:"sourceSecurityGroups,omitempty"`
 }
 
-// A property that allows a node to repel a set of pods. For more information,
-// see Node taints on managed node groups (https://docs.aws.amazon.com/eks/latest/userguide/node-taints-managed-node-groups.html).
+// A property that allows a node to repel a Pod. For more information, see Node
+// taints on managed node groups (https://docs.aws.amazon.com/eks/latest/userguide/node-taints-managed-node-groups.html)
+// in the Amazon EKS User Guide.
 type Taint struct {
 	Effect *string `json:"effect,omitempty"`
 	Key    *string `json:"key,omitempty"`
@@ -682,6 +819,11 @@ type Update struct {
 	Type      *string        `json:"type_,omitempty"`
 }
 
+// The access configuration information for the cluster.
+type UpdateAccessConfigRequest struct {
+	AuthenticationMode *string `json:"authenticationMode,omitempty"`
+}
+
 // An object representing a Kubernetes label change for a managed node group.
 type UpdateLabelsPayload struct {
 	AddOrUpdateLabels map[string]*string `json:"addOrUpdateLabels,omitempty"`
@@ -694,7 +836,8 @@ type UpdateParam struct {
 }
 
 // An object representing the details of an update to a taints payload. For
-// more information, see Node taints on managed node groups (https://docs.aws.amazon.com/eks/latest/userguide/node-taints-managed-node-groups.html).
+// more information, see Node taints on managed node groups (https://docs.aws.amazon.com/eks/latest/userguide/node-taints-managed-node-groups.html)
+// in the Amazon EKS User Guide.
 type UpdateTaintsPayload struct {
 	AddOrUpdateTaints []*Taint `json:"addOrUpdateTaints,omitempty"`
 	RemoveTaints      []*Taint `json:"removeTaints,omitempty"`

@@ -46,7 +46,7 @@ spec:
                   to ensure the idempotency of the request.
                 type: string
               clusterName:
-                description: The name of the cluster to create the add-on for.
+                description: The name of your cluster.
                 type: string
               clusterRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
@@ -64,12 +64,11 @@ spec:
               configurationValues:
                 description: The set of configuration values for the add-on that's
                   created. The values that you provide are validated against the schema
-                  in DescribeAddonConfiguration (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonConfiguration.html).
+                  returned by DescribeAddonConfiguration.
                 type: string
               name:
                 description: The name of the add-on. The name must match one of the
-                  names that DescribeAddonVersions (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonVersions.html)
-                  returns.
+                  names returned by DescribeAddonVersions.
                 type: string
               resolveConflicts:
                 description: "How to resolve field value conflicts for an Amazon EKS
@@ -119,9 +118,10 @@ spec:
               tags:
                 additionalProperties:
                   type: string
-                description: The metadata to apply to the cluster to assist with categorization
-                  and organization. Each tag consists of a key and an optional value.
-                  You define both.
+                description: Metadata that assists with categorization and organization.
+                  Each tag consists of a key and an optional value. You define both.
+                  Tags don't propagate to any other cluster or Amazon Web Services
+                  resources.
                 type: object
             required:
             - name
@@ -191,7 +191,7 @@ spec:
                   type: object
                 type: array
               createdAt:
-                description: The date and time that the add-on was created.
+                description: The Unix epoch timestamp at object creation.
                 format: date-time
                 type: string
               health:
@@ -222,7 +222,8 @@ spec:
                     type: string
                 type: object
               modifiedAt:
-                description: The date and time that the add-on was last modified.
+                description: The Unix epoch timestamp for the last modification to
+                  the object.
                 format: date-time
                 type: string
               owner:
