@@ -39,7 +39,7 @@ type AccessConfigResponse struct {
 // authentication. For more information about access entries, see Access entries
 // (https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html) in
 // the Amazon EKS User Guide.
-type AccessEntry struct {
+type AccessEntry_SDK struct {
 	AccessEntryARN   *string      `json:"accessEntryARN,omitempty"`
 	ClusterName      *string      `json:"clusterName,omitempty"`
 	CreatedAt        *metav1.Time `json:"createdAt,omitempty"`
@@ -94,6 +94,7 @@ type AccessPolicy struct {
 // The scope of an AccessPolicy that's associated to an AccessEntry.
 type AccessScope struct {
 	Namespaces []*string `json:"namespaces,omitempty"`
+	Type       *string   `json:"type,omitempty"`
 }
 
 // The health of the add-on.
@@ -171,8 +172,16 @@ type Addon_SDK struct {
 	Tags map[string]*string `json:"tags,omitempty"`
 }
 
+type AssociateAccessPolicyInput struct {
+	// The scope of an AccessPolicy that's associated to an AccessEntry.
+	AccessScope *AccessScope `json:"accessScope,omitempty"`
+	PolicyARN   *string      `json:"policyARN,omitempty"`
+}
+
 // An access policy association.
 type AssociatedAccessPolicy struct {
+	// The scope of an AccessPolicy that's associated to an AccessEntry.
+	AccessScope  *AccessScope `json:"accessScope,omitempty"`
 	AssociatedAt *metav1.Time `json:"associatedAt,omitempty"`
 	ModifiedAt   *metav1.Time `json:"modifiedAt,omitempty"`
 	PolicyARN    *string      `json:"policyARN,omitempty"`

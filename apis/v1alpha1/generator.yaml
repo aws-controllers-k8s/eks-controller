@@ -229,7 +229,29 @@ resources:
           service_name: iam
           resource: Role
           path: Status.ACKResourceMetadata.ARN
+  AccessEntry:
+    fields:
+      ClusterName:
+        references:
+          resource: Cluster
+          path: Spec.Name
+        is_primary_key: true
+      AccessPolicies:
+        custom_field:
+          list_of: AssociateAccessPolicyInput
+      AccessPolicies.AccessScope.Type:
+        go_tag: json:"type,omitempty"
+      Type:
+        go_tag: json:"type,omitempty"
+    hooks:
+      sdk_read_one_post_set_output:
+        template_path: hooks/access_entry/sdk_read_one_post_set_output.go.tpl
+      sdk_update_pre_build_request:
+        template_path: hooks/access_entry/sdk_update_pre_build_request.go.tpl
 ignore:
   resource_names:
-   - EksAnywhereSubscription
-   - AccessEntry
+  - EksAnywhereSubscription
+  field_paths:
+  - CreateAccessEntryInput.ClientRequestToken
+  - AssociateAccessPolicyInput.PrincipalArn
+  - AssociateAccessPolicyInput.ClusterName

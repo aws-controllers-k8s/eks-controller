@@ -2,6 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - common
+  - bases/eks.services.k8s.aws_accessentries.yaml
   - bases/eks.services.k8s.aws_addons.yaml
   - bases/eks.services.k8s.aws_clusters.yaml
   - bases/eks.services.k8s.aws_fargateprofiles.yaml

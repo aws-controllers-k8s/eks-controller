@@ -26,5 +26,7 @@ REPLACEMENT_VALUES = {
     "PUBLIC_SUBNET_1": get_bootstrap_resources().ClusterVPC.public_subnets.subnet_ids[0],
     "PUBLIC_SUBNET_2": get_bootstrap_resources().ClusterVPC.public_subnets.subnet_ids[1],
     "PRIVATE_SUBNET_1": get_bootstrap_resources().ClusterVPC.private_subnets.subnet_ids[0],
-    "PRIVATE_SUBNET_2": get_bootstrap_resources().ClusterVPC.private_subnets.subnet_ids[1]
+    "PRIVATE_SUBNET_2": get_bootstrap_resources().ClusterVPC.private_subnets.subnet_ids[1],
+
+    "AUTHENTICATION_MODE": "API_AND_CONFIG_MAP"
 }
