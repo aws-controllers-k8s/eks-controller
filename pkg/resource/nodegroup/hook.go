@@ -103,14 +103,14 @@ func customPreCompare(
 }
 
 func getDesiredSizeManagedByAnnotation(nodegroup *svcapitypes.Nodegroup) (string, bool) {
-	if nodegroup.Annotations == nil {
+	if len(nodegroup.Annotations) == 0 {
 		return "", false
 	}
 	managedBy, ok := nodegroup.Annotations[svcapitypes.DesiredSizeManagedByAnnotation]
 	return managedBy, ok
 }
 
-func isManagedExternally(nodegroup *svcapitypes.Nodegroup) bool {
+func isManagedByExternalAutoscaler(nodegroup *svcapitypes.Nodegroup) bool {
 	managedBy, ok := getDesiredSizeManagedByAnnotation(nodegroup)
 	if !ok {
 		return false
@@ -130,7 +130,7 @@ func customPostCompare(
 	// When managed by an external entity, an annotation is set on the
 	// nodegroup resource to indicate that the desiredSize is managed
 	// externally.
-	if isManagedExternally(a.ko) && delta.DifferentAt("Spec.ScalingConfig.DesiredSize") {
+	if isManagedByExternalAutoscaler(a.ko) && delta.DifferentAt("Spec.ScalingConfig.DesiredSize") {
 		// We need to unset the desiredSize field in the delta so that the
 		// controller does not attempt to reconcile the desiredSize of the
 		// nodegroup.
@@ -384,6 +384,18 @@ func (rm *resourceManager) updateVersion(
 	return nil
 }
 
+func (rm *resourceManager) newUpdateScalingConfigPayload(
+	desired, latest *resource,
+) *svcsdk.NodegroupScalingConfig {
+	sc := rm.newNodegroupScalingConfig(desired)
+	// We need to default the desiredSize to the current observed
+	// value in the case where the desiredSize is managed externally.
+	if isManagedByExternalAutoscaler(desired.ko) && latest.ko.Spec.ScalingConfig != nil {
+		sc.DesiredSize = latest.ko.Spec.ScalingConfig.DesiredSize
+	}
+	return sc
+}
+
 func (rm *resourceManager) updateConfig(
 	ctx context.Context,
 	delta *ackcompare.Delta,
@@ -402,13 +414,7 @@ func (rm *resourceManager) updateConfig(
 	}
 
 	if desired.ko.Spec.ScalingConfig != nil {
-		sc := rm.newNodegroupScalingConfig(desired)
-		// We need to default the desiredSize to the current observed
-		// value in the case where the desiredSize is managed externally.
-		if isManagedExternally(desired.ko) && latest.ko.Spec.ScalingConfig != nil {
-			sc.DesiredSize = latest.ko.Spec.ScalingConfig.DesiredSize
-		}
-		input.SetScalingConfig(sc)
+		input.SetScalingConfig(rm.newUpdateScalingConfigPayload(desired, latest))
 	}
 
 	if desired.ko.Spec.UpdateConfig != nil {

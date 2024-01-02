@@ -171,9 +171,6 @@ resources:
       Taints:
         compare:
           is_ignored: true
-      ScalingConfig.DesiredSize:
-        compare:
-          is_ignored: true
     renames:
       operations:
         CreateNodegroup:

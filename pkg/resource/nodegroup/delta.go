@@ -166,6 +166,13 @@ func newResourceDelta(
 	if ackcompare.HasNilDifference(a.ko.Spec.ScalingConfig, b.ko.Spec.ScalingConfig) {
 		delta.Add("Spec.ScalingConfig", a.ko.Spec.ScalingConfig, b.ko.Spec.ScalingConfig)
 	} else if a.ko.Spec.ScalingConfig != nil && b.ko.Spec.ScalingConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.ScalingConfig.DesiredSize, b.ko.Spec.ScalingConfig.DesiredSize) {
+			delta.Add("Spec.ScalingConfig.DesiredSize", a.ko.Spec.ScalingConfig.DesiredSize, b.ko.Spec.ScalingConfig.DesiredSize)
+		} else if a.ko.Spec.ScalingConfig.DesiredSize != nil && b.ko.Spec.ScalingConfig.DesiredSize != nil {
+			if *a.ko.Spec.ScalingConfig.DesiredSize != *b.ko.Spec.ScalingConfig.DesiredSize {
+				delta.Add("Spec.ScalingConfig.DesiredSize", a.ko.Spec.ScalingConfig.DesiredSize, b.ko.Spec.ScalingConfig.DesiredSize)
+			}
+		}
 		if ackcompare.HasNilDifference(a.ko.Spec.ScalingConfig.MaxSize, b.ko.Spec.ScalingConfig.MaxSize) {
 			delta.Add("Spec.ScalingConfig.MaxSize", a.ko.Spec.ScalingConfig.MaxSize, b.ko.Spec.ScalingConfig.MaxSize)
 		} else if a.ko.Spec.ScalingConfig.MaxSize != nil && b.ko.Spec.ScalingConfig.MaxSize != nil {
