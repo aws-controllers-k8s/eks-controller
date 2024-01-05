@@ -238,3 +238,85 @@ class TestNodegroup:
         )
 
         assert "taints" not in aws_res["nodegroup"]
+
+    def test_nodegroup_custom_annotations(self, simple_nodegroup, eks_client):
+        (ref, cr) = simple_nodegroup
+
+        cluster_name = cr["spec"]["clusterName"]
+        cr_name = ref.name
+
+        nodegroup_name = cr["spec"]["name"]
+
+        try:
+            aws_res = eks_client.describe_nodegroup(
+                clusterName=cluster_name,
+                nodegroupName=nodegroup_name
+            )
+            assert aws_res is not None
+
+            assert aws_res["nodegroup"]["nodegroupName"] == nodegroup_name
+            assert aws_res["nodegroup"]["nodegroupArn"] is not None
+        except eks_client.exceptions.ResourceNotFoundException:
+            pytest.fail(f"Could not find Nodegroup '{cr_name}' in EKS")
+
+        wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
+
+        # Set the eks.services.k8s.aws/desired-size-managed-by annotations and
+        # update the desiredSize along with the maxSize
+        updates = {
+            "metadata": {
+                "annotations": {
+                    "eks.services.k8s.aws/desired-size-managed-by": "external-autoscaler",
+                }
+            },
+            "spec": {
+                "scalingConfig": {
+                    "minSize": 1,
+                    "maxSize": 2,
+                    "desiredSize": 3, # Controller should not apply this value
+                }
+            }
+        }
+
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
+
+        aws_res = eks_client.describe_nodegroup(
+            clusterName=cluster_name,
+            nodegroupName=nodegroup_name
+        )
+        assert aws_res["nodegroup"]["scalingConfig"]["minSize"] == 1
+        assert aws_res["nodegroup"]["scalingConfig"]["maxSize"] == 2
+        assert aws_res["nodegroup"]["scalingConfig"]["desiredSize"] == 1 # Should be 1, not 3
+
+        # Set the eks.services.k8s.aws/desired-size-managed-by annotations and
+        # update the desiredSize only
+        updates = {
+            "metadata": {
+                "annotations": {
+                    "eks.services.k8s.aws/desired-size-managed-by": "external-autoscaler",
+                }
+            },
+            "spec": {
+                "scalingConfig": {
+                    "minSize": 1,
+                    "maxSize": 2,
+                    "desiredSize": 10, # Controller should not apply this value
+                }
+            }
+        }
+
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
+
+        aws_res = eks_client.describe_nodegroup(
+            clusterName=cluster_name,
+            nodegroupName=nodegroup_name
+        )
+        assert aws_res["nodegroup"]["scalingConfig"]["minSize"] == 1
+        assert aws_res["nodegroup"]["scalingConfig"]["maxSize"] == 2
+        assert aws_res["nodegroup"]["scalingConfig"]["desiredSize"] == 1 # Should be 1, not 10

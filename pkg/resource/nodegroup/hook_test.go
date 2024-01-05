@@ -15,6 +15,7 @@ package nodegroup
 
 import (
 	"fmt"
+	"io"
 	"reflect"
 	"testing"
 
@@ -23,6 +24,7 @@ import (
 	svcsdk "github.com/aws/aws-sdk-go/service/eks"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 )
@@ -354,7 +356,11 @@ func Test_resourceManager_newUpdateScalingConfigPayload_ManagedByExternalAutosca
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rm := resourceManager{}
+			rm := resourceManager{
+				log: zap.New(zap.UseFlagOptions(&zap.Options{
+					DestWriter: io.Discard,
+				})),
+			}
 			if got := rm.newUpdateScalingConfigPayload(&resource{tt.args.desired}, &resource{tt.args.latest}); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("resourceManager.newUpdateScalingConfigPayload() = %v, want %v", got, tt.want)
 			}

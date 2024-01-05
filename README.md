@@ -29,12 +29,12 @@ For some resources, the `eks-controller` supports annotations to customize the
 behavior of the controller. The following annotations are supported:
 
 - **Nodegroup**
-    - `eks.service.k8s.aws/desired-size-managed-by`: used to control whether the
+    - `eks.services.k8s.aws/desired-size-managed-by`: used to control whether the
       controller should manage the desiredSize of the Nodegroup `spec.ScalingConfig.DesiredSize`.
       It supports the following values:
-        - `ack-eks-controller`: If set the controller will be responsible for
+        - `ack-eks-controller`: If set, the controller will be responsible for
           managing the desired size of the nodegroup.
-        - `external-autoscaler`: If set will ignore any changes to the
+        - `external-autoscaler`: If set, will ignore any changes to the
           `spec.ScalingConfig.DesiredSize` and will not manage the desired size
           of the nodegroup.
 
