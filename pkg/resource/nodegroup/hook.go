@@ -19,13 +19,14 @@ import (
 	"reflect"
 	"time"
 
-	svcapitypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
 	svcsdk "github.com/aws/aws-sdk-go/service/eks"
 	corev1 "k8s.io/api/core/v1"
+
+	svcapitypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 )
 
 // Taken from the list of nodegroup statuses on the boto3 documentation
@@ -390,7 +391,19 @@ func (rm *resourceManager) newUpdateScalingConfigPayload(
 	sc := rm.newNodegroupScalingConfig(desired)
 	// We need to default the desiredSize to the current observed
 	// value in the case where the desiredSize is managed externally.
-	if isManagedByExternalAutoscaler(desired.ko) && latest.ko.Spec.ScalingConfig != nil {
+	isManagedExternally := isManagedByExternalAutoscaler(desired.ko)
+	if isManagedExternally {
+		rm.log.Info(
+			"detected that the desiredSize is managed by an external entity.",
+			"annotation", fmt.Sprintf("%s: '%s'", svcapitypes.DesiredSizeManagedByAnnotation, svcapitypes.DesiredSizeManagedByExternalAutoscaler),
+		)
+	}
+	if isManagedExternally && latest.ko.Spec.ScalingConfig != nil {
+		rm.log.Info(
+			"ignoring the difference in desiredSize as it is managed by an external entity.",
+			"external_desired_size", latest.ko.Spec.ScalingConfig.DesiredSize,
+			"ack_desired_size", desired.ko.Spec.ScalingConfig.DesiredSize,
+		)
 		sc.DesiredSize = latest.ko.Spec.ScalingConfig.DesiredSize
 	}
 	return sc
