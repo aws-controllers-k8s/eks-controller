@@ -63,6 +63,9 @@ resources:
           service_name: ec2
           resource: Subnet
           path: Status.SubnetID
+      AccessConfig.BootstrapClusterCreatorAdminPermissions:
+        compare:
+          is_ignored: true
     exceptions:
       errors:
         404:
@@ -229,3 +232,4 @@ resources:
 ignore:
   resource_names:
    - EksAnywhereSubscription
+   - AccessEntry

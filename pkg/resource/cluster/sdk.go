@@ -90,6 +90,18 @@ func (rm *resourceManager) sdkFind(
 	// the original Kubernetes object we passed to the function
 	ko := r.ko.DeepCopy()
 
+	if resp.Cluster.AccessConfig != nil {
+		f0 := &svcapitypes.CreateAccessConfigRequest{}
+		if resp.Cluster.AccessConfig.AuthenticationMode != nil {
+			f0.AuthenticationMode = resp.Cluster.AccessConfig.AuthenticationMode
+		}
+		if resp.Cluster.AccessConfig.BootstrapClusterCreatorAdminPermissions != nil {
+			f0.BootstrapClusterCreatorAdminPermissions = resp.Cluster.AccessConfig.BootstrapClusterCreatorAdminPermissions
+		}
+		ko.Spec.AccessConfig = f0
+	} else {
+		ko.Spec.AccessConfig = nil
+	}
 	if ko.Status.ACKResourceMetadata == nil {
 		ko.Status.ACKResourceMetadata = &ackv1alpha1.ResourceMetadata{}
 	}
@@ -98,11 +110,11 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.ACKResourceMetadata.ARN = &arn
 	}
 	if resp.Cluster.CertificateAuthority != nil {
-		f1 := &svcapitypes.Certificate{}
+		f2 := &svcapitypes.Certificate{}
 		if resp.Cluster.CertificateAuthority.Data != nil {
-			f1.Data = resp.Cluster.CertificateAuthority.Data
+			f2.Data = resp.Cluster.CertificateAuthority.Data
 		}
-		ko.Status.CertificateAuthority = f1
+		ko.Status.CertificateAuthority = f2
 	} else {
 		ko.Status.CertificateAuthority = nil
 	}
@@ -112,23 +124,23 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.ClientRequestToken = nil
 	}
 	if resp.Cluster.ConnectorConfig != nil {
-		f3 := &svcapitypes.ConnectorConfigResponse{}
+		f4 := &svcapitypes.ConnectorConfigResponse{}
 		if resp.Cluster.ConnectorConfig.ActivationCode != nil {
-			f3.ActivationCode = resp.Cluster.ConnectorConfig.ActivationCode
+			f4.ActivationCode = resp.Cluster.ConnectorConfig.ActivationCode
 		}
 		if resp.Cluster.ConnectorConfig.ActivationExpiry != nil {
-			f3.ActivationExpiry = &metav1.Time{*resp.Cluster.ConnectorConfig.ActivationExpiry}
+			f4.ActivationExpiry = &metav1.Time{*resp.Cluster.ConnectorConfig.ActivationExpiry}
 		}
 		if resp.Cluster.ConnectorConfig.ActivationId != nil {
-			f3.ActivationID = resp.Cluster.ConnectorConfig.ActivationId
+			f4.ActivationID = resp.Cluster.ConnectorConfig.ActivationId
 		}
 		if resp.Cluster.ConnectorConfig.Provider != nil {
-			f3.Provider = resp.Cluster.ConnectorConfig.Provider
+			f4.Provider = resp.Cluster.ConnectorConfig.Provider
 		}
 		if resp.Cluster.ConnectorConfig.RoleArn != nil {
-			f3.RoleARN = resp.Cluster.ConnectorConfig.RoleArn
+			f4.RoleARN = resp.Cluster.ConnectorConfig.RoleArn
 		}
-		ko.Status.ConnectorConfig = f3
+		ko.Status.ConnectorConfig = f4
 	} else {
 		ko.Status.ConnectorConfig = nil
 	}
@@ -138,28 +150,28 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.CreatedAt = nil
 	}
 	if resp.Cluster.EncryptionConfig != nil {
-		f5 := []*svcapitypes.EncryptionConfig{}
-		for _, f5iter := range resp.Cluster.EncryptionConfig {
-			f5elem := &svcapitypes.EncryptionConfig{}
-			if f5iter.Provider != nil {
-				f5elemf0 := &svcapitypes.Provider{}
-				if f5iter.Provider.KeyArn != nil {
-					f5elemf0.KeyARN = f5iter.Provider.KeyArn
+		f6 := []*svcapitypes.EncryptionConfig{}
+		for _, f6iter := range resp.Cluster.EncryptionConfig {
+			f6elem := &svcapitypes.EncryptionConfig{}
+			if f6iter.Provider != nil {
+				f6elemf0 := &svcapitypes.Provider{}
+				if f6iter.Provider.KeyArn != nil {
+					f6elemf0.KeyARN = f6iter.Provider.KeyArn
 				}
-				f5elem.Provider = f5elemf0
+				f6elem.Provider = f6elemf0
 			}
-			if f5iter.Resources != nil {
-				f5elemf1 := []*string{}
-				for _, f5elemf1iter := range f5iter.Resources {
-					var f5elemf1elem string
-					f5elemf1elem = *f5elemf1iter
-					f5elemf1 = append(f5elemf1, &f5elemf1elem)
+			if f6iter.Resources != nil {
+				f6elemf1 := []*string{}
+				for _, f6elemf1iter := range f6iter.Resources {
+					var f6elemf1elem string
+					f6elemf1elem = *f6elemf1iter
+					f6elemf1 = append(f6elemf1, &f6elemf1elem)
 				}
-				f5elem.Resources = f5elemf1
+				f6elem.Resources = f6elemf1
 			}
-			f5 = append(f5, f5elem)
+			f6 = append(f6, f6elem)
 		}
-		ko.Spec.EncryptionConfig = f5
+		ko.Spec.EncryptionConfig = f6
 	} else {
 		ko.Spec.EncryptionConfig = nil
 	}
@@ -169,31 +181,31 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.Endpoint = nil
 	}
 	if resp.Cluster.Health != nil {
-		f7 := &svcapitypes.ClusterHealth{}
+		f8 := &svcapitypes.ClusterHealth{}
 		if resp.Cluster.Health.Issues != nil {
-			f7f0 := []*svcapitypes.ClusterIssue{}
-			for _, f7f0iter := range resp.Cluster.Health.Issues {
-				f7f0elem := &svcapitypes.ClusterIssue{}
-				if f7f0iter.Code != nil {
-					f7f0elem.Code = f7f0iter.Code
+			f8f0 := []*svcapitypes.ClusterIssue{}
+			for _, f8f0iter := range resp.Cluster.Health.Issues {
+				f8f0elem := &svcapitypes.ClusterIssue{}
+				if f8f0iter.Code != nil {
+					f8f0elem.Code = f8f0iter.Code
 				}
-				if f7f0iter.Message != nil {
-					f7f0elem.Message = f7f0iter.Message
+				if f8f0iter.Message != nil {
+					f8f0elem.Message = f8f0iter.Message
 				}
-				if f7f0iter.ResourceIds != nil {
-					f7f0elemf2 := []*string{}
-					for _, f7f0elemf2iter := range f7f0iter.ResourceIds {
-						var f7f0elemf2elem string
-						f7f0elemf2elem = *f7f0elemf2iter
-						f7f0elemf2 = append(f7f0elemf2, &f7f0elemf2elem)
+				if f8f0iter.ResourceIds != nil {
+					f8f0elemf2 := []*string{}
+					for _, f8f0elemf2iter := range f8f0iter.ResourceIds {
+						var f8f0elemf2elem string
+						f8f0elemf2elem = *f8f0elemf2iter
+						f8f0elemf2 = append(f8f0elemf2, &f8f0elemf2elem)
 					}
-					f7f0elem.ResourceIDs = f7f0elemf2
+					f8f0elem.ResourceIDs = f8f0elemf2
 				}
-				f7f0 = append(f7f0, f7f0elem)
+				f8f0 = append(f8f0, f8f0elem)
 			}
-			f7.Issues = f7f0
+			f8.Issues = f8f0
 		}
-		ko.Status.Health = f7
+		ko.Status.Health = f8
 	} else {
 		ko.Status.Health = nil
 	}
@@ -203,53 +215,53 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.ID = nil
 	}
 	if resp.Cluster.Identity != nil {
-		f9 := &svcapitypes.Identity{}
+		f10 := &svcapitypes.Identity{}
 		if resp.Cluster.Identity.Oidc != nil {
-			f9f0 := &svcapitypes.OIDC{}
+			f10f0 := &svcapitypes.OIDC{}
 			if resp.Cluster.Identity.Oidc.Issuer != nil {
-				f9f0.Issuer = resp.Cluster.Identity.Oidc.Issuer
+				f10f0.Issuer = resp.Cluster.Identity.Oidc.Issuer
 			}
-			f9.OIDC = f9f0
+			f10.OIDC = f10f0
 		}
-		ko.Status.Identity = f9
+		ko.Status.Identity = f10
 	} else {
 		ko.Status.Identity = nil
 	}
 	if resp.Cluster.KubernetesNetworkConfig != nil {
-		f10 := &svcapitypes.KubernetesNetworkConfigRequest{}
+		f11 := &svcapitypes.KubernetesNetworkConfigRequest{}
 		if resp.Cluster.KubernetesNetworkConfig.IpFamily != nil {
-			f10.IPFamily = resp.Cluster.KubernetesNetworkConfig.IpFamily
+			f11.IPFamily = resp.Cluster.KubernetesNetworkConfig.IpFamily
 		}
 		if resp.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr != nil {
-			f10.ServiceIPv4CIDR = resp.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr
+			f11.ServiceIPv4CIDR = resp.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr
 		}
-		ko.Spec.KubernetesNetworkConfig = f10
+		ko.Spec.KubernetesNetworkConfig = f11
 	} else {
 		ko.Spec.KubernetesNetworkConfig = nil
 	}
 	if resp.Cluster.Logging != nil {
-		f11 := &svcapitypes.Logging{}
+		f12 := &svcapitypes.Logging{}
 		if resp.Cluster.Logging.ClusterLogging != nil {
-			f11f0 := []*svcapitypes.LogSetup{}
-			for _, f11f0iter := range resp.Cluster.Logging.ClusterLogging {
-				f11f0elem := &svcapitypes.LogSetup{}
-				if f11f0iter.Enabled != nil {
-					f11f0elem.Enabled = f11f0iter.Enabled
+			f12f0 := []*svcapitypes.LogSetup{}
+			for _, f12f0iter := range resp.Cluster.Logging.ClusterLogging {
+				f12f0elem := &svcapitypes.LogSetup{}
+				if f12f0iter.Enabled != nil {
+					f12f0elem.Enabled = f12f0iter.Enabled
 				}
-				if f11f0iter.Types != nil {
-					f11f0elemf1 := []*string{}
-					for _, f11f0elemf1iter := range f11f0iter.Types {
-						var f11f0elemf1elem string
-						f11f0elemf1elem = *f11f0elemf1iter
-						f11f0elemf1 = append(f11f0elemf1, &f11f0elemf1elem)
+				if f12f0iter.Types != nil {
+					f12f0elemf1 := []*string{}
+					for _, f12f0elemf1iter := range f12f0iter.Types {
+						var f12f0elemf1elem string
+						f12f0elemf1elem = *f12f0elemf1iter
+						f12f0elemf1 = append(f12f0elemf1, &f12f0elemf1elem)
 					}
-					f11f0elem.Types = f11f0elemf1
+					f12f0elem.Types = f12f0elemf1
 				}
-				f11f0 = append(f11f0, f11f0elem)
+				f12f0 = append(f12f0, f12f0elem)
 			}
-			f11.ClusterLogging = f11f0
+			f12.ClusterLogging = f12f0
 		}
-		ko.Spec.Logging = f11
+		ko.Spec.Logging = f12
 	} else {
 		ko.Spec.Logging = nil
 	}
@@ -259,27 +271,27 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.Name = nil
 	}
 	if resp.Cluster.OutpostConfig != nil {
-		f13 := &svcapitypes.OutpostConfigRequest{}
+		f14 := &svcapitypes.OutpostConfigRequest{}
 		if resp.Cluster.OutpostConfig.ControlPlaneInstanceType != nil {
-			f13.ControlPlaneInstanceType = resp.Cluster.OutpostConfig.ControlPlaneInstanceType
+			f14.ControlPlaneInstanceType = resp.Cluster.OutpostConfig.ControlPlaneInstanceType
 		}
 		if resp.Cluster.OutpostConfig.ControlPlanePlacement != nil {
-			f13f1 := &svcapitypes.ControlPlanePlacementRequest{}
+			f14f1 := &svcapitypes.ControlPlanePlacementRequest{}
 			if resp.Cluster.OutpostConfig.ControlPlanePlacement.GroupName != nil {
-				f13f1.GroupName = resp.Cluster.OutpostConfig.ControlPlanePlacement.GroupName
+				f14f1.GroupName = resp.Cluster.OutpostConfig.ControlPlanePlacement.GroupName
 			}
-			f13.ControlPlanePlacement = f13f1
+			f14.ControlPlanePlacement = f14f1
 		}
 		if resp.Cluster.OutpostConfig.OutpostArns != nil {
-			f13f2 := []*string{}
-			for _, f13f2iter := range resp.Cluster.OutpostConfig.OutpostArns {
-				var f13f2elem string
-				f13f2elem = *f13f2iter
-				f13f2 = append(f13f2, &f13f2elem)
+			f14f2 := []*string{}
+			for _, f14f2iter := range resp.Cluster.OutpostConfig.OutpostArns {
+				var f14f2elem string
+				f14f2elem = *f14f2iter
+				f14f2 = append(f14f2, &f14f2elem)
 			}
-			f13.OutpostARNs = f13f2
+			f14.OutpostARNs = f14f2
 		}
-		ko.Spec.OutpostConfig = f13
+		ko.Spec.OutpostConfig = f14
 	} else {
 		ko.Spec.OutpostConfig = nil
 	}
@@ -289,41 +301,41 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.PlatformVersion = nil
 	}
 	if resp.Cluster.ResourcesVpcConfig != nil {
-		f15 := &svcapitypes.VPCConfigRequest{}
+		f16 := &svcapitypes.VPCConfigRequest{}
 		if resp.Cluster.ResourcesVpcConfig.EndpointPrivateAccess != nil {
-			f15.EndpointPrivateAccess = resp.Cluster.ResourcesVpcConfig.EndpointPrivateAccess
+			f16.EndpointPrivateAccess = resp.Cluster.ResourcesVpcConfig.EndpointPrivateAccess
 		}
 		if resp.Cluster.ResourcesVpcConfig.EndpointPublicAccess != nil {
-			f15.EndpointPublicAccess = resp.Cluster.ResourcesVpcConfig.EndpointPublicAccess
+			f16.EndpointPublicAccess = resp.Cluster.ResourcesVpcConfig.EndpointPublicAccess
 		}
 		if resp.Cluster.ResourcesVpcConfig.PublicAccessCidrs != nil {
-			f15f3 := []*string{}
-			for _, f15f3iter := range resp.Cluster.ResourcesVpcConfig.PublicAccessCidrs {
-				var f15f3elem string
-				f15f3elem = *f15f3iter
-				f15f3 = append(f15f3, &f15f3elem)
+			f16f3 := []*string{}
+			for _, f16f3iter := range resp.Cluster.ResourcesVpcConfig.PublicAccessCidrs {
+				var f16f3elem string
+				f16f3elem = *f16f3iter
+				f16f3 = append(f16f3, &f16f3elem)
 			}
-			f15.PublicAccessCIDRs = f15f3
+			f16.PublicAccessCIDRs = f16f3
 		}
 		if resp.Cluster.ResourcesVpcConfig.SecurityGroupIds != nil {
-			f15f4 := []*string{}
-			for _, f15f4iter := range resp.Cluster.ResourcesVpcConfig.SecurityGroupIds {
-				var f15f4elem string
-				f15f4elem = *f15f4iter
-				f15f4 = append(f15f4, &f15f4elem)
+			f16f4 := []*string{}
+			for _, f16f4iter := range resp.Cluster.ResourcesVpcConfig.SecurityGroupIds {
+				var f16f4elem string
+				f16f4elem = *f16f4iter
+				f16f4 = append(f16f4, &f16f4elem)
 			}
-			f15.SecurityGroupIDs = f15f4
+			f16.SecurityGroupIDs = f16f4
 		}
 		if resp.Cluster.ResourcesVpcConfig.SubnetIds != nil {
-			f15f5 := []*string{}
-			for _, f15f5iter := range resp.Cluster.ResourcesVpcConfig.SubnetIds {
-				var f15f5elem string
-				f15f5elem = *f15f5iter
-				f15f5 = append(f15f5, &f15f5elem)
+			f16f5 := []*string{}
+			for _, f16f5iter := range resp.Cluster.ResourcesVpcConfig.SubnetIds {
+				var f16f5elem string
+				f16f5elem = *f16f5iter
+				f16f5 = append(f16f5, &f16f5elem)
 			}
-			f15.SubnetIDs = f15f5
+			f16.SubnetIDs = f16f5
 		}
-		ko.Spec.ResourcesVPCConfig = f15
+		ko.Spec.ResourcesVPCConfig = f16
 	} else {
 		ko.Spec.ResourcesVPCConfig = nil
 	}
@@ -338,13 +350,13 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.Status = nil
 	}
 	if resp.Cluster.Tags != nil {
-		f18 := map[string]*string{}
-		for f18key, f18valiter := range resp.Cluster.Tags {
-			var f18val string
-			f18val = *f18valiter
-			f18[f18key] = &f18val
+		f19 := map[string]*string{}
+		for f19key, f19valiter := range resp.Cluster.Tags {
+			var f19val string
+			f19val = *f19valiter
+			f19[f19key] = &f19val
 		}
-		ko.Spec.Tags = f18
+		ko.Spec.Tags = f19
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -418,6 +430,18 @@ func (rm *resourceManager) sdkCreate(
 	// the original Kubernetes object we passed to the function
 	ko := desired.ko.DeepCopy()
 
+	if resp.Cluster.AccessConfig != nil {
+		f0 := &svcapitypes.CreateAccessConfigRequest{}
+		if resp.Cluster.AccessConfig.AuthenticationMode != nil {
+			f0.AuthenticationMode = resp.Cluster.AccessConfig.AuthenticationMode
+		}
+		if resp.Cluster.AccessConfig.BootstrapClusterCreatorAdminPermissions != nil {
+			f0.BootstrapClusterCreatorAdminPermissions = resp.Cluster.AccessConfig.BootstrapClusterCreatorAdminPermissions
+		}
+		ko.Spec.AccessConfig = f0
+	} else {
+		ko.Spec.AccessConfig = nil
+	}
 	if ko.Status.ACKResourceMetadata == nil {
 		ko.Status.ACKResourceMetadata = &ackv1alpha1.ResourceMetadata{}
 	}
@@ -426,11 +450,11 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.ACKResourceMetadata.ARN = &arn
 	}
 	if resp.Cluster.CertificateAuthority != nil {
-		f1 := &svcapitypes.Certificate{}
+		f2 := &svcapitypes.Certificate{}
 		if resp.Cluster.CertificateAuthority.Data != nil {
-			f1.Data = resp.Cluster.CertificateAuthority.Data
+			f2.Data = resp.Cluster.CertificateAuthority.Data
 		}
-		ko.Status.CertificateAuthority = f1
+		ko.Status.CertificateAuthority = f2
 	} else {
 		ko.Status.CertificateAuthority = nil
 	}
@@ -440,23 +464,23 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.ClientRequestToken = nil
 	}
 	if resp.Cluster.ConnectorConfig != nil {
-		f3 := &svcapitypes.ConnectorConfigResponse{}
+		f4 := &svcapitypes.ConnectorConfigResponse{}
 		if resp.Cluster.ConnectorConfig.ActivationCode != nil {
-			f3.ActivationCode = resp.Cluster.ConnectorConfig.ActivationCode
+			f4.ActivationCode = resp.Cluster.ConnectorConfig.ActivationCode
 		}
 		if resp.Cluster.ConnectorConfig.ActivationExpiry != nil {
-			f3.ActivationExpiry = &metav1.Time{*resp.Cluster.ConnectorConfig.ActivationExpiry}
+			f4.ActivationExpiry = &metav1.Time{*resp.Cluster.ConnectorConfig.ActivationExpiry}
 		}
 		if resp.Cluster.ConnectorConfig.ActivationId != nil {
-			f3.ActivationID = resp.Cluster.ConnectorConfig.ActivationId
+			f4.ActivationID = resp.Cluster.ConnectorConfig.ActivationId
 		}
 		if resp.Cluster.ConnectorConfig.Provider != nil {
-			f3.Provider = resp.Cluster.ConnectorConfig.Provider
+			f4.Provider = resp.Cluster.ConnectorConfig.Provider
 		}
 		if resp.Cluster.ConnectorConfig.RoleArn != nil {
-			f3.RoleARN = resp.Cluster.ConnectorConfig.RoleArn
+			f4.RoleARN = resp.Cluster.ConnectorConfig.RoleArn
 		}
-		ko.Status.ConnectorConfig = f3
+		ko.Status.ConnectorConfig = f4
 	} else {
 		ko.Status.ConnectorConfig = nil
 	}
@@ -466,28 +490,28 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.CreatedAt = nil
 	}
 	if resp.Cluster.EncryptionConfig != nil {
-		f5 := []*svcapitypes.EncryptionConfig{}
-		for _, f5iter := range resp.Cluster.EncryptionConfig {
-			f5elem := &svcapitypes.EncryptionConfig{}
-			if f5iter.Provider != nil {
-				f5elemf0 := &svcapitypes.Provider{}
-				if f5iter.Provider.KeyArn != nil {
-					f5elemf0.KeyARN = f5iter.Provider.KeyArn
+		f6 := []*svcapitypes.EncryptionConfig{}
+		for _, f6iter := range resp.Cluster.EncryptionConfig {
+			f6elem := &svcapitypes.EncryptionConfig{}
+			if f6iter.Provider != nil {
+				f6elemf0 := &svcapitypes.Provider{}
+				if f6iter.Provider.KeyArn != nil {
+					f6elemf0.KeyARN = f6iter.Provider.KeyArn
 				}
-				f5elem.Provider = f5elemf0
+				f6elem.Provider = f6elemf0
 			}
-			if f5iter.Resources != nil {
-				f5elemf1 := []*string{}
-				for _, f5elemf1iter := range f5iter.Resources {
-					var f5elemf1elem string
-					f5elemf1elem = *f5elemf1iter
-					f5elemf1 = append(f5elemf1, &f5elemf1elem)
+			if f6iter.Resources != nil {
+				f6elemf1 := []*string{}
+				for _, f6elemf1iter := range f6iter.Resources {
+					var f6elemf1elem string
+					f6elemf1elem = *f6elemf1iter
+					f6elemf1 = append(f6elemf1, &f6elemf1elem)
 				}
-				f5elem.Resources = f5elemf1
+				f6elem.Resources = f6elemf1
 			}
-			f5 = append(f5, f5elem)
+			f6 = append(f6, f6elem)
 		}
-		ko.Spec.EncryptionConfig = f5
+		ko.Spec.EncryptionConfig = f6
 	} else {
 		ko.Spec.EncryptionConfig = nil
 	}
@@ -497,31 +521,31 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.Endpoint = nil
 	}
 	if resp.Cluster.Health != nil {
-		f7 := &svcapitypes.ClusterHealth{}
+		f8 := &svcapitypes.ClusterHealth{}
 		if resp.Cluster.Health.Issues != nil {
-			f7f0 := []*svcapitypes.ClusterIssue{}
-			for _, f7f0iter := range resp.Cluster.Health.Issues {
-				f7f0elem := &svcapitypes.ClusterIssue{}
-				if f7f0iter.Code != nil {
-					f7f0elem.Code = f7f0iter.Code
+			f8f0 := []*svcapitypes.ClusterIssue{}
+			for _, f8f0iter := range resp.Cluster.Health.Issues {
+				f8f0elem := &svcapitypes.ClusterIssue{}
+				if f8f0iter.Code != nil {
+					f8f0elem.Code = f8f0iter.Code
 				}
-				if f7f0iter.Message != nil {
-					f7f0elem.Message = f7f0iter.Message
+				if f8f0iter.Message != nil {
+					f8f0elem.Message = f8f0iter.Message
 				}
-				if f7f0iter.ResourceIds != nil {
-					f7f0elemf2 := []*string{}
-					for _, f7f0elemf2iter := range f7f0iter.ResourceIds {
-						var f7f0elemf2elem string
-						f7f0elemf2elem = *f7f0elemf2iter
-						f7f0elemf2 = append(f7f0elemf2, &f7f0elemf2elem)
+				if f8f0iter.ResourceIds != nil {
+					f8f0elemf2 := []*string{}
+					for _, f8f0elemf2iter := range f8f0iter.ResourceIds {
+						var f8f0elemf2elem string
+						f8f0elemf2elem = *f8f0elemf2iter
+						f8f0elemf2 = append(f8f0elemf2, &f8f0elemf2elem)
 					}
-					f7f0elem.ResourceIDs = f7f0elemf2
+					f8f0elem.ResourceIDs = f8f0elemf2
 				}
-				f7f0 = append(f7f0, f7f0elem)
+				f8f0 = append(f8f0, f8f0elem)
 			}
-			f7.Issues = f7f0
+			f8.Issues = f8f0
 		}
-		ko.Status.Health = f7
+		ko.Status.Health = f8
 	} else {
 		ko.Status.Health = nil
 	}
@@ -531,53 +555,53 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.ID = nil
 	}
 	if resp.Cluster.Identity != nil {
-		f9 := &svcapitypes.Identity{}
+		f10 := &svcapitypes.Identity{}
 		if resp.Cluster.Identity.Oidc != nil {
-			f9f0 := &svcapitypes.OIDC{}
+			f10f0 := &svcapitypes.OIDC{}
 			if resp.Cluster.Identity.Oidc.Issuer != nil {
-				f9f0.Issuer = resp.Cluster.Identity.Oidc.Issuer
+				f10f0.Issuer = resp.Cluster.Identity.Oidc.Issuer
 			}
-			f9.OIDC = f9f0
+			f10.OIDC = f10f0
 		}
-		ko.Status.Identity = f9
+		ko.Status.Identity = f10
 	} else {
 		ko.Status.Identity = nil
 	}
 	if resp.Cluster.KubernetesNetworkConfig != nil {
-		f10 := &svcapitypes.KubernetesNetworkConfigRequest{}
+		f11 := &svcapitypes.KubernetesNetworkConfigRequest{}
 		if resp.Cluster.KubernetesNetworkConfig.IpFamily != nil {
-			f10.IPFamily = resp.Cluster.KubernetesNetworkConfig.IpFamily
+			f11.IPFamily = resp.Cluster.KubernetesNetworkConfig.IpFamily
 		}
 		if resp.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr != nil {
-			f10.ServiceIPv4CIDR = resp.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr
+			f11.ServiceIPv4CIDR = resp.Cluster.KubernetesNetworkConfig.ServiceIpv4Cidr
 		}
-		ko.Spec.KubernetesNetworkConfig = f10
+		ko.Spec.KubernetesNetworkConfig = f11
 	} else {
 		ko.Spec.KubernetesNetworkConfig = nil
 	}
 	if resp.Cluster.Logging != nil {
-		f11 := &svcapitypes.Logging{}
+		f12 := &svcapitypes.Logging{}
 		if resp.Cluster.Logging.ClusterLogging != nil {
-			f11f0 := []*svcapitypes.LogSetup{}
-			for _, f11f0iter := range resp.Cluster.Logging.ClusterLogging {
-				f11f0elem := &svcapitypes.LogSetup{}
-				if f11f0iter.Enabled != nil {
-					f11f0elem.Enabled = f11f0iter.Enabled
+			f12f0 := []*svcapitypes.LogSetup{}
+			for _, f12f0iter := range resp.Cluster.Logging.ClusterLogging {
+				f12f0elem := &svcapitypes.LogSetup{}
+				if f12f0iter.Enabled != nil {
+					f12f0elem.Enabled = f12f0iter.Enabled
 				}
-				if f11f0iter.Types != nil {
-					f11f0elemf1 := []*string{}
-					for _, f11f0elemf1iter := range f11f0iter.Types {
-						var f11f0elemf1elem string
-						f11f0elemf1elem = *f11f0elemf1iter
-						f11f0elemf1 = append(f11f0elemf1, &f11f0elemf1elem)
+				if f12f0iter.Types != nil {
+					f12f0elemf1 := []*string{}
+					for _, f12f0elemf1iter := range f12f0iter.Types {
+						var f12f0elemf1elem string
+						f12f0elemf1elem = *f12f0elemf1iter
+						f12f0elemf1 = append(f12f0elemf1, &f12f0elemf1elem)
 					}
-					f11f0elem.Types = f11f0elemf1
+					f12f0elem.Types = f12f0elemf1
 				}
-				f11f0 = append(f11f0, f11f0elem)
+				f12f0 = append(f12f0, f12f0elem)
 			}
-			f11.ClusterLogging = f11f0
+			f12.ClusterLogging = f12f0
 		}
-		ko.Spec.Logging = f11
+		ko.Spec.Logging = f12
 	} else {
 		ko.Spec.Logging = nil
 	}
@@ -587,27 +611,27 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.Name = nil
 	}
 	if resp.Cluster.OutpostConfig != nil {
-		f13 := &svcapitypes.OutpostConfigRequest{}
+		f14 := &svcapitypes.OutpostConfigRequest{}
 		if resp.Cluster.OutpostConfig.ControlPlaneInstanceType != nil {
-			f13.ControlPlaneInstanceType = resp.Cluster.OutpostConfig.ControlPlaneInstanceType
+			f14.ControlPlaneInstanceType = resp.Cluster.OutpostConfig.ControlPlaneInstanceType
 		}
 		if resp.Cluster.OutpostConfig.ControlPlanePlacement != nil {
-			f13f1 := &svcapitypes.ControlPlanePlacementRequest{}
+			f14f1 := &svcapitypes.ControlPlanePlacementRequest{}
 			if resp.Cluster.OutpostConfig.ControlPlanePlacement.GroupName != nil {
-				f13f1.GroupName = resp.Cluster.OutpostConfig.ControlPlanePlacement.GroupName
+				f14f1.GroupName = resp.Cluster.OutpostConfig.ControlPlanePlacement.GroupName
 			}
-			f13.ControlPlanePlacement = f13f1
+			f14.ControlPlanePlacement = f14f1
 		}
 		if resp.Cluster.OutpostConfig.OutpostArns != nil {
-			f13f2 := []*string{}
-			for _, f13f2iter := range resp.Cluster.OutpostConfig.OutpostArns {
-				var f13f2elem string
-				f13f2elem = *f13f2iter
-				f13f2 = append(f13f2, &f13f2elem)
+			f14f2 := []*string{}
+			for _, f14f2iter := range resp.Cluster.OutpostConfig.OutpostArns {
+				var f14f2elem string
+				f14f2elem = *f14f2iter
+				f14f2 = append(f14f2, &f14f2elem)
 			}
-			f13.OutpostARNs = f13f2
+			f14.OutpostARNs = f14f2
 		}
-		ko.Spec.OutpostConfig = f13
+		ko.Spec.OutpostConfig = f14
 	} else {
 		ko.Spec.OutpostConfig = nil
 	}
@@ -617,41 +641,41 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.PlatformVersion = nil
 	}
 	if resp.Cluster.ResourcesVpcConfig != nil {
-		f15 := &svcapitypes.VPCConfigRequest{}
+		f16 := &svcapitypes.VPCConfigRequest{}
 		if resp.Cluster.ResourcesVpcConfig.EndpointPrivateAccess != nil {
-			f15.EndpointPrivateAccess = resp.Cluster.ResourcesVpcConfig.EndpointPrivateAccess
+			f16.EndpointPrivateAccess = resp.Cluster.ResourcesVpcConfig.EndpointPrivateAccess
 		}
 		if resp.Cluster.ResourcesVpcConfig.EndpointPublicAccess != nil {
-			f15.EndpointPublicAccess = resp.Cluster.ResourcesVpcConfig.EndpointPublicAccess
+			f16.EndpointPublicAccess = resp.Cluster.ResourcesVpcConfig.EndpointPublicAccess
 		}
 		if resp.Cluster.ResourcesVpcConfig.PublicAccessCidrs != nil {
-			f15f3 := []*string{}
-			for _, f15f3iter := range resp.Cluster.ResourcesVpcConfig.PublicAccessCidrs {
-				var f15f3elem string
-				f15f3elem = *f15f3iter
-				f15f3 = append(f15f3, &f15f3elem)
+			f16f3 := []*string{}
+			for _, f16f3iter := range resp.Cluster.ResourcesVpcConfig.PublicAccessCidrs {
+				var f16f3elem string
+				f16f3elem = *f16f3iter
+				f16f3 = append(f16f3, &f16f3elem)
 			}
-			f15.PublicAccessCIDRs = f15f3
+			f16.PublicAccessCIDRs = f16f3
 		}
 		if resp.Cluster.ResourcesVpcConfig.SecurityGroupIds != nil {
-			f15f4 := []*string{}
-			for _, f15f4iter := range resp.Cluster.ResourcesVpcConfig.SecurityGroupIds {
-				var f15f4elem string
-				f15f4elem = *f15f4iter
-				f15f4 = append(f15f4, &f15f4elem)
+			f16f4 := []*string{}
+			for _, f16f4iter := range resp.Cluster.ResourcesVpcConfig.SecurityGroupIds {
+				var f16f4elem string
+				f16f4elem = *f16f4iter
+				f16f4 = append(f16f4, &f16f4elem)
 			}
-			f15.SecurityGroupIDs = f15f4
+			f16.SecurityGroupIDs = f16f4
 		}
 		if resp.Cluster.ResourcesVpcConfig.SubnetIds != nil {
-			f15f5 := []*string{}
-			for _, f15f5iter := range resp.Cluster.ResourcesVpcConfig.SubnetIds {
-				var f15f5elem string
-				f15f5elem = *f15f5iter
-				f15f5 = append(f15f5, &f15f5elem)
+			f16f5 := []*string{}
+			for _, f16f5iter := range resp.Cluster.ResourcesVpcConfig.SubnetIds {
+				var f16f5elem string
+				f16f5elem = *f16f5iter
+				f16f5 = append(f16f5, &f16f5elem)
 			}
-			f15.SubnetIDs = f15f5
+			f16.SubnetIDs = f16f5
 		}
-		ko.Spec.ResourcesVPCConfig = f15
+		ko.Spec.ResourcesVPCConfig = f16
 	} else {
 		ko.Spec.ResourcesVPCConfig = nil
 	}
@@ -666,13 +690,13 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.Status = nil
 	}
 	if resp.Cluster.Tags != nil {
-		f18 := map[string]*string{}
-		for f18key, f18valiter := range resp.Cluster.Tags {
-			var f18val string
-			f18val = *f18valiter
-			f18[f18key] = &f18val
+		f19 := map[string]*string{}
+		for f19key, f19valiter := range resp.Cluster.Tags {
+			var f19val string
+			f19val = *f19valiter
+			f19[f19key] = &f19val
 		}
-		ko.Spec.Tags = f18
+		ko.Spec.Tags = f19
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -703,141 +727,151 @@ func (rm *resourceManager) newCreateRequestPayload(
 ) (*svcsdk.CreateClusterInput, error) {
 	res := &svcsdk.CreateClusterInput{}
 
+	if r.ko.Spec.AccessConfig != nil {
+		f0 := &svcsdk.CreateAccessConfigRequest{}
+		if r.ko.Spec.AccessConfig.AuthenticationMode != nil {
+			f0.SetAuthenticationMode(*r.ko.Spec.AccessConfig.AuthenticationMode)
+		}
+		if r.ko.Spec.AccessConfig.BootstrapClusterCreatorAdminPermissions != nil {
+			f0.SetBootstrapClusterCreatorAdminPermissions(*r.ko.Spec.AccessConfig.BootstrapClusterCreatorAdminPermissions)
+		}
+		res.SetAccessConfig(f0)
+	}
 	if r.ko.Spec.ClientRequestToken != nil {
 		res.SetClientRequestToken(*r.ko.Spec.ClientRequestToken)
 	}
 	if r.ko.Spec.EncryptionConfig != nil {
-		f1 := []*svcsdk.EncryptionConfig{}
-		for _, f1iter := range r.ko.Spec.EncryptionConfig {
-			f1elem := &svcsdk.EncryptionConfig{}
-			if f1iter.Provider != nil {
-				f1elemf0 := &svcsdk.Provider{}
-				if f1iter.Provider.KeyARN != nil {
-					f1elemf0.SetKeyArn(*f1iter.Provider.KeyARN)
+		f2 := []*svcsdk.EncryptionConfig{}
+		for _, f2iter := range r.ko.Spec.EncryptionConfig {
+			f2elem := &svcsdk.EncryptionConfig{}
+			if f2iter.Provider != nil {
+				f2elemf0 := &svcsdk.Provider{}
+				if f2iter.Provider.KeyARN != nil {
+					f2elemf0.SetKeyArn(*f2iter.Provider.KeyARN)
 				}
-				f1elem.SetProvider(f1elemf0)
+				f2elem.SetProvider(f2elemf0)
 			}
-			if f1iter.Resources != nil {
-				f1elemf1 := []*string{}
-				for _, f1elemf1iter := range f1iter.Resources {
-					var f1elemf1elem string
-					f1elemf1elem = *f1elemf1iter
-					f1elemf1 = append(f1elemf1, &f1elemf1elem)
+			if f2iter.Resources != nil {
+				f2elemf1 := []*string{}
+				for _, f2elemf1iter := range f2iter.Resources {
+					var f2elemf1elem string
+					f2elemf1elem = *f2elemf1iter
+					f2elemf1 = append(f2elemf1, &f2elemf1elem)
 				}
-				f1elem.SetResources(f1elemf1)
+				f2elem.SetResources(f2elemf1)
 			}
-			f1 = append(f1, f1elem)
+			f2 = append(f2, f2elem)
 		}
-		res.SetEncryptionConfig(f1)
+		res.SetEncryptionConfig(f2)
 	}
 	if r.ko.Spec.KubernetesNetworkConfig != nil {
-		f2 := &svcsdk.KubernetesNetworkConfigRequest{}
+		f3 := &svcsdk.KubernetesNetworkConfigRequest{}
 		if r.ko.Spec.KubernetesNetworkConfig.IPFamily != nil {
-			f2.SetIpFamily(*r.ko.Spec.KubernetesNetworkConfig.IPFamily)
+			f3.SetIpFamily(*r.ko.Spec.KubernetesNetworkConfig.IPFamily)
 		}
 		if r.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR != nil {
-			f2.SetServiceIpv4Cidr(*r.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR)
+			f3.SetServiceIpv4Cidr(*r.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR)
 		}
-		res.SetKubernetesNetworkConfig(f2)
+		res.SetKubernetesNetworkConfig(f3)
 	}
 	if r.ko.Spec.Logging != nil {
-		f3 := &svcsdk.Logging{}
+		f4 := &svcsdk.Logging{}
 		if r.ko.Spec.Logging.ClusterLogging != nil {
-			f3f0 := []*svcsdk.LogSetup{}
-			for _, f3f0iter := range r.ko.Spec.Logging.ClusterLogging {
-				f3f0elem := &svcsdk.LogSetup{}
-				if f3f0iter.Enabled != nil {
-					f3f0elem.SetEnabled(*f3f0iter.Enabled)
+			f4f0 := []*svcsdk.LogSetup{}
+			for _, f4f0iter := range r.ko.Spec.Logging.ClusterLogging {
+				f4f0elem := &svcsdk.LogSetup{}
+				if f4f0iter.Enabled != nil {
+					f4f0elem.SetEnabled(*f4f0iter.Enabled)
 				}
-				if f3f0iter.Types != nil {
-					f3f0elemf1 := []*string{}
-					for _, f3f0elemf1iter := range f3f0iter.Types {
-						var f3f0elemf1elem string
-						f3f0elemf1elem = *f3f0elemf1iter
-						f3f0elemf1 = append(f3f0elemf1, &f3f0elemf1elem)
+				if f4f0iter.Types != nil {
+					f4f0elemf1 := []*string{}
+					for _, f4f0elemf1iter := range f4f0iter.Types {
+						var f4f0elemf1elem string
+						f4f0elemf1elem = *f4f0elemf1iter
+						f4f0elemf1 = append(f4f0elemf1, &f4f0elemf1elem)
 					}
-					f3f0elem.SetTypes(f3f0elemf1)
+					f4f0elem.SetTypes(f4f0elemf1)
 				}
-				f3f0 = append(f3f0, f3f0elem)
+				f4f0 = append(f4f0, f4f0elem)
 			}
-			f3.SetClusterLogging(f3f0)
+			f4.SetClusterLogging(f4f0)
 		}
-		res.SetLogging(f3)
+		res.SetLogging(f4)
 	}
 	if r.ko.Spec.Name != nil {
 		res.SetName(*r.ko.Spec.Name)
 	}
 	if r.ko.Spec.OutpostConfig != nil {
-		f5 := &svcsdk.OutpostConfigRequest{}
+		f6 := &svcsdk.OutpostConfigRequest{}
 		if r.ko.Spec.OutpostConfig.ControlPlaneInstanceType != nil {
-			f5.SetControlPlaneInstanceType(*r.ko.Spec.OutpostConfig.ControlPlaneInstanceType)
+			f6.SetControlPlaneInstanceType(*r.ko.Spec.OutpostConfig.ControlPlaneInstanceType)
 		}
 		if r.ko.Spec.OutpostConfig.ControlPlanePlacement != nil {
-			f5f1 := &svcsdk.ControlPlanePlacementRequest{}
+			f6f1 := &svcsdk.ControlPlanePlacementRequest{}
 			if r.ko.Spec.OutpostConfig.ControlPlanePlacement.GroupName != nil {
-				f5f1.SetGroupName(*r.ko.Spec.OutpostConfig.ControlPlanePlacement.GroupName)
+				f6f1.SetGroupName(*r.ko.Spec.OutpostConfig.ControlPlanePlacement.GroupName)
 			}
-			f5.SetControlPlanePlacement(f5f1)
+			f6.SetControlPlanePlacement(f6f1)
 		}
 		if r.ko.Spec.OutpostConfig.OutpostARNs != nil {
-			f5f2 := []*string{}
-			for _, f5f2iter := range r.ko.Spec.OutpostConfig.OutpostARNs {
-				var f5f2elem string
-				f5f2elem = *f5f2iter
-				f5f2 = append(f5f2, &f5f2elem)
-			}
-			f5.SetOutpostArns(f5f2)
-		}
-		res.SetOutpostConfig(f5)
-	}
-	if r.ko.Spec.ResourcesVPCConfig != nil {
-		f6 := &svcsdk.VpcConfigRequest{}
-		if r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess != nil {
-			f6.SetEndpointPrivateAccess(*r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess)
-		}
-		if r.ko.Spec.ResourcesVPCConfig.EndpointPublicAccess != nil {
-			f6.SetEndpointPublicAccess(*r.ko.Spec.ResourcesVPCConfig.EndpointPublicAccess)
-		}
-		if r.ko.Spec.ResourcesVPCConfig.PublicAccessCIDRs != nil {
 			f6f2 := []*string{}
-			for _, f6f2iter := range r.ko.Spec.ResourcesVPCConfig.PublicAccessCIDRs {
+			for _, f6f2iter := range r.ko.Spec.OutpostConfig.OutpostARNs {
 				var f6f2elem string
 				f6f2elem = *f6f2iter
 				f6f2 = append(f6f2, &f6f2elem)
 			}
-			f6.SetPublicAccessCidrs(f6f2)
+			f6.SetOutpostArns(f6f2)
+		}
+		res.SetOutpostConfig(f6)
+	}
+	if r.ko.Spec.ResourcesVPCConfig != nil {
+		f7 := &svcsdk.VpcConfigRequest{}
+		if r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess != nil {
+			f7.SetEndpointPrivateAccess(*r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess)
+		}
+		if r.ko.Spec.ResourcesVPCConfig.EndpointPublicAccess != nil {
+			f7.SetEndpointPublicAccess(*r.ko.Spec.ResourcesVPCConfig.EndpointPublicAccess)
+		}
+		if r.ko.Spec.ResourcesVPCConfig.PublicAccessCIDRs != nil {
+			f7f2 := []*string{}
+			for _, f7f2iter := range r.ko.Spec.ResourcesVPCConfig.PublicAccessCIDRs {
+				var f7f2elem string
+				f7f2elem = *f7f2iter
+				f7f2 = append(f7f2, &f7f2elem)
+			}
+			f7.SetPublicAccessCidrs(f7f2)
 		}
 		if r.ko.Spec.ResourcesVPCConfig.SecurityGroupIDs != nil {
-			f6f3 := []*string{}
-			for _, f6f3iter := range r.ko.Spec.ResourcesVPCConfig.SecurityGroupIDs {
-				var f6f3elem string
-				f6f3elem = *f6f3iter
-				f6f3 = append(f6f3, &f6f3elem)
+			f7f3 := []*string{}
+			for _, f7f3iter := range r.ko.Spec.ResourcesVPCConfig.SecurityGroupIDs {
+				var f7f3elem string
+				f7f3elem = *f7f3iter
+				f7f3 = append(f7f3, &f7f3elem)
 			}
-			f6.SetSecurityGroupIds(f6f3)
+			f7.SetSecurityGroupIds(f7f3)
 		}
 		if r.ko.Spec.ResourcesVPCConfig.SubnetIDs != nil {
-			f6f4 := []*string{}
-			for _, f6f4iter := range r.ko.Spec.ResourcesVPCConfig.SubnetIDs {
-				var f6f4elem string
-				f6f4elem = *f6f4iter
-				f6f4 = append(f6f4, &f6f4elem)
+			f7f4 := []*string{}
+			for _, f7f4iter := range r.ko.Spec.ResourcesVPCConfig.SubnetIDs {
+				var f7f4elem string
+				f7f4elem = *f7f4iter
+				f7f4 = append(f7f4, &f7f4elem)
 			}
-			f6.SetSubnetIds(f6f4)
+			f7.SetSubnetIds(f7f4)
 		}
-		res.SetResourcesVpcConfig(f6)
+		res.SetResourcesVpcConfig(f7)
 	}
 	if r.ko.Spec.RoleARN != nil {
 		res.SetRoleArn(*r.ko.Spec.RoleARN)
 	}
 	if r.ko.Spec.Tags != nil {
-		f8 := map[string]*string{}
-		for f8key, f8valiter := range r.ko.Spec.Tags {
-			var f8val string
-			f8val = *f8valiter
-			f8[f8key] = &f8val
+		f9 := map[string]*string{}
+		for f9key, f9valiter := range r.ko.Spec.Tags {
+			var f9val string
+			f9val = *f9valiter
+			f9[f9key] = &f9val
 		}
-		res.SetTags(f8)
+		res.SetTags(f9)
 	}
 	if r.ko.Spec.Version != nil {
 		res.SetVersion(*r.ko.Spec.Version)

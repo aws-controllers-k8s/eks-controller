@@ -30,7 +30,7 @@ from e2e.common.waiter import wait_until_deleted
 from e2e.replacement_values import REPLACEMENT_VALUES
 
 # Time to wait after modifying the CR for the status to change
-MODIFY_WAIT_AFTER_SECONDS = 50
+MODIFY_WAIT_AFTER_SECONDS = 60
 
 # Time to wait after the cluster has changed status, for the CR to update
 CHECK_STATUS_WAIT_SECONDS = 30
@@ -133,10 +133,16 @@ class TestCluster:
         updates = {
             "spec": {
                 "logging": {
-                    "clusterLogging": [{
-                        "enabled": True,
-                        "types": ["api"]
-                    }]
+                    "clusterLogging": [
+                        {
+                            "enabled": True,
+                            "types": ["api"]
+                        },
+                        {
+                            "enabled": False,
+                            "types": ["audit", "authenticator", "controllerManager", "scheduler"]
+                        },
+                    ]
                 },
             }
         }
@@ -151,6 +157,23 @@ class TestCluster:
         logging = aws_res["cluster"]["logging"]["clusterLogging"][0]
         assert logging["enabled"] == True
         assert logging["types"] == ["api"]
+
+        # Update the AccessConfig field
+        updates = {
+            "spec": {
+                "accessConfig": {
+                    "authenticationMode": "API_AND_CONFIG_MAP",
+                }
+            }
+        }
+
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        assert aws_res["cluster"]["accessConfig"]["authenticationMode"] == "API_AND_CONFIG_MAP"
 
         # Delete the k8s resource on teardown of the module
         k8s.delete_custom_resource(ref)

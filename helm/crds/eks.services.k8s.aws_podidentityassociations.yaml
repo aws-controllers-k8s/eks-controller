@@ -37,12 +37,12 @@ spec:
             description: "PodIdentityAssociationSpec defines the desired state of
               PodIdentityAssociation. \n Amazon EKS Pod Identity associations provide
               the ability to manage credentials for your applications, similar to
-              the way that 7EC2l instance profiles provide credentials to Amazon EC2
-              instances."
+              the way that Amazon EC2 instance profiles provide credentials to Amazon
+              EC2 instances."
             properties:
               clientRequestToken:
-                description: Unique, case-sensitive identifier that you provide to
-                  ensure the idempotency of the request.
+                description: A unique, case-sensitive identifier that you provide
+                  to ensure the idempotency of the request.
                 type: string
               clusterName:
                 description: The name of the cluster to create the association in.
@@ -91,23 +91,23 @@ spec:
               tags:
                 additionalProperties:
                   type: string
-                description: "The metadata that you apply to a resource to assist
-                  with categorization and organization. Each tag consists of a key
-                  and an optional value. You define both. \n The following basic restrictions
-                  apply to tags: \n - Maximum number of tags per resource – 50 \n
-                  - For each resource, each tag key must be unique, and each tag key
-                  can have only one value. \n - Maximum key length – 128 Unicode characters
-                  in UTF-8 \n - Maximum value length – 256 Unicode characters in UTF-8
-                  \n - If your tagging schema is used across multiple services and
-                  resources, remember that other services may have restrictions on
-                  allowed characters. Generally allowed characters are: letters, numbers,
-                  and spaces representable in UTF-8, and the following characters:
-                  + - = . _ : / @. \n - Tag keys and values are case-sensitive. \n
-                  - Do not use aws:, AWS:, or any upper or lowercase combination of
-                  such as a prefix for either keys or values as it is reserved for
-                  Amazon Web Services use. You cannot edit or delete tag keys or values
-                  with this prefix. Tags with this prefix do not count against your
-                  tags per resource limit."
+                description: "Metadata that assists with categorization and organization.
+                  Each tag consists of a key and an optional value. You define both.
+                  Tags don't propagate to any other cluster or Amazon Web Services
+                  resources. \n The following basic restrictions apply to tags: \n
+                  - Maximum number of tags per resource – 50 \n - For each resource,
+                  each tag key must be unique, and each tag key can have only one
+                  value. \n - Maximum key length – 128 Unicode characters in UTF-8
+                  \n - Maximum value length – 256 Unicode characters in UTF-8 \n -
+                  If your tagging schema is used across multiple services and resources,
+                  remember that other services may have restrictions on allowed characters.
+                  Generally allowed characters are: letters, numbers, and spaces representable
+                  in UTF-8, and the following characters: + - = . _ : / @. \n - Tag
+                  keys and values are case-sensitive. \n - Do not use aws:, AWS:,
+                  or any upper or lowercase combination of such as a prefix for either
+                  keys or values as it is reserved for Amazon Web Services use. You
+                  cannot edit or delete tag keys or values with this prefix. Tags
+                  with this prefix do not count against your tags per resource limit."
                 type: object
             required:
             - namespace

@@ -32,16 +32,14 @@ type AddonSpec struct {
 	// A unique, case-sensitive identifier that you provide to ensure the idempotency
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
-	// The name of the cluster to create the add-on for.
+	// The name of your cluster.
 	ClusterName *string                                  `json:"clusterName,omitempty"`
 	ClusterRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
 	// The set of configuration values for the add-on that's created. The values
-	// that you provide are validated against the schema in DescribeAddonConfiguration
-	// (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonConfiguration.html).
+	// that you provide are validated against the schema returned by DescribeAddonConfiguration.
 	ConfigurationValues *string `json:"configurationValues,omitempty"`
-	// The name of the add-on. The name must match one of the names that DescribeAddonVersions
-	// (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonVersions.html)
-	// returns.
+	// The name of the add-on. The name must match one of the names returned by
+	// DescribeAddonVersions.
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
 	// How to resolve field value conflicts for an Amazon EKS add-on. Conflicts
@@ -79,8 +77,9 @@ type AddonSpec struct {
 	// in the Amazon EKS User Guide.
 	ServiceAccountRoleARN *string                                  `json:"serviceAccountRoleARN,omitempty"`
 	ServiceAccountRoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"serviceAccountRoleRef,omitempty"`
-	// The metadata to apply to the cluster to assist with categorization and organization.
-	// Each tag consists of a key and an optional value. You define both.
+	// Metadata that assists with categorization and organization. Each tag consists
+	// of a key and an optional value. You define both. Tags don't propagate to
+	// any other cluster or Amazon Web Services resources.
 	Tags map[string]*string `json:"tags,omitempty"`
 }
 
@@ -97,7 +96,7 @@ type AddonStatus struct {
 	// resource
 	// +kubebuilder:validation:Optional
 	Conditions []*ackv1alpha1.Condition `json:"conditions"`
-	// The date and time that the add-on was created.
+	// The Unix epoch timestamp at object creation.
 	// +kubebuilder:validation:Optional
 	CreatedAt *metav1.Time `json:"createdAt,omitempty"`
 	// An object that represents the health of the add-on.
@@ -106,7 +105,7 @@ type AddonStatus struct {
 	// Information about an Amazon EKS add-on from the Amazon Web Services Marketplace.
 	// +kubebuilder:validation:Optional
 	MarketplaceInformation *MarketplaceInformation `json:"marketplaceInformation,omitempty"`
-	// The date and time that the add-on was last modified.
+	// The Unix epoch timestamp for the last modification to the object.
 	// +kubebuilder:validation:Optional
 	ModifiedAt *metav1.Time `json:"modifiedAt,omitempty"`
 	// The owner of the add-on.

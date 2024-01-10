@@ -6,7 +6,7 @@ require (
 	github.com/aws-controllers-k8s/ec2-controller v1.1.0
 	github.com/aws-controllers-k8s/iam-controller v1.3.1
 	github.com/aws-controllers-k8s/runtime v0.28.0
-	github.com/aws/aws-sdk-go v1.49.0
+	github.com/aws/aws-sdk-go v1.49.13
 	github.com/go-logr/logr v1.2.3
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4

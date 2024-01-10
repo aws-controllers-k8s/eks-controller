@@ -219,6 +219,20 @@ func (rm *resourceManager) customUpdate(
 		}
 		return returnClusterUpdating(updatedRes)
 	}
+	if delta.DifferentAt("Spec.AccessConfig") {
+		if err := rm.updateAccessConfig(ctx, desired); err != nil {
+			awserr, ok := ackerr.AWSError(err)
+
+			// Check to see if we've raced an async update call and need to
+			// requeue
+			if ok && awserr.Code() == "ResourceInUseException" {
+				return nil, requeueAfterAsyncUpdate()
+			}
+			return nil, err
+		}
+		return returnClusterUpdating(updatedRes)
+	}
+
 	if delta.DifferentAt("Spec.Version") {
 		if err := rm.updateVersion(ctx, desired); err != nil {
 			awserr, ok := ackerr.AWSError(err)
@@ -269,6 +283,35 @@ func (rm *resourceManager) updateConfigLogging(
 	input := &svcsdk.UpdateClusterConfigInput{
 		Name:    r.ko.Spec.Name,
 		Logging: rm.newLogging(r),
+	}
+
+	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func newAccessConfig(r *resource) *svcsdk.UpdateAccessConfigRequest {
+	cfg := &svcsdk.UpdateAccessConfigRequest{}
+	if r.ko.Spec.AccessConfig != nil {
+		cfg.AuthenticationMode = r.ko.Spec.AccessConfig.AuthenticationMode
+	}
+	return cfg
+}
+
+func (rm *resourceManager) updateAccessConfig(
+	ctx context.Context,
+	r *resource,
+) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateAccessConfig")
+	defer exit(err)
+	input := &svcsdk.UpdateClusterConfigInput{
+		Name:         r.ko.Spec.Name,
+		AccessConfig: newAccessConfig(r),
 	}
 
 	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
