@@ -77,6 +77,26 @@ rules:
 - apiGroups:
   - eks.services.k8s.aws
   resources:
+  - accessentries
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
+  - accessentries/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
   - addons
   verbs:
   - create

@@ -1,0 +1,12 @@
+apiVersion: eks.services.k8s.aws/v1alpha1
+kind: AccessEntry
+metadata:
+  name: $CR_NAME
+spec:
+  clusterName: $CLUSTER_NAME
+  principalARN: $PRINCIPAL_ARN
+  accessPolicies:
+  - policyARN: $ACCESS_POLICY_ARN
+    accessScope:
+      type: namespace
+      namespaces: ["prod-1"]

@@ -37,6 +37,7 @@ import (
 	svctypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 	svcresource "github.com/aws-controllers-k8s/eks-controller/pkg/resource"
 
+	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/access_entry"
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/addon"
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/cluster"
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/fargate_profile"

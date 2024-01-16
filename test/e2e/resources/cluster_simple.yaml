@@ -5,6 +5,8 @@ metadata:
 spec:
   name: $CLUSTER_NAME
   roleARN: $CLUSTER_ROLE
+  accessConfig:
+    authenticationMode: $AUTHENTICATION_MODE
   resourcesVPCConfig:
     endpointPrivateAccess: true
     endpointPublicAccess: true

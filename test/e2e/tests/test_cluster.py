@@ -74,7 +74,7 @@ def simple_cluster(eks_client):
         cluster_name, namespace="default",
     )
     k8s.create_custom_resource(ref, resource_data)
-    cr = k8s.wait_resource_consumed_by_controller(ref)
+    cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=15)
 
     assert cr is not None
     assert k8s.get_resource_exists(ref)
@@ -162,7 +162,7 @@ class TestCluster:
         updates = {
             "spec": {
                 "accessConfig": {
-                    "authenticationMode": "API_AND_CONFIG_MAP",
+                    "authenticationMode": "API",
                 }
             }
         }
@@ -173,7 +173,7 @@ class TestCluster:
         wait_for_cluster_active(eks_client, cluster_name)
 
         aws_res = eks_client.describe_cluster(name=cluster_name)
-        assert aws_res["cluster"]["accessConfig"]["authenticationMode"] == "API_AND_CONFIG_MAP"
+        assert aws_res["cluster"]["accessConfig"]["authenticationMode"] == "API"
 
         # Delete the k8s resource on teardown of the module
         k8s.delete_custom_resource(ref)

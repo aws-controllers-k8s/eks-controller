@@ -38,6 +38,10 @@ def service_bootstrap() -> Resources:
                 "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess",
             ]
         ),
+        AccessEntryPrincipalRole=Role(
+            "ack-access-entry-principal-role",
+            "eks.amazonaws.com",
+        ),
         ClusterVPC=VPC(name_prefix="cluster-vpc", num_public_subnet=2, num_private_subnet=2)
     )
 
