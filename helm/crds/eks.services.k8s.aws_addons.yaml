@@ -15,7 +15,31 @@ spec:
     singular: addon
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.clusterName
+      name: CLUSTER
+      type: string
+    - jsonPath: .spec.addonVersion
+      name: ADDONVERSION
+      type: string
+    - jsonPath: .spec.resolveConflicts
+      name: RESOLVECONFLICTS
+      type: string
+    - jsonPath: .status.status
+      name: STATUS
+      priority: 1
+      type: string
+    - jsonPath: .spec.serviceAccountRoleARN
+      name: SERVICEACCOUNTROLEARN
+      priority: 1
+      type: string
+    - jsonPath: .status.conditions[?(@.type=="ACK.ResourceSynced")].status
+      name: Synced
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Addon is the Schema for the Addons API

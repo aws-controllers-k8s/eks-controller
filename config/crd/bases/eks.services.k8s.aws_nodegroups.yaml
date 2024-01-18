@@ -15,7 +15,40 @@ spec:
     singular: nodegroup
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.clusterName
+      name: CLUSTER
+      type: string
+    - jsonPath: .spec.version
+      name: VERSION
+      type: string
+    - jsonPath: .status.status
+      name: STATUS
+      type: string
+    - jsonPath: .spec.releaseVersion
+      name: RELEASEVERSION
+      priority: 1
+      type: string
+    - jsonPath: .spec.scalingConfig.desiredSize
+      name: DESIREDSIZE
+      type: integer
+    - jsonPath: .spec.scalingConfig.minSize
+      name: MINSIZE
+      type: integer
+    - jsonPath: .spec.scalingConfig.maxSize
+      name: MAXSIZE
+      type: integer
+    - jsonPath: .spec.diskSize
+      name: DISKSIZE
+      priority: 1
+      type: integer
+    - jsonPath: .status.conditions[?(@.type=="ACK.ResourceSynced")].status
+      name: Synced
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Nodegroup is the Schema for the Nodegroups API

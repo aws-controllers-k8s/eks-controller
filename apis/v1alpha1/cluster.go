@@ -135,6 +135,12 @@ type ClusterStatus struct {
 // Cluster is the Schema for the Clusters API
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="VERSION",type=string,priority=0,JSONPath=`.spec.version`
+// +kubebuilder:printcolumn:name="STATUS",type=string,priority=0,JSONPath=`.status.status`
+// +kubebuilder:printcolumn:name="PLATFORMVERSION",type=string,priority=1,JSONPath=`.status.platformVersion`
+// +kubebuilder:printcolumn:name="ENDPOINT",type=string,priority=1,JSONPath=`.status.endpoint`
+// +kubebuilder:printcolumn:name="Synced",type="string",priority=0,JSONPath=".status.conditions[?(@.type==\"ACK.ResourceSynced\")].status"
+// +kubebuilder:printcolumn:name="Age",type="date",priority=0,JSONPath=".metadata.creationTimestamp"
 type Cluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -173,6 +173,16 @@ type NodegroupStatus struct {
 // Nodegroup is the Schema for the Nodegroups API
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="CLUSTER",type=string,priority=0,JSONPath=`.spec.clusterName`
+// +kubebuilder:printcolumn:name="VERSION",type=string,priority=0,JSONPath=`.spec.version`
+// +kubebuilder:printcolumn:name="STATUS",type=string,priority=0,JSONPath=`.status.status`
+// +kubebuilder:printcolumn:name="RELEASEVERSION",type=string,priority=1,JSONPath=`.spec.releaseVersion`
+// +kubebuilder:printcolumn:name="DESIREDSIZE",type=integer,priority=0,JSONPath=`.spec.scalingConfig.desiredSize`
+// +kubebuilder:printcolumn:name="MINSIZE",type=integer,priority=0,JSONPath=`.spec.scalingConfig.minSize`
+// +kubebuilder:printcolumn:name="MAXSIZE",type=integer,priority=0,JSONPath=`.spec.scalingConfig.maxSize`
+// +kubebuilder:printcolumn:name="DISKSIZE",type=integer,priority=1,JSONPath=`.spec.diskSize`
+// +kubebuilder:printcolumn:name="Synced",type="string",priority=0,JSONPath=".status.conditions[?(@.type==\"ACK.ResourceSynced\")].status"
+// +kubebuilder:printcolumn:name="Age",type="date",priority=0,JSONPath=".metadata.creationTimestamp"
 type Nodegroup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -15,7 +15,31 @@ spec:
     singular: podidentityassociation
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.clusterName
+      name: CLUSTER
+      type: string
+    - jsonPath: .spec.namespace
+      name: NAMESPACE
+      type: string
+    - jsonPath: .spec.serviceaccount
+      name: SERVICEACCOUNT
+      type: string
+    - jsonPath: .spec.roleARN
+      name: ROLEARN
+      priority: 1
+      type: string
+    - jsonPath: .status.associationID
+      name: ASSOCIATIONID
+      priority: 1
+      type: string
+    - jsonPath: .status.conditions[?(@.type=="ACK.ResourceSynced")].status
+      name: Synced
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: PodIdentityAssociation is the Schema for the PodIdentityAssociations

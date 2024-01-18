@@ -15,7 +15,27 @@ spec:
     singular: accessentry
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.clusterName
+      name: CLUSTER
+      type: string
+    - jsonPath: .spec.type
+      name: TYPE
+      type: string
+    - jsonPath: .spec.username
+      name: USERNAME
+      type: string
+    - jsonPath: .spec.principalARN
+      name: PRINCIPALARN
+      priority: 1
+      type: string
+    - jsonPath: .status.conditions[?(@.type=="ACK.ResourceSynced")].status
+      name: Synced
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: AccessEntry is the Schema for the AccessEntries API
