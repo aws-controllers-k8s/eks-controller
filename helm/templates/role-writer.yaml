@@ -10,17 +10,11 @@ rules:
   - eks.services.k8s.aws
   resources:
   - accessentries
-
   - addons
-
   - clusters
-
   - fargateprofiles
-
   - nodegroups
-
   - podidentityassociations
-
   verbs:
   - create
   - delete
