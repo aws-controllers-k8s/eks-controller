@@ -41,6 +41,33 @@ resources:
         - MissingAction
         - MissingParameter
         - ValidationError
+    print:
+      add_age_column: true
+      add_synced_column: true
+      order_by: index
+      additional_columns:
+      - name: CLUSTER
+        json_path: .spec.clusterName
+        type: string
+        index: 10
+      - name: ADDONVERSION
+        json_path: .spec.addonVersion
+        type: string
+        index: 20
+      - name: RESOLVECONFLICTS
+        json_path: .spec.resolveConflicts
+        type: string
+        index: 30
+      - name: STATUS
+        json_path: .status.status
+        type: string
+        index: 40
+        priority: 1
+      - name: SERVICEACCOUNTROLEARN
+        json_path: .spec.serviceAccountRoleARN
+        type: string
+        index: 50
+        priority: 1
   Cluster:
     fields:
       EncryptionProvider.Provider.KeyArn:
@@ -94,6 +121,29 @@ resources:
         template_path: hooks/cluster/sdk_file_end.go.tpl
     update_operation:
       custom_method_name: customUpdate
+    print:
+      add_age_column: true
+      add_synced_column: true
+      order_by: index
+      additional_columns:
+      - name: VERSION
+        json_path: .spec.version
+        type: string
+        index: 10
+      - name: STATUS
+        json_path: .status.status
+        type: string
+        index: 20
+      - name: PLATFORMVERSION
+        json_path: .status.platformVersion
+        type: string
+        index: 30
+        priority: 1
+      - name: ENDPOINT
+        json_path: .status.endpoint
+        type: string
+        index: 40
+        priority: 1
   FargateProfile:
     fields:
       ClusterName:
@@ -150,6 +200,24 @@ resources:
       - path: Status.Status
         in:
         - ACTIVE
+    print:
+      add_age_column: true
+      add_synced_column: true
+      order_by: index
+      additional_columns:
+      - name: CLUSTER
+        json_path: .spec.clusterName
+        type: string
+        index: 10
+      - name: STATUS
+        json_path: .status.status
+        type: string
+        index: 20
+      - name: PODEXECUTIONROLEARN
+        json_path: .spec.podExecutionRoleARN
+        type: string
+        index: 30
+        priority: 1
   Nodegroup:
     fields:
       ClusterName:
@@ -217,6 +285,45 @@ resources:
         template_path: hooks/nodegroup/sdk_file_end.go.tpl
     update_operation:
       custom_method_name: customUpdate
+    print:
+      add_age_column: true
+      add_synced_column: true
+      order_by: index
+      additional_columns:
+      - name: CLUSTER
+        json_path: .spec.clusterName
+        type: string
+        index: 10
+      - name: VERSION
+        json_path: .spec.version
+        type: string
+        index: 20
+      - name: STATUS
+        json_path: .status.status
+        type: string
+        index: 30
+      - name: RELEASEVERSION
+        json_path: .spec.releaseVersion
+        type: string
+        index: 40
+        priority: 1
+      - name: DESIREDSIZE
+        json_path: .spec.scalingConfig.desiredSize
+        type: integer
+        index: 50
+      - name: MINSIZE
+        json_path: .spec.scalingConfig.minSize
+        type: integer
+        index: 60
+      - name: MAXSIZE
+        json_path: .spec.scalingConfig.maxSize
+        type: integer
+        index: 70
+      - name: DISKSIZE
+        json_path: .spec.diskSize
+        type: integer
+        index: 80
+        priority: 1
   PodIdentityAssociation:
     fields:
       ClusterName:
@@ -229,6 +336,33 @@ resources:
           service_name: iam
           resource: Role
           path: Status.ACKResourceMetadata.ARN
+    print:
+      add_age_column: true
+      add_synced_column: true
+      order_by: index
+      additional_columns:
+      - name: CLUSTER
+        json_path: .spec.clusterName
+        type: string
+        index: 10
+      - name: NAMESPACE
+        json_path: .spec.namespace
+        type: string
+        index: 20
+      - name: SERVICEACCOUNT
+        json_path: .spec.serviceaccount
+        type: string
+        index: 30
+      - name: ROLEARN
+        json_path: .spec.roleARN
+        type: string
+        index: 40
+        priority: 1
+      - name: ASSOCIATIONID
+        json_path: .status.associationID
+        type: string
+        index: 50
+        priority: 1
   AccessEntry:
     fields:
       ClusterName:
@@ -248,6 +382,28 @@ resources:
         template_path: hooks/access_entry/sdk_read_one_post_set_output.go.tpl
       sdk_update_pre_build_request:
         template_path: hooks/access_entry/sdk_update_pre_build_request.go.tpl
+    print:
+      add_age_column: true
+      add_synced_column: true
+      order_by: index
+      additional_columns:
+      - name: CLUSTER
+        json_path: .spec.clusterName
+        type: string
+        index: 10
+      - name: TYPE
+        json_path: .spec.type
+        type: string
+        index: 20
+      - name: USERNAME
+        json_path: .spec.username
+        type: string
+        index: 30
+      - name: PRINCIPALARN
+        json_path: .spec.principalARN
+        type: string
+        index: 40
+        priority: 1
 ignore:
   resource_names:
   - EksAnywhereSubscription

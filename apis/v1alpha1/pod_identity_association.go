@@ -106,6 +106,13 @@ type PodIdentityAssociationStatus struct {
 // PodIdentityAssociation is the Schema for the PodIdentityAssociations API
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="CLUSTER",type=string,priority=0,JSONPath=`.spec.clusterName`
+// +kubebuilder:printcolumn:name="NAMESPACE",type=string,priority=0,JSONPath=`.spec.namespace`
+// +kubebuilder:printcolumn:name="SERVICEACCOUNT",type=string,priority=0,JSONPath=`.spec.serviceaccount`
+// +kubebuilder:printcolumn:name="ROLEARN",type=string,priority=1,JSONPath=`.spec.roleARN`
+// +kubebuilder:printcolumn:name="ASSOCIATIONID",type=string,priority=1,JSONPath=`.status.associationID`
+// +kubebuilder:printcolumn:name="Synced",type="string",priority=0,JSONPath=".status.conditions[?(@.type==\"ACK.ResourceSynced\")].status"
+// +kubebuilder:printcolumn:name="Age",type="date",priority=0,JSONPath=".metadata.creationTimestamp"
 type PodIdentityAssociation struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

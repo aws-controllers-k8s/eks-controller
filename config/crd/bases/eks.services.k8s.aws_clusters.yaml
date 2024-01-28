@@ -15,7 +15,28 @@ spec:
     singular: cluster
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.version
+      name: VERSION
+      type: string
+    - jsonPath: .status.status
+      name: STATUS
+      type: string
+    - jsonPath: .status.platformVersion
+      name: PLATFORMVERSION
+      priority: 1
+      type: string
+    - jsonPath: .status.endpoint
+      name: ENDPOINT
+      priority: 1
+      type: string
+    - jsonPath: .status.conditions[?(@.type=="ACK.ResourceSynced")].status
+      name: Synced
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Cluster is the Schema for the Clusters API
