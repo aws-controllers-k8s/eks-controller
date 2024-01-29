@@ -46,3 +46,236 @@ If release name contains chart name it will be used as a full name.
 {{- define "aws.credentials.path" -}}
 {{- printf "%s/%s" (include "aws.credentials.secret_mount_path" .) .Values.aws.credentials.secretKey -}}
 {{- end -}}
+
+{{/* The rules a of ClusterRole or Role */}}
+{{- define "controller-role-rules" }}
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - patch
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - patch
+  - watch
+- apiGroups:
+  - ec2.services.k8s.aws
+  resources:
+  - securitygroups
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ec2.services.k8s.aws
+  resources:
+  - securitygroups/status
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ec2.services.k8s.aws
+  resources:
+  - subnets
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ec2.services.k8s.aws
+  resources:
+  - subnets/status
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
+  - accessentries
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
+  - accessentries/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
+  - addons
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
+  - addons/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
+  - clusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
+  - clusters/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
+  - fargateprofiles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
+  - fargateprofiles/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
+  - nodegroups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
+  - nodegroups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
+  - podidentityassociations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
+  - podidentityassociations/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - iam.services.k8s.aws
+  resources:
+  - roles
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - iam.services.k8s.aws
+  resources:
+  - roles/status
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - services.k8s.aws
+  resources:
+  - adoptedresources
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - services.k8s.aws
+  resources:
+  - adoptedresources/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - services.k8s.aws
+  resources:
+  - fieldexports
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - services.k8s.aws
+  resources:
+  - fieldexports/status
+  verbs:
+  - get
+  - patch
+  - update
+{{- end }}
