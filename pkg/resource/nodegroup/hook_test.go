@@ -422,3 +422,108 @@ func Test_resourceManager_newUpdateScalingConfigPayload_ManagedByDefault(t *test
 		})
 	}
 }
+
+func Test_newUpdateNodegroupPayload(t *testing.T) {
+	type args struct {
+		r *resource
+	}
+	tests := []struct {
+		name               string
+		args               args
+		wantVersion        string
+		wantForce          bool
+		wantLaunchTemplate bool
+	}{
+		{
+			name: "version only",
+			args: args{
+				r: &resource{
+					ko: &v1alpha1.Nodegroup{
+						Spec: v1alpha1.NodegroupSpec{
+							Version: aws.String("1.21"),
+						},
+					},
+				},
+			},
+			wantVersion:        "1.21",
+			wantForce:          false,
+			wantLaunchTemplate: false,
+		},
+		{
+			name: "all fields",
+			args: args{
+				r: &resource{
+					ko: &v1alpha1.Nodegroup{
+						Spec: v1alpha1.NodegroupSpec{
+							Version:        aws.String("1.21"),
+							ReleaseVersion: aws.String("someversion"),
+							LaunchTemplate: &v1alpha1.LaunchTemplateSpecification{
+								ID: aws.String("id"),
+							},
+						},
+					},
+				},
+			},
+			wantVersion:        "1.21",
+			wantForce:          false,
+			wantLaunchTemplate: true,
+		},
+		{
+			name: "force update annotation false",
+			args: args{
+				r: &resource{
+					ko: &v1alpha1.Nodegroup{
+						ObjectMeta: metav1.ObjectMeta{
+							Annotations: map[string]string{
+								"eks.services.k8s.aws/force-update-version": "false",
+							},
+						},
+						Spec: v1alpha1.NodegroupSpec{
+							Version: aws.String("1.21"),
+						},
+					},
+				},
+			},
+			wantVersion:        "1.21",
+			wantForce:          false,
+			wantLaunchTemplate: false,
+		},
+		{
+			name: "force update annotation true",
+			args: args{
+				r: &resource{
+					ko: &v1alpha1.Nodegroup{
+						ObjectMeta: metav1.ObjectMeta{
+							Annotations: map[string]string{
+								"eks.services.k8s.aws/force-update-version": "true",
+							},
+						},
+						Spec: v1alpha1.NodegroupSpec{
+							Version: aws.String("1.21"),
+						},
+					},
+				},
+			},
+			wantVersion:        "1.21",
+			wantForce:          true,
+			wantLaunchTemplate: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := newUpdateNodegroupVersionPayload(tt.args.r)
+			assert.Equal(t, tt.wantVersion, *got.Version)
+			if tt.wantForce {
+				assert.NotNil(t, got.Force)
+				assert.True(t, *got.Force)
+			} else {
+				assert.Nil(t, got.Force)
+			}
+			if tt.wantLaunchTemplate {
+				assert.NotNil(t, got.LaunchTemplate)
+			} else {
+				assert.Nil(t, got.LaunchTemplate)
+			}
+		})
+	}
+}

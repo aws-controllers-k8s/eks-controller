@@ -34,6 +34,13 @@ var (
 	// the value is not one of the above, the controller will default to managing the desired size
 	// as if the annotation was set to "controller".
 	DesiredSizeManagedByAnnotation = fmt.Sprintf("%s/desired-size-managed-by", GroupVersion.Group)
+	// ForceNodeGroupUpdateVersionAnnotation is the annotation key used to force an update of the
+	// nodegroup version. This annotation can only be set on a nodegroup custom resource.
+	// The value of this annotation must be a boolean value. If the value is "true", the controller
+	// will force an update of the nodegroup version to the value specified in the `version` field
+	// of the `spec` object. If the value is "false", the controller will not force an update of the
+	// nodegroup version.
+	ForceNodeGroupUpdateVersionAnnotation = fmt.Sprintf("%s/force-update-version", GroupVersion.Group)
 )
 
 const (

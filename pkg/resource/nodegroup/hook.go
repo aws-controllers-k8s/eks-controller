@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strconv"
 	"time"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
@@ -25,6 +26,7 @@ import (
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
 	svcsdk "github.com/aws/aws-sdk-go/service/eks"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	svcapitypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 )
@@ -363,6 +365,31 @@ func newUpdateTaintsPayload(
 	return &payload
 }
 
+func newUpdateNodegroupVersionPayload(
+	desired *resource,
+) *svcsdk.UpdateNodegroupVersionInput {
+	input := &svcsdk.UpdateNodegroupVersionInput{
+		NodegroupName:  desired.ko.Spec.Name,
+		ClusterName:    desired.ko.Spec.ClusterName,
+		Version:        desired.ko.Spec.Version,
+		ReleaseVersion: desired.ko.Spec.ReleaseVersion,
+	}
+
+	if desired.ko.Spec.LaunchTemplate != nil {
+		input.SetLaunchTemplate(&svcsdk.LaunchTemplateSpecification{
+			Id:      desired.ko.Spec.LaunchTemplate.ID,
+			Name:    desired.ko.Spec.LaunchTemplate.Name,
+			Version: desired.ko.Spec.LaunchTemplate.Version,
+		})
+	}
+
+	if getUpdateNodeGroupForceAnnotation(desired.ko.ObjectMeta) {
+		input.SetForce(true)
+	}
+
+	return input
+}
+
 func (rm *resourceManager) updateVersion(
 	ctx context.Context,
 	r *resource,
@@ -370,11 +397,8 @@ func (rm *resourceManager) updateVersion(
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.updateVersion")
 	defer exit(err)
-	input := &svcsdk.UpdateNodegroupVersionInput{
-		NodegroupName: r.ko.Spec.Name,
-		ClusterName:   r.ko.Spec.ClusterName,
-		Version:       r.ko.Spec.Version,
-	}
+
+	input := newUpdateNodegroupVersionPayload(r)
 
 	_, err = rm.sdkapi.UpdateNodegroupVersionWithContext(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateNodegroupVersion", err)
@@ -385,6 +409,29 @@ func (rm *resourceManager) updateVersion(
 	return nil
 }
 
+const (
+	defaultUpgradeNodeGroupVersion = false
+)
+
+// GetDeleteForce returns whether the nodegroup should be deleted forcefully.
+//
+// https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateNodegroupVersion.html
+func getUpdateNodeGroupForceAnnotation(
+	m metav1.ObjectMeta,
+) bool {
+	resAnnotations := m.GetAnnotations()
+	forceVersionUpdate, ok := resAnnotations[svcapitypes.ForceNodeGroupUpdateVersionAnnotation]
+	if !ok {
+		return defaultUpgradeNodeGroupVersion
+	}
+
+	forceVersionUpdateBool, err := strconv.ParseBool(forceVersionUpdate)
+	if err != nil {
+		return defaultUpgradeNodeGroupVersion
+	}
+
+	return forceVersionUpdateBool
+}
 func (rm *resourceManager) newUpdateScalingConfigPayload(
 	desired, latest *resource,
 ) *svcsdk.NodegroupScalingConfig {
