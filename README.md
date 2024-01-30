@@ -19,6 +19,7 @@ Currently, the `eks-controller` is GA and supports the following resources:
 - `FargateProfile`
 - `Addon`
 - `PodIdentityAssociation`
+- `AccessEntry`
 
 A detailed list of the resources supported specifications can be found in the
 [references][ack-references] section.
@@ -39,6 +40,11 @@ behavior of the controller. The following annotations are supported:
           of the nodegroup.
 
       If not set, the controller will default to `ack-eks-controller`.
+
+    - `eks.services.k8s.aws/force-update-version`: used to force the version
+      update of the nodegroup. If set to `true`, and the controller detects a
+      a change in the nodegroup, it will set the `force` attribute to `true`
+      in the `UpdateNodeGroupConfig` API call.
 
 ## Contributing
 
