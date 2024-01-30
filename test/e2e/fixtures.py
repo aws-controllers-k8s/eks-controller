@@ -14,11 +14,16 @@
 """Fixtures common to all EKS controller tests"""
 
 import dataclasses
+import logging
 
 from acktest.k8s.resource import _get_k8s_api_client
 from kubernetes import client
+from acktest.k8s import resource as k8s
+from acktest import tags as tagutil
 
+import time
 import pytest
+import boto3
 
 @dataclasses.dataclass
 class SeviceAccountRef:
@@ -70,3 +75,48 @@ def k8s_service_account():
 
     for sa_ref in created:
         delete_service_account(sa_ref.ns, sa_ref.name)
+
+TAGS_PATCH_WAIT_TIME = 5
+
+def assert_tagging_functionality(ref, arn):
+    eks_client = boto3.client('eks')
+    # Add tags
+    k8s.patch_custom_resource(ref, {
+        "spec": {
+            "tags": {
+                "key1": "value1",
+                "key2": "value2"
+            }
+        }
+    })
+    time.sleep(TAGS_PATCH_WAIT_TIME)
+
+
+    pia_tags = eks_client.list_tags_for_resource(
+        resourceArn=arn
+    )
+    pia_tags = tagutil.clean(pia_tags['tags'])
+    assert len(pia_tags) == 2
+    assert pia_tags["key1"] == "value1"
+    assert pia_tags["key2"] == "value2"
+
+    # Update tags
+    k8s.patch_custom_resource(ref, {
+        "spec": {
+            "tags": {
+                "key2": "value2-updated",
+                "key3": "value3"
+            }
+        }
+    })
+    time.sleep(TAGS_PATCH_WAIT_TIME)
+    
+    pia_tags = eks_client.list_tags_for_resource(
+        resourceArn=arn
+    )
+    pia_tags = tagutil.clean(pia_tags['tags'])
+    logging.info(pia_tags)
+    assert len(pia_tags) == 3
+    assert pia_tags["key1"] == "value1"
+    assert pia_tags["key2"] == "value2-updated"
+    assert pia_tags["key3"] == "value3"

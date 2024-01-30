@@ -1,5 +1,8 @@
 resources:
   Addon:
+    hooks:
+      sdk_update_pre_build_request:
+        template_path: hooks/pod_identity_association/sdk_update_pre_build_request.go.tpl
     fields:
       ClusterName:
         references:
@@ -325,6 +328,13 @@ resources:
         index: 80
         priority: 1
   PodIdentityAssociation:
+    hooks:
+      sdk_update_pre_build_request:
+        template_path: hooks/pod_identity_association/sdk_update_pre_build_request.go.tpl
+      sdk_read_one_post_set_output:
+        template_path: hooks/pod_identity_association/sdk_read_one_post_set_output.go.tpl
+      sdk_create_post_set_output:
+        template_path: hooks/pod_identity_association/sdk_create_post_set_output.go.tpl
     fields:
       ClusterName:
         references:
