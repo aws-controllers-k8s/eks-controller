@@ -11,7 +11,7 @@
 // express or implied. See the License for the specific language governing
 // permissions and limitations under the License.
 
-package pod_identity_association
+package addon
 
 import "github.com/aws-controllers-k8s/eks-controller/pkg/tags"
 

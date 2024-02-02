@@ -28,6 +28,7 @@ from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_eks_resource
 from e2e.common.types import CLUSTER_RESOURCE_PLURAL
 from e2e.common.waiter import wait_until_deleted
 from e2e.replacement_values import REPLACEMENT_VALUES
+from e2e.fixtures import assert_tagging_functionality
 
 # Time to wait after modifying the CR for the status to change
 MODIFY_WAIT_AFTER_SECONDS = 60
@@ -174,6 +175,8 @@ class TestCluster:
 
         aws_res = eks_client.describe_cluster(name=cluster_name)
         assert aws_res["cluster"]["accessConfig"]["authenticationMode"] == "API"
+
+        assert_tagging_functionality(ref, cr["status"]["ackResourceMetadata"]["arn"])
 
         # Delete the k8s resource on teardown of the module
         k8s.delete_custom_resource(ref)

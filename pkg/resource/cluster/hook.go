@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
@@ -188,6 +189,17 @@ func (rm *resourceManager) customUpdate(
 		return updatedRes, requeueWaitUntilCanModify(latest)
 	}
 
+	if delta.DifferentAt("Spec.Tags") {
+		if err := tags.SyncTags(
+			ctx, rm.sdkapi, rm.metrics,
+			string(*desired.ko.Status.ACKResourceMetadata.ARN),
+			desired.ko.Spec.Tags, latest.ko.Spec.Tags,
+		); err != nil {
+			return nil, err
+		}
+		// Tag updates are not reflected in the status, so we don't need to
+		// requeue here.
+	}
 	if delta.DifferentAt("Spec.Logging") {
 		if err := rm.updateConfigLogging(ctx, desired); err != nil {
 			awserr, ok := ackerr.AWSError(err)

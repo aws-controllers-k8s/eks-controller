@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	svcapitypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
+	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
 )
 
 // Taken from the list of nodegroup statuses on the boto3 documentation
@@ -238,6 +239,19 @@ func (rm *resourceManager) customUpdate(
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.customUpdate")
 	defer exit(err)
+	if delta.DifferentAt("Spec.Tags") {
+		err := tags.SyncTags(
+			ctx, rm.sdkapi, rm.metrics,
+			string(*desired.ko.Status.ACKResourceMetadata.ARN),
+			desired.ko.Spec.Tags, latest.ko.Spec.Tags,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if !delta.DifferentExcept("Spec.Tags") {
+		return desired, nil
+	}
 
 	// For asynchronous updates, latest(from ReadOne) contains the
 	// outdate values for Spec fields. However the status(Cluster status)

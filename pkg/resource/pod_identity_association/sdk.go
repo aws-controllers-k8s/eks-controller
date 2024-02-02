@@ -143,6 +143,9 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	rm.setStatusDefaults(ko)
+	if resp.Association.AssociationArn != nil {
+		ko.Status.ACKResourceMetadata.ARN = (*ackv1alpha1.AWSResourceName)(resp.Association.AssociationArn)
+	}
 	return &resource{ko}, nil
 }
 
@@ -254,6 +257,9 @@ func (rm *resourceManager) sdkCreate(
 	}
 
 	rm.setStatusDefaults(ko)
+	if resp.Association.AssociationArn != nil {
+		ko.Status.ACKResourceMetadata.ARN = (*ackv1alpha1.AWSResourceName)(resp.Association.AssociationArn)
+	}
 	return &resource{ko}, nil
 }
 
@@ -306,6 +312,19 @@ func (rm *resourceManager) sdkUpdate(
 	defer func() {
 		exit(err)
 	}()
+	if delta.DifferentAt("Spec.Tags") {
+		err := syncTags(
+			ctx, rm.sdkapi, rm.metrics,
+			string(*desired.ko.Status.ACKResourceMetadata.ARN),
+			desired.ko.Spec.Tags, latest.ko.Spec.Tags,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if !delta.DifferentExcept("Spec.Tags") {
+		return desired, nil
+	}
 	input, err := rm.newUpdateRequestPayload(ctx, desired, delta)
 	if err != nil {
 		return nil, err

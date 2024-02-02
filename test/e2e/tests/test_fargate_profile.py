@@ -29,6 +29,7 @@ from acktest.k8s import condition
 from e2e import CRD_VERSION, service_marker, CRD_GROUP, load_eks_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
 from e2e.bootstrap_resources import get_bootstrap_resources
+from e2e.fixtures import assert_tagging_functionality
 
 from .test_cluster import simple_cluster, wait_for_cluster_active
 
@@ -111,6 +112,8 @@ class TestFargateProfile:
         # Ensure status is updated properly once it has become active
         time.sleep(CHECK_STATUS_WAIT_SECONDS)
         get_and_assert_status(ref, 'ACTIVE', True)
+
+        assert_tagging_functionality(ref, cr["status"]["ackResourceMetadata"]["arn"])
 
         _, deleted = k8s.delete_custom_resource(ref, 3, 10)
         assert deleted

@@ -21,7 +21,13 @@ import (
 	svcsdk "github.com/aws/aws-sdk-go/service/eks"
 
 	"github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
+	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
 )
+
+// Ideally, a part of this code needs to be generated.. However since the
+// tags packge is not imported, we can't call it directly from sdk.go. We
+// have to do this Go-fu to make it work.
+var syncTags = tags.SyncTags
 
 // setResourceDefaults queries the EKS API for the current state of the
 // fields that are not returned by the ReadOne or List APIs. In this
@@ -182,93 +188,5 @@ func (rm *resourceManager) disassociateAccessPolicy(
 	}
 	_, err = rm.sdkapi.DisassociateAccessPolicyWithContext(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "DisassociateAccessPolicy", err)
-	return err
-}
-
-// syncTags examines the Tags in the supplied AccessEntry and calls the
-// TagResource and UntagResource APIs to ensure that the set of
-// associated Tags stays in sync with the AccessEntry.Spec.Tags
-func (rm *resourceManager) syncTags(
-	ctx context.Context,
-	desired *resource,
-	latest *resource,
-) (err error) {
-	rlog := ackrtlog.FromContext(ctx)
-	exit := rlog.Trace("rm.syncTags")
-	defer func() { exit(err) }()
-	toAdd := map[string]*string{}
-	toDelete := []*string{}
-
-	existingTags := latest.ko.Spec.Tags
-
-	for k, v := range desired.ko.Spec.Tags {
-		if ev, found := existingTags[k]; !found || *ev != *v {
-			toAdd[k] = v
-		}
-	}
-
-	for k, _ := range existingTags {
-		if _, found := desired.ko.Spec.Tags[k]; !found {
-			deleteKey := k
-			toDelete = append(toDelete, &deleteKey)
-		}
-	}
-
-	if len(toAdd) > 0 {
-		for k, v := range toAdd {
-			rlog.Debug("adding tag to access entry", "key", k, "value", *v)
-		}
-		if err = rm.addTags(ctx, desired, toAdd); err != nil {
-			return err
-		}
-	}
-	if len(toDelete) > 0 {
-		for _, k := range toDelete {
-			rlog.Debug("removing tag from access entry", "key", *k)
-		}
-		if err = rm.removeTags(ctx, desired, toDelete); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// addTags adds the supplied Tags to the supplied resource
-func (rm *resourceManager) addTags(
-	ctx context.Context,
-	r *resource,
-	tags map[string]*string,
-) (err error) {
-	rlog := ackrtlog.FromContext(ctx)
-	exit := rlog.Trace("rm.addTag")
-	defer func() { exit(err) }()
-
-	input := &svcsdk.TagResourceInput{
-		ResourceArn: (*string)(r.ko.Status.ACKResourceMetadata.ARN),
-		Tags:        tags,
-	}
-
-	_, err = rm.sdkapi.TagResourceWithContext(ctx, input)
-	rm.metrics.RecordAPICall("UPDATE", "TagResource", err)
-	return err
-}
-
-// removeTags removes the supplied Tags from the supplied resource
-func (rm *resourceManager) removeTags(
-	ctx context.Context,
-	r *resource,
-	tagKeys []*string, // the set of tag keys to delete
-) (err error) {
-	rlog := ackrtlog.FromContext(ctx)
-	exit := rlog.Trace("rm.removeTag")
-	defer func() { exit(err) }()
-
-	input := &svcsdk.UntagResourceInput{
-		ResourceArn: (*string)(r.ko.Status.ACKResourceMetadata.ARN),
-		TagKeys:     tagKeys,
-	}
-	_, err = rm.sdkapi.UntagResourceWithContext(ctx, input)
-	rm.metrics.RecordAPICall("UPDATE", "UntagResource", err)
 	return err
 }

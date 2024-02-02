@@ -24,6 +24,7 @@ from acktest.k8s import resource as k8s
 from acktest.resources import random_suffix_name
 from e2e import CRD_VERSION, service_marker, CRD_GROUP, load_eks_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
+from e2e.fixtures import assert_tagging_functionality
 
 from .test_cluster import simple_cluster, wait_for_cluster_active, get_and_assert_status
 
@@ -238,6 +239,8 @@ class TestNodegroup:
         )
 
         assert "taints" not in aws_res["nodegroup"]
+
+        assert_tagging_functionality(ref, cr["status"]["ackResourceMetadata"]["arn"])
 
     def test_nodegroup_custom_annotations(self, simple_nodegroup, eks_client):
         (ref, cr) = simple_nodegroup

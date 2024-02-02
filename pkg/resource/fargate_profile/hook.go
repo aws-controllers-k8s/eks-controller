@@ -19,6 +19,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
+	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
@@ -71,6 +72,17 @@ func (rm *resourceManager) customUpdate(
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.customUpdate")
 	defer exit(err)
+
+	if delta.DifferentAt("Spec.Tags") {
+		if err := tags.SyncTags(
+			ctx, rm.sdkapi, rm.metrics,
+			string(*desired.ko.Status.ACKResourceMetadata.ARN),
+			desired.ko.Spec.Tags, latest.ko.Spec.Tags,
+		); err != nil {
+			return nil, err
+		}
+		return desired, nil
+	}
 
 	// Never allow any changes
 	updated = &resource{ko: desired.ko.DeepCopy()}
