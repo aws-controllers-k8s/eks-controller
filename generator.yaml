@@ -2,7 +2,7 @@ resources:
   Addon:
     hooks:
       sdk_update_pre_build_request:
-        template_path: hooks/pod_identity_association/sdk_update_pre_build_request.go.tpl
+        template_path: hooks/addons/sdk_update_pre_build_request.go.tpl
     fields:
       ClusterName:
         references:
