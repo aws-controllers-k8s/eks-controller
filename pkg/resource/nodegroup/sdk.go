@@ -962,6 +962,27 @@ func (rm *resourceManager) terminalAWSError(err error) bool {
 	}
 }
 
+// getImmutableFieldChanges returns list of immutable fields from the
+func (rm *resourceManager) getImmutableFieldChanges(
+	delta *ackcompare.Delta,
+) []string {
+	var fields []string
+	if delta.DifferentAt("Spec.DiskSize") {
+		fields = append(fields, "DiskSize")
+	}
+	if delta.DifferentAt("Spec.NodeRole") {
+		fields = append(fields, "NodeRole")
+	}
+	if delta.DifferentAt("Spec.RemoteAccess") {
+		fields = append(fields, "RemoteAccess")
+	}
+	if delta.DifferentAt("Spec.Subnets") {
+		fields = append(fields, "Subnets")
+	}
+
+	return fields
+}
+
 // newNodegroupScalingConfig returns a NodegroupScalingConfig object
 // with each the field set by the resource's corresponding spec field.
 func (rm *resourceManager) newNodegroupScalingConfig(

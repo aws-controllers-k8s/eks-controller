@@ -232,6 +232,11 @@ resources:
           service_name: iam
           resource: Role
           path: Status.ACKResourceMetadata.ARN
+        is_immutable: true
+      DiskSize:
+        is_immutable: true
+      RemoteAccess:
+        is_immutable: true
       RemoteAccess.SourceSecurityGroups:
         references:
           service_name: ec2
@@ -242,7 +247,14 @@ resources:
           service_name: ec2
           resource: Subnet
           path: Status.SubnetID
+        is_immutable: true
       Taints:
+        compare:
+          is_ignored: true
+      ReleaseVersion:
+        compare:
+          is_ignored: true
+      Version:
         compare:
           is_ignored: true
     renames:

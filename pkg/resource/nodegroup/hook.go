@@ -18,10 +18,12 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
+	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
 	svcsdk "github.com/aws/aws-sdk-go/service/eks"
@@ -30,6 +32,7 @@ import (
 
 	svcapitypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
+	"github.com/aws-controllers-k8s/eks-controller/pkg/util"
 )
 
 // Taken from the list of nodegroup statuses on the boto3 documentation
@@ -102,6 +105,20 @@ func customPreCompare(
 					break
 				}
 			}
+		}
+	}
+	// only compare releaseVersion if it's provided by the user. Note that there will always be a
+	// ReleaseVersion in the observed state (after a successful creation).
+	if a.ko.Spec.ReleaseVersion != nil && *a.ko.Spec.ReleaseVersion != "" {
+		if *a.ko.Spec.ReleaseVersion != *b.ko.Spec.ReleaseVersion {
+			delta.Add("Spec.ReleaseVersion", a.ko.Spec.ReleaseVersion, b.ko.Spec.ReleaseVersion)
+		}
+	}
+	// only compare version if it's provided by the user. Note that there will always be a
+	// Version in the observed state (after a successful creation).
+	if a.ko.Spec.Version != nil && *a.ko.Spec.Version != "" {
+		if *a.ko.Spec.Version != *b.ko.Spec.Version {
+			delta.Add("Spec.Version", a.ko.Spec.Version, b.ko.Spec.Version)
 		}
 	}
 }
@@ -239,6 +256,12 @@ func (rm *resourceManager) customUpdate(
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.customUpdate")
 	defer exit(err)
+
+	if immutableFieldChanges := rm.getImmutableFieldChanges(delta); len(immutableFieldChanges) > 0 {
+		msg := fmt.Sprintf("Immutable Spec fields have been modified: %s", strings.Join(immutableFieldChanges, ","))
+		return nil, ackerr.NewTerminalError(fmt.Errorf(msg))
+	}
+
 	if delta.DifferentAt("Spec.Tags") {
 		err := tags.SyncTags(
 			ctx, rm.sdkapi, rm.metrics,
@@ -282,8 +305,55 @@ func (rm *resourceManager) customUpdate(
 		}
 		return returnNodegroupUpdating(updatedRes)
 	}
-	if delta.DifferentAt("Spec.Version") {
-		if err := rm.updateVersion(ctx, desired); err != nil {
+
+	// At the stage we know that at least one of Version, ReleaseVersion or
+	// LaunchTemplate has changed. The API does not allow using LaunchTemplate
+	// with either Version or ReleaseVersion. So we need to check if the user
+	// has provided a valid desired state.
+	// There is no need to manually set a terminal condition here as the
+	// controller will automatically set a terminal condition if the api
+	// returns an InvalidParameterException
+
+	if delta.DifferentAt("Spec.Version") || delta.DifferentAt("Spec.ReleaseVersion") || delta.DifferentAt("Spec.LaunchTemplate") {
+		// Before trying to trigger a Nodegroup version update, we need to ensure that the user
+		// has provided a valid desired state. For context the EKS UpdateNodegroupVersion API
+		// accepts optional parameters Version and ReleaseVersion.
+		//
+		// The following are the valid combinations of the Version and ReleaseVersion parameters:
+		// 1. None of the parameters are provided
+		// 2. Only the Version parameter is provided
+		// 3. Only the ReleaseVersion parameter is provided
+		// 4. Both the Version and ReleaseVersion parameters are provided and they match
+		//
+		// The first case is not applicable here as it's counterintuitive in a declarative
+		// model to not provide a desired state and have the controller trigger a blind update.
+
+		// We need to set a terminal condition if the user provides both a version and release version
+		// and they do not match. This is needed because the controller could potentially start alternating
+		// between the non-matching version and release version in the spec and the observed state.
+		if desired.ko.Spec.Version != nil && desired.ko.Spec.ReleaseVersion != nil &&
+			*desired.ko.Spec.Version != "" && *desired.ko.Spec.ReleaseVersion != "" {
+
+			// First parse the user provided release version and desired release
+			desiredReleaseVersionTrimmed, err := util.GetEKSVersionFromReleaseVersion(*desired.ko.Spec.ReleaseVersion)
+			if err != nil {
+				return nil, ackerr.NewTerminalError(err)
+			}
+
+			// Set a terminal condition if the release version and version do not match.
+			// e.g if the user provides a release version of 1.16.8-20211201 and a version of 1.17
+			// They will either need to provide one of the following:
+			// 2. A version
+			// 1. A release version
+			// 3. A version and release version that matches (e.g 1.16 and 1.16.8-20211201)
+			if desiredReleaseVersionTrimmed != *desired.ko.Spec.Version {
+				return nil, ackerr.NewTerminalError(
+					fmt.Errorf("version and release version do not match: %s and %s", *desired.ko.Spec.Version, desiredReleaseVersionTrimmed),
+				)
+			}
+		}
+
+		if err := rm.updateVersion(ctx, delta, desired); err != nil {
 			return nil, err
 		}
 		return returnNodegroupUpdating(updatedRes)
@@ -380,39 +450,51 @@ func newUpdateTaintsPayload(
 }
 
 func newUpdateNodegroupVersionPayload(
+	delta *ackcompare.Delta,
 	desired *resource,
 ) *svcsdk.UpdateNodegroupVersionInput {
 	input := &svcsdk.UpdateNodegroupVersionInput{
-		NodegroupName:  desired.ko.Spec.Name,
-		ClusterName:    desired.ko.Spec.ClusterName,
-		Version:        desired.ko.Spec.Version,
-		ReleaseVersion: desired.ko.Spec.ReleaseVersion,
+		NodegroupName: desired.ko.Spec.Name,
+		ClusterName:   desired.ko.Spec.ClusterName,
 	}
 
-	if desired.ko.Spec.LaunchTemplate != nil {
-		input.SetLaunchTemplate(&svcsdk.LaunchTemplateSpecification{
-			Id:      desired.ko.Spec.LaunchTemplate.ID,
-			Name:    desired.ko.Spec.LaunchTemplate.Name,
-			Version: desired.ko.Spec.LaunchTemplate.Version,
-		})
+	if delta.DifferentAt("Spec.Version") {
+		input.Version = desired.ko.Spec.Version
 	}
 
+	if delta.DifferentAt("Spec.ReleaseVersion") {
+		input.ReleaseVersion = desired.ko.Spec.ReleaseVersion
+	}
+
+	if delta.DifferentAt("Spec.LaunchTemplate") {
+		// We need to be careful here to not access a nil pointer
+		if desired.ko.Spec.LaunchTemplate != nil {
+			input.SetLaunchTemplate(&svcsdk.LaunchTemplateSpecification{
+				Id:      desired.ko.Spec.LaunchTemplate.ID,
+				Name:    desired.ko.Spec.LaunchTemplate.Name,
+				Version: desired.ko.Spec.LaunchTemplate.Version,
+			})
+		}
+	}
+
+	// If the force annotation is set, we set the force flag on the input
+	// payload.
 	if getUpdateNodeGroupForceAnnotation(desired.ko.ObjectMeta) {
 		input.SetForce(true)
 	}
-
 	return input
 }
 
 func (rm *resourceManager) updateVersion(
 	ctx context.Context,
+	delta *ackcompare.Delta,
 	r *resource,
 ) (err error) {
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.updateVersion")
 	defer exit(err)
 
-	input := newUpdateNodegroupVersionPayload(r)
+	input := newUpdateNodegroupVersionPayload(delta, r)
 
 	_, err = rm.sdkapi.UpdateNodegroupVersionWithContext(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateNodegroupVersion", err)

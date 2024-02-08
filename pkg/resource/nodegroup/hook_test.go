@@ -424,6 +424,10 @@ func Test_resourceManager_newUpdateScalingConfigPayload_ManagedByDefault(t *test
 }
 
 func Test_newUpdateNodegroupPayload(t *testing.T) {
+	delta := ackcompare.NewDelta()
+	delta.Add("Spec.Version", nil, nil)
+	delta.Add("Spec.LaunchTemplate", nil, nil)
+
 	type args struct {
 		r *resource
 	}
@@ -511,7 +515,7 @@ func Test_newUpdateNodegroupPayload(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := newUpdateNodegroupVersionPayload(tt.args.r)
+			got := newUpdateNodegroupVersionPayload(delta, tt.args.r)
 			assert.Equal(t, tt.wantVersion, *got.Version)
 			if tt.wantForce {
 				assert.NotNil(t, got.Force)

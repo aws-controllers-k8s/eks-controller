@@ -138,13 +138,6 @@ func newResourceDelta(
 	if !reflect.DeepEqual(a.ko.Spec.NodeRoleRef, b.ko.Spec.NodeRoleRef) {
 		delta.Add("Spec.NodeRoleRef", a.ko.Spec.NodeRoleRef, b.ko.Spec.NodeRoleRef)
 	}
-	if ackcompare.HasNilDifference(a.ko.Spec.ReleaseVersion, b.ko.Spec.ReleaseVersion) {
-		delta.Add("Spec.ReleaseVersion", a.ko.Spec.ReleaseVersion, b.ko.Spec.ReleaseVersion)
-	} else if a.ko.Spec.ReleaseVersion != nil && b.ko.Spec.ReleaseVersion != nil {
-		if *a.ko.Spec.ReleaseVersion != *b.ko.Spec.ReleaseVersion {
-			delta.Add("Spec.ReleaseVersion", a.ko.Spec.ReleaseVersion, b.ko.Spec.ReleaseVersion)
-		}
-	}
 	if ackcompare.HasNilDifference(a.ko.Spec.RemoteAccess, b.ko.Spec.RemoteAccess) {
 		delta.Add("Spec.RemoteAccess", a.ko.Spec.RemoteAccess, b.ko.Spec.RemoteAccess)
 	} else if a.ko.Spec.RemoteAccess != nil && b.ko.Spec.RemoteAccess != nil {
@@ -217,13 +210,6 @@ func newResourceDelta(
 			if *a.ko.Spec.UpdateConfig.MaxUnavailablePercentage != *b.ko.Spec.UpdateConfig.MaxUnavailablePercentage {
 				delta.Add("Spec.UpdateConfig.MaxUnavailablePercentage", a.ko.Spec.UpdateConfig.MaxUnavailablePercentage, b.ko.Spec.UpdateConfig.MaxUnavailablePercentage)
 			}
-		}
-	}
-	if ackcompare.HasNilDifference(a.ko.Spec.Version, b.ko.Spec.Version) {
-		delta.Add("Spec.Version", a.ko.Spec.Version, b.ko.Spec.Version)
-	} else if a.ko.Spec.Version != nil && b.ko.Spec.Version != nil {
-		if *a.ko.Spec.Version != *b.ko.Spec.Version {
-			delta.Add("Spec.Version", a.ko.Spec.Version, b.ko.Spec.Version)
 		}
 	}
 
