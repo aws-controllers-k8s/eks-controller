@@ -29,6 +29,10 @@ from e2e.common.types import CLUSTER_RESOURCE_PLURAL
 from e2e.common.waiter import wait_until_deleted
 from e2e.replacement_values import REPLACEMENT_VALUES
 from e2e.fixtures import assert_tagging_functionality
+from e2e.common import (
+    TESTS_DEFAULT_KUBERNETES_VERSION_1_27,
+    TESTS_DEFAULT_KUBERNETES_VERSION_1_29,
+)
 
 # Time to wait after modifying the CR for the status to change
 MODIFY_WAIT_AFTER_SECONDS = 60
@@ -62,6 +66,42 @@ def simple_cluster(eks_client):
 
     replacements = REPLACEMENT_VALUES.copy()
     replacements["CLUSTER_NAME"] = cluster_name
+    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_29
+
+    resource_data = load_eks_resource(
+        "cluster_simple",
+        additional_replacements=replacements,
+    )
+    logging.debug(resource_data)
+
+    # Create the k8s resource
+    ref = k8s.CustomResourceReference(
+        CRD_GROUP, CRD_VERSION, CLUSTER_RESOURCE_PLURAL,
+        cluster_name, namespace="default",
+    )
+    k8s.create_custom_resource(ref, resource_data)
+    cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=15)
+
+    assert cr is not None
+    assert k8s.get_resource_exists(ref)
+
+    yield (ref, cr)
+
+    # Try to delete, if doesn't already exist
+    try:
+        _, deleted = k8s.delete_custom_resource(ref, 3, 10)
+        assert deleted
+        wait_until_deleted(cluster_name)
+    except:
+        pass
+
+@pytest.fixture
+def simple_cluster_version_minus_2(eks_client):
+    cluster_name = random_suffix_name("simple-cluster", 32)
+
+    replacements = REPLACEMENT_VALUES.copy()
+    replacements["CLUSTER_NAME"] = cluster_name
+    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_27
 
     resource_data = load_eks_resource(
         "cluster_simple",
@@ -181,3 +221,55 @@ class TestCluster:
         # Delete the k8s resource on teardown of the module
         k8s.delete_custom_resource(ref)
         wait_until_deleted(cluster_name)
+
+    def test_update_cluster_version(self, eks_client, simple_cluster_version_minus_2):
+        (ref, cr) = simple_cluster_version_minus_2
+
+        cluster_name = cr["spec"]["name"]
+
+        try:
+            aws_res = eks_client.describe_cluster(name=cluster_name)
+            assert aws_res is not None
+        except eks_client.exceptions.ResourceNotFoundException:
+            pytest.fail(f"Could not find cluster '{cluster_name}' in EKS")
+
+
+        wait_for_cluster_active(eks_client, cluster_name)
+
+       # Bump two minor versions 1.27 -> 1.29
+        updates = {
+            "spec": {
+                "version": "1.29"
+            }
+        }
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        # Ensure status is updating properly and set as not synced
+        get_and_assert_status(ref, 'UPDATING', False)
+
+        # Wait for the updating to become active again
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        # At this point, the cluster should be active again at version 1.28
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        assert aws_res["cluster"]["version"] == "1.28"
+
+        # So we need to wait again for the CR to be updated.
+        time.sleep(CHECK_STATUS_WAIT_SECONDS*1.5)
+
+        # Ensure status is updating properly and set as not synced
+        get_and_assert_status(ref, 'UPDATING', False)
+
+        # Wait for the updating to become active again
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        # the cluster should be active again at version 1.29
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        assert aws_res["cluster"]["version"] == "1.29"
+
+        # So we need to wait again for the CR to be updated.
+        time.sleep(CHECK_STATUS_WAIT_SECONDS*1.5)
+
+        # Ensure status is updating properly and set as not synced
+        get_and_assert_status(ref, 'ACTIVE', True)

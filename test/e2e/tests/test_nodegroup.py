@@ -25,6 +25,12 @@ from acktest.resources import random_suffix_name
 from e2e import CRD_VERSION, service_marker, CRD_GROUP, load_eks_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
 from e2e.fixtures import assert_tagging_functionality
+from e2e.common import (
+    TESTS_DEFAULT_KUBERNETES_VERSION_1_28,
+    TESTS_DEFAULT_KUBERNETES_VERSION_1_29,
+    TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_28,
+    TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_29,
+)
 
 from .test_cluster import simple_cluster, wait_for_cluster_active, get_and_assert_status
 
@@ -59,6 +65,8 @@ def simple_nodegroup(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceRefe
     replacements = REPLACEMENT_VALUES.copy()
     replacements["CLUSTER_NAME"] = cluster_name
     replacements["NODEGROUP_NAME"] = nodegroup_name
+    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_28
+    replacements["RELEASE_VERSION"] = TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_28
 
     resource_data = load_eks_resource(
         "nodegroup_simple",
@@ -83,6 +91,8 @@ def simple_nodegroup(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceRefe
 
     _, deleted = k8s.delete_custom_resource(ref, 3, 10)
     assert deleted
+    wait_for_nodegroup_deleted(eks_client, cluster_name, nodegroup_name)
+
 
 @service_marker
 class TestNodegroup:
@@ -323,3 +333,74 @@ class TestNodegroup:
         assert aws_res["nodegroup"]["scalingConfig"]["minSize"] == 1
         assert aws_res["nodegroup"]["scalingConfig"]["maxSize"] == 2
         assert aws_res["nodegroup"]["scalingConfig"]["desiredSize"] == 1 # Should be 1, not 10
+
+    def test_update_nodegroup_version(self, simple_nodegroup, eks_client):
+        (ref, cr) = simple_nodegroup
+
+        cluster_name = cr["spec"]["clusterName"]
+        cr_name = ref.name
+
+        nodegroup_name = cr["spec"]["name"]
+
+        try:
+            aws_res = eks_client.describe_nodegroup(
+                clusterName=cluster_name,
+                nodegroupName=nodegroup_name
+            )
+            assert aws_res is not None
+
+            assert aws_res["nodegroup"]["nodegroupName"] == nodegroup_name
+            assert aws_res["nodegroup"]["nodegroupArn"] is not None
+        except eks_client.exceptions.ResourceNotFoundException:
+            pytest.fail(f"Could not find Nodegroup '{cr_name}' in EKS")
+
+        wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
+
+        # Update nodegroup version fields
+        updates = {
+            "spec": {
+                "version": TESTS_DEFAULT_KUBERNETES_VERSION_1_29,
+                "releaseVersion": TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_29,
+            }
+        }
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        # Wait for the nodegroup to become active again
+        wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
+
+        # Ensure status is updated properly once it has become active
+        time.sleep(CHECK_STATUS_WAIT_SECONDS)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        aws_res = eks_client.describe_nodegroup(
+            clusterName=cluster_name,
+            nodegroupName=nodegroup_name
+        )
+
+        assert aws_res["nodegroup"]["version"] == TESTS_DEFAULT_KUBERNETES_VERSION_1_29
+        assert aws_res["nodegroup"]["releaseVersion"] == TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_29
+
+        # Assert terminal condition is set to True
+        updates = {
+            "spec": {
+                "version": TESTS_DEFAULT_KUBERNETES_VERSION_1_28,
+                "releaseVersion": TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_29,
+            }
+        }
+
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        terminal_condition = "ACK.Terminal"
+        cond = k8s.get_resource_condition(ref, terminal_condition)
+        if cond is None:
+            msg = (f"Failed to find {terminal_condition} condition in "
+                f"resource {ref}")
+            pytest.fail(msg)
+
+        cond_status = cond.get('status', None)
+        if str(cond_status) != str(True):
+            msg = (f"Expected {terminal_condition} condition to "
+                f"have status {terminal_condition} but found {cond_status}")
+            pytest.fail(msg)

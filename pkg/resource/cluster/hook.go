@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
@@ -27,6 +26,9 @@ import (
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
 	svcsdk "github.com/aws/aws-sdk-go/service/eks"
 	corev1 "k8s.io/api/core/v1"
+
+	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
+	"github.com/aws-controllers-k8s/eks-controller/pkg/util"
 )
 
 const (
@@ -246,7 +248,7 @@ func (rm *resourceManager) customUpdate(
 	}
 
 	if delta.DifferentAt("Spec.Version") {
-		if err := rm.updateVersion(ctx, desired); err != nil {
+		if err := rm.updateVersion(ctx, desired, latest); err != nil {
 			awserr, ok := ackerr.AWSError(err)
 
 			// Check to see if we've raced an async update call and need to
@@ -264,16 +266,45 @@ func (rm *resourceManager) customUpdate(
 	return updatedRes, nil
 }
 
+// updateVersion updates the cluster version to the next possible version.
+//
+// This function isn't supposed to blindly update the cluster version to the
+// desired version. It should increment the minor version of the observed
+// version and update the cluster to that version. The reconciliation mechanism
+// should ensure that the desired version is eventually reached.
 func (rm *resourceManager) updateVersion(
 	ctx context.Context,
-	r *resource,
+	desired, latest *resource,
 ) (err error) {
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.updateVersion")
 	defer exit(err)
+
+	// If the desired version is less than the observed version, we can't update
+	// the cluster to an older version.
+	// Note that the desired and observed versions are guaranteed to be never be
+	// equal at this stage, as the delta comparison would have caught that.
+	compareResult, err := util.CompareEKSKubernetesVersions(*desired.ko.Spec.Version, *latest.ko.Spec.Version)
+	if err != nil {
+		return ackerr.NewTerminalError(fmt.Errorf("failed to compare the desired and observed versions: %v", err))
+	}
+	if compareResult != 1 {
+		return ackerr.NewTerminalError(
+			fmt.Errorf("desired cluster version is less than the observed version: %s < %s",
+				*desired.ko.Spec.Version, *latest.ko.Spec.Version,
+			),
+		)
+	}
+
+	// Compure the next minor version of the desired version
+	nextVersion, err := util.IncrementEKSMinorVersion(*latest.ko.Spec.Version)
+	if err != nil {
+		return ackerr.NewTerminalError(fmt.Errorf("failed to compute the next minor version: %v", err))
+	}
+
 	input := &svcsdk.UpdateClusterVersionInput{
-		Name:    r.ko.Spec.Name,
-		Version: r.ko.Spec.Version,
+		Name:    desired.ko.Spec.Name,
+		Version: &nextVersion,
 	}
 
 	_, err = rm.sdkapi.UpdateClusterVersionWithContext(ctx, input)

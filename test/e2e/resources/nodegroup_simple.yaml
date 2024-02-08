@@ -13,3 +13,5 @@ spec:
     minSize: 1
     maxSize: 1
     desiredSize: 1
+  version: "$K8S_VERSION"
+  releaseVersion: "$RELEASE_VERSION"
