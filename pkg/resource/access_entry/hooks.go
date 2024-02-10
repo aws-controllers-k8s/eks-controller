@@ -15,9 +15,10 @@ package access_entry
 
 import (
 	"context"
-	"reflect"
 
+	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
+	"github.com/aws/aws-sdk-go/aws"
 	svcsdk "github.com/aws/aws-sdk-go/service/eks"
 
 	"github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
@@ -87,62 +88,27 @@ func (rm *resourceManager) syncAccessPolicies(ctx context.Context, desired, late
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.syncAccessPolicies")
 	defer func() { exit(err) }()
-	toAdd := []*v1alpha1.AssociateAccessPolicyInput{}
-	toDelete := []*string{}
 
 	existingPolicies := latest.ko.Spec.AccessPolicies
+	desiredPolicies := desired.ko.Spec.AccessPolicies
 
-	// find the policies to add
-	for _, p := range desired.ko.Spec.AccessPolicies {
-		if !exactMatchInAccessPolicies(p, existingPolicies) {
-			toAdd = append(toAdd, p)
-		}
-	}
+	toAdd, toDelete := computeAccessPoliciesDelta(desiredPolicies, existingPolicies)
 
-	// find the policies to delete
-	for _, p := range existingPolicies {
-		if !inAccessPolicies(p, desired.ko.Spec.AccessPolicies) {
-			toDelete = append(toDelete, p.PolicyARN)
-		}
-	}
-
-	// manage policies...
+	// remove policies first (to avoid conflicts)
 	for _, p := range toDelete {
-		rlog.Debug("disassociating access policy from role", "policy_arn", *p)
+		rlog.Debug("disassociating access policy from access entry", "policy_arn", *p)
 		if err = rm.disassociateAccessPolicy(ctx, desired, p); err != nil {
 			return err
 		}
 	}
 	for _, p := range toAdd {
-		rlog.Debug("associate access policy to access entry", "policy_arn", *p.PolicyARN)
+		rlog.Debug("associating access policy to access entry", "policy_arn", *p.PolicyARN)
 		if err = rm.associateAccessPolicy(ctx, desired, p); err != nil {
 			return err
 		}
 	}
 
 	return nil
-}
-
-// inAccessPolicies returns true if the supplied AccessPolicy ARN exists
-// in the slice of AccessPolicy objects.
-func inAccessPolicies(policy *v1alpha1.AssociateAccessPolicyInput, policies []*v1alpha1.AssociateAccessPolicyInput) bool {
-	for _, p := range policies {
-		if p.PolicyARN == policy.PolicyARN {
-			return false
-		}
-	}
-	return false
-}
-
-// exactMatchInAccessPolicies returns true if the supplied AccessPolicy is in the
-// slice of AccessPolicy objects and the AccessScope is exactly the same.
-func exactMatchInAccessPolicies(policy *v1alpha1.AssociateAccessPolicyInput, policies []*v1alpha1.AssociateAccessPolicyInput) bool {
-	for _, p := range policies {
-		if p.PolicyARN == policy.PolicyARN {
-			return reflect.DeepEqual(p.AccessScope, policy.AccessScope)
-		}
-	}
-	return false
 }
 
 // associateAccessPolicy adds the supplied AccessPolicy to the supplied
@@ -153,7 +119,7 @@ func (rm *resourceManager) associateAccessPolicy(
 	entry *v1alpha1.AssociateAccessPolicyInput,
 ) (err error) {
 	rlog := ackrtlog.FromContext(ctx)
-	exit := rlog.Trace("rm.addManagedPolicy")
+	exit := rlog.Trace("rm.associateAccessPolicy")
 	defer func() { exit(err) }()
 
 	input := &svcsdk.AssociateAccessPolicyInput{
@@ -189,4 +155,117 @@ func (rm *resourceManager) disassociateAccessPolicy(
 	_, err = rm.sdkapi.DisassociateAccessPolicyWithContext(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "DisassociateAccessPolicy", err)
 	return err
+}
+
+// inAccessPolicies returns true if the supplied AccessPolicy ARN exists
+// in the slice of AccessPolicy objects.
+func inAccessPolicies(policy *v1alpha1.AssociateAccessPolicyInput, policies []*v1alpha1.AssociateAccessPolicyInput) bool {
+	for _, p := range policies {
+		if *p.PolicyARN == *policy.PolicyARN {
+			return true
+		}
+	}
+	return false
+}
+
+// equalAccessScopes returns true if the supplied AccessScope objects are
+// exactly the same.
+func equalAccessScopes(a, b *v1alpha1.AccessScope) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil {
+		return equalZeroString(b.Type) && len(b.Namespaces) == 0
+	}
+	if b == nil {
+		return equalZeroString(b.Type) && len(a.Namespaces) == 0
+	}
+	return equalStrings(a.Type, b.Type) && ackcompare.SliceStringPEqual(a.Namespaces, b.Namespaces)
+}
+
+// exactMatchInAccessPolicies returns true if the supplied AccessPolicy is in the
+// slice of AccessPolicy objects and the AccessScope is exactly the same.
+func exactMatchInAccessPolicies(policy *v1alpha1.AssociateAccessPolicyInput, policies []*v1alpha1.AssociateAccessPolicyInput) bool {
+	for _, p := range policies {
+		if p.PolicyARN == nil {
+			continue
+		}
+		if *p.PolicyARN == *policy.PolicyARN {
+			return equalAccessScopes(p.AccessScope, policy.AccessScope)
+		}
+	}
+	return false
+}
+
+// computeAccessPoliciesDelta returns two slices of AccessPolicy objects: one
+// slice of AccessPolicy objects that are in the desired slice but not in the
+// latest slice, and one slice of AccessPolicy objects that are in the latest
+// slice but not in the desired slice.
+func computeAccessPoliciesDelta(desired, latest []*v1alpha1.AssociateAccessPolicyInput) (toAdd []*v1alpha1.AssociateAccessPolicyInput, toDelete []*string) {
+	// useful for the toDelete elements
+	visited := map[string]bool{}
+
+	// First we need to loop through the desired policies and see if they are
+	// in the latest policies. If they are, we need to check if the AccessScope
+	// is the same. If it is, we don't need to do anything. If it's not, we need
+	// to add the policy to the toAdd slice and remove it from the toDelete slice.
+	//
+	// The delete is necessary because the API dosen't allow us to update the
+	// AccessScope of an existing policy. We need to disassociate the policy and
+	// then reassociate it.
+	for _, p := range desired {
+		visited[*p.PolicyARN] = true
+		// If it's an exact match, we don't need to do anything.
+		if exactMatchInAccessPolicies(p, latest) {
+			continue
+		}
+		// If it's in the latest policies, but the AccessScope is different, we
+		// need to remove it from the toDelete slice (update).
+		if inAccessPolicies(p, latest) {
+			toAdd = append(toAdd, p)
+			toDelete = append(toDelete, p.PolicyARN)
+		} else {
+			// If it's not in the latest policies, we need to add it.
+			toAdd = append(toAdd, p)
+		}
+	}
+
+	// Now that we've handled the desired policies, we need to loop through the
+	// latest policies and see if they are in the desired policies. If they are
+	// not, we need to add them to the toDelete slice.
+	for _, p := range latest {
+		// If we've already visited this policy, we don't need to do anything.
+		if visited[*p.PolicyARN] {
+			continue
+		}
+		// If it's not in the desired policies, we need to remove it.
+		if !inAccessPolicies(p, desired) {
+			toDelete = append(toDelete, p.PolicyARN)
+		}
+	}
+	return toAdd, toDelete
+}
+
+func customPreCompare(delta *ackcompare.Delta, a, b *resource) {
+	if len(a.ko.Spec.AccessPolicies) != len(b.ko.Spec.AccessPolicies) {
+		delta.Add("Spec.AccessPolicies", a.ko.Spec.AccessPolicies, b.ko.Spec.AccessPolicies)
+	} else if toAdd, toRemove := computeAccessPoliciesDelta(a.ko.Spec.AccessPolicies, b.ko.Spec.AccessPolicies); len(toAdd) > 0 || len(toRemove) > 0 {
+		delta.Add("Spec.AccessPolicies", a.ko.Spec.AccessPolicies, b.ko.Spec.AccessPolicies)
+	}
+}
+
+// EqualStrings returns true if two strings are equal e.g., both are nil, one is
+// nil and the other is empty string, or both non-zero strings are equal.
+func equalStrings(a, b *string) bool {
+	if a == nil {
+		return b == nil || *b == ""
+	}
+	if b == nil {
+		return *a == ""
+	}
+	return *a == *b
+}
+
+func equalZeroString(a *string) bool {
+	return equalStrings(a, aws.String(""))
 }

@@ -395,11 +395,15 @@ resources:
       AccessPolicies:
         custom_field:
           list_of: AssociateAccessPolicyInput
+        compare:
+          is_ignored: true
       AccessPolicies.AccessScope.Type:
         go_tag: json:"type,omitempty"
       Type:
         go_tag: json:"type,omitempty"
     hooks:
+      delta_pre_compare:
+        code: customPreCompare(delta, a, b)
       sdk_read_one_post_set_output:
         template_path: hooks/access_entry/sdk_read_one_post_set_output.go.tpl
       sdk_update_pre_build_request:
