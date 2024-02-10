@@ -264,6 +264,9 @@ class TestCluster:
         # Wait for the updating to become active again
         wait_for_cluster_active(eks_client, cluster_name)
 
+        # So we need to wait again for the CR to be updated.
+        time.sleep(CHECK_STATUS_WAIT_SECONDS*1.5)
+        
         # the cluster should be active again at version 1.29
         aws_res = eks_client.describe_cluster(name=cluster_name)
         assert aws_res["cluster"]["version"] == "1.29"

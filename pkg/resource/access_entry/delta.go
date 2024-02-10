@@ -42,14 +42,8 @@ func newResourceDelta(
 		delta.Add("", a, b)
 		return delta
 	}
+	customPreCompare(delta, a, b)
 
-	if len(a.ko.Spec.AccessPolicies) != len(b.ko.Spec.AccessPolicies) {
-		delta.Add("Spec.AccessPolicies", a.ko.Spec.AccessPolicies, b.ko.Spec.AccessPolicies)
-	} else if len(a.ko.Spec.AccessPolicies) > 0 {
-		if !reflect.DeepEqual(a.ko.Spec.AccessPolicies, b.ko.Spec.AccessPolicies) {
-			delta.Add("Spec.AccessPolicies", a.ko.Spec.AccessPolicies, b.ko.Spec.AccessPolicies)
-		}
-	}
 	if ackcompare.HasNilDifference(a.ko.Spec.ClusterName, b.ko.Spec.ClusterName) {
 		delta.Add("Spec.ClusterName", a.ko.Spec.ClusterName, b.ko.Spec.ClusterName)
 	} else if a.ko.Spec.ClusterName != nil && b.ko.Spec.ClusterName != nil {
