@@ -73,10 +73,10 @@ resources:
         priority: 1
   Cluster:
     fields:
-      EncryptionProvider.Provider.KeyArn:
+      EncryptionConfig.Provider.KeyArn:
         references:
           service_name: kms
-          resources: Key
+          resource: Key
           path: Status.ACKResourceMetadata.ARN
       RoleArn:
         references:

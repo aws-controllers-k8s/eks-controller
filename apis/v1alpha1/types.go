@@ -798,6 +798,8 @@ type PodIdentityAssociation_SDK struct {
 // Identifies the Key Management Service (KMS) key used to encrypt the secrets.
 type Provider struct {
 	KeyARN *string `json:"keyARN,omitempty"`
+	// Reference field for KeyARN
+	KeyRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"keyRef,omitempty"`
 }
 
 // An object representing the remote access configuration for the managed node

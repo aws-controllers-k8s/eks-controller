@@ -24,6 +24,7 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
+	"github.com/aws/aws-sdk-go/aws"
 	svcsdk "github.com/aws/aws-sdk-go/service/eks"
 	corev1 "k8s.io/api/core/v1"
 
@@ -247,6 +248,45 @@ func (rm *resourceManager) customUpdate(
 		return returnClusterUpdating(updatedRes)
 	}
 
+	if delta.DifferentAt("Spec.EncryptionConfig") {
+		// Set a terminal condition if the observed cluster has encryption
+		// config and the desired cluster does not.
+		if len(latest.ko.Spec.EncryptionConfig) > 0 && len(desired.ko.Spec.EncryptionConfig) == 0 {
+			msg := "Encryption configuration cannot be removed from an existing cluster"
+			ackcondition.SetTerminal(updatedRes, corev1.ConditionTrue, &msg, nil)
+			return updatedRes, nil
+		}
+		// Set a terminal condition if the user tries to patch the encryption
+		// config of an existing cluster.
+		if len(latest.ko.Spec.EncryptionConfig) == 1 && len(desired.ko.Spec.EncryptionConfig) == 1 {
+			msg := "Encryption configuration cannot be updated"
+			ackcondition.SetTerminal(updatedRes, corev1.ConditionTrue, &msg, nil)
+			return updatedRes, nil
+		}
+		// Set a terminal condition if the user tries to add a second encryption
+		// config to an existing cluster.
+		if len(latest.ko.Spec.EncryptionConfig) == 0 && len(desired.ko.Spec.EncryptionConfig) > 1 {
+			msg := "Only one encryption configuration is allowed"
+			ackcondition.SetTerminal(updatedRes, corev1.ConditionTrue, &msg, nil)
+			return updatedRes, nil
+		}
+
+		if err := rm.associateEncryptionConfig(ctx, desired); err != nil {
+			awserr, ok := ackerr.AWSError(err)
+			// Check to see if we've raced an async update call and need to
+			// requeue
+			if ok && awserr.Code() == "ResourceInUseException" {
+				return nil, requeueAfterAsyncUpdate()
+			}
+
+			return nil, err
+		}
+		// This doesn't reflect the actual status of the cluster, so we have to explicitly
+		// requeue and set the status to updating.
+		updatedRes.ko.Status.Status = aws.String(string(svcsdk.ClusterStatusUpdating))
+		return returnClusterUpdating(updatedRes)
+	}
+
 	if delta.DifferentAt("Spec.Version") {
 		if err := rm.updateVersion(ctx, desired, latest); err != nil {
 			awserr, ok := ackerr.AWSError(err)
@@ -411,4 +451,38 @@ func (rm *resourceManager) listNodegroups(
 	}
 
 	return nodes, nil
+}
+
+// associateEncryptionConfig associates the encryption configuration with the
+// cluster.
+func (rm *resourceManager) associateEncryptionConfig(
+	ctx context.Context,
+	r *resource,
+) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateEncryptionConfiguration")
+	defer func() { exit(err) }()
+
+	input := &svcsdk.AssociateEncryptionConfigInput{
+		ClusterName: r.ko.Spec.Name,
+		EncryptionConfig: []*svcsdk.EncryptionConfig{
+			{
+				// Being it means that we already have a single encryption config
+				// in the spec. So we can safely assume that the first element is
+				// the only one.
+				Resources: r.ko.Spec.EncryptionConfig[0].Resources,
+				Provider: &svcsdk.Provider{
+					KeyArn: r.ko.Spec.EncryptionConfig[0].Provider.KeyARN,
+				},
+			},
+		},
+	}
+
+	_, err = rm.sdkapi.AssociateEncryptionConfigWithContext(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "AssociateEncryptionConfig", err)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
