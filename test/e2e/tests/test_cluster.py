@@ -41,7 +41,11 @@ MODIFY_WAIT_AFTER_SECONDS = 60
 CHECK_STATUS_WAIT_SECONDS = 30
 
 def wait_for_cluster_active(eks_client, cluster_name):
-    waiter = eks_client.get_waiter('cluster_active')
+    waiter = eks_client.get_waiter(
+        'cluster_active',
+    )
+    waiter.config.delay = 5
+    waiter.config.max_attempts = 240
     waiter.wait(name=cluster_name)
 
 def get_and_assert_status(ref: k8s.CustomResourceReference, expected_status: str, expected_synced: bool):
