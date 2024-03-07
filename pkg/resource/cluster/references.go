@@ -25,12 +25,16 @@ import (
 
 	ec2apitypes "github.com/aws-controllers-k8s/ec2-controller/apis/v1alpha1"
 	iamapitypes "github.com/aws-controllers-k8s/iam-controller/apis/v1alpha1"
+	kmsapitypes "github.com/aws-controllers-k8s/kms-controller/apis/v1alpha1"
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	acktypes "github.com/aws-controllers-k8s/runtime/pkg/types"
 
 	svcapitypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 )
+
+// +kubebuilder:rbac:groups=kms.services.k8s.aws,resources=keys,verbs=get;list
+// +kubebuilder:rbac:groups=kms.services.k8s.aws,resources=keys/status,verbs=get;list
 
 // +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=securitygroups,verbs=get;list
 // +kubebuilder:rbac:groups=ec2.services.k8s.aws,resources=securitygroups/status,verbs=get;list
@@ -47,6 +51,14 @@ import (
 // values.
 func (rm *resourceManager) ClearResolvedReferences(res acktypes.AWSResource) acktypes.AWSResource {
 	ko := rm.concreteResource(res).ko.DeepCopy()
+
+	for f0idx, f0iter := range ko.Spec.EncryptionConfig {
+		if f0iter.Provider != nil {
+			if f0iter.Provider.KeyRef != nil {
+				ko.Spec.EncryptionConfig[f0idx].Provider.KeyARN = nil
+			}
+		}
+	}
 
 	if ko.Spec.ResourcesVPCConfig != nil {
 		if len(ko.Spec.ResourcesVPCConfig.SecurityGroupRefs) > 0 {
@@ -84,6 +96,12 @@ func (rm *resourceManager) ResolveReferences(
 
 	resourceHasReferences := false
 	err := validateReferenceFields(ko)
+	if fieldHasReferences, err := rm.resolveReferenceForEncryptionConfig_Provider_KeyARN(ctx, apiReader, namespace, ko); err != nil {
+		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
+	} else {
+		resourceHasReferences = resourceHasReferences || fieldHasReferences
+	}
+
 	if fieldHasReferences, err := rm.resolveReferenceForResourcesVPCConfig_SecurityGroupIDs(ctx, apiReader, namespace, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
@@ -109,6 +127,14 @@ func (rm *resourceManager) ResolveReferences(
 // identifier field.
 func validateReferenceFields(ko *svcapitypes.Cluster) error {
 
+	for _, f0iter := range ko.Spec.EncryptionConfig {
+		if f0iter.Provider != nil {
+			if f0iter.Provider.KeyRef != nil && f0iter.Provider.KeyARN != nil {
+				return ackerr.ResourceReferenceAndIDNotSupportedFor("EncryptionConfig.Provider.KeyARN", "EncryptionConfig.Provider.KeyRef")
+			}
+		}
+	}
+
 	if ko.Spec.ResourcesVPCConfig != nil {
 		if len(ko.Spec.ResourcesVPCConfig.SecurityGroupRefs) > 0 && len(ko.Spec.ResourcesVPCConfig.SecurityGroupIDs) > 0 {
 			return ackerr.ResourceReferenceAndIDNotSupportedFor("ResourcesVPCConfig.SecurityGroupIDs", "ResourcesVPCConfig.SecurityGroupRefs")
@@ -126,6 +152,87 @@ func validateReferenceFields(ko *svcapitypes.Cluster) error {
 	}
 	if ko.Spec.RoleRef == nil && ko.Spec.RoleARN == nil {
 		return ackerr.ResourceReferenceOrIDRequiredFor("RoleARN", "RoleRef")
+	}
+	return nil
+}
+
+// resolveReferenceForEncryptionConfig_Provider_KeyARN reads the resource referenced
+// from EncryptionConfig.Provider.KeyRef field and sets the EncryptionConfig.Provider.KeyARN
+// from referenced resource. Returns a boolean indicating whether a reference
+// contains references, or an error
+func (rm *resourceManager) resolveReferenceForEncryptionConfig_Provider_KeyARN(
+	ctx context.Context,
+	apiReader client.Reader,
+	namespace string,
+	ko *svcapitypes.Cluster,
+) (hasReferences bool, err error) {
+	for f0idx, f0iter := range ko.Spec.EncryptionConfig {
+		if f0iter.Provider != nil {
+			if f0iter.Provider.KeyRef != nil && f0iter.Provider.KeyRef.From != nil {
+				hasReferences = true
+				arr := f0iter.Provider.KeyRef.From
+				if arr.Name == nil || *arr.Name == "" {
+					return hasReferences, fmt.Errorf("provided resource reference is nil or empty: EncryptionConfig.Provider.KeyRef")
+				}
+				obj := &kmsapitypes.Key{}
+				if err := getReferencedResourceState_Key(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
+					return hasReferences, err
+				}
+				ko.Spec.EncryptionConfig[f0idx].Provider.KeyARN = (*string)(obj.Status.ACKResourceMetadata.ARN)
+			}
+		}
+	}
+
+	return hasReferences, nil
+}
+
+// getReferencedResourceState_Key looks up whether a referenced resource
+// exists and is in a ACK.ResourceSynced=True state. If the referenced resource does exist and is
+// in a Synced state, returns nil, otherwise returns `ackerr.ResourceReferenceTerminalFor` or
+// `ResourceReferenceNotSyncedFor` depending on if the resource is in a Terminal state.
+func getReferencedResourceState_Key(
+	ctx context.Context,
+	apiReader client.Reader,
+	obj *kmsapitypes.Key,
+	name string, // the Kubernetes name of the referenced resource
+	namespace string, // the Kubernetes namespace of the referenced resource
+) error {
+	namespacedName := types.NamespacedName{
+		Namespace: namespace,
+		Name:      name,
+	}
+	err := apiReader.Get(ctx, namespacedName, obj)
+	if err != nil {
+		return err
+	}
+	var refResourceSynced, refResourceTerminal bool
+	for _, cond := range obj.Status.Conditions {
+		if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+			cond.Status == corev1.ConditionTrue {
+			refResourceSynced = true
+		}
+		if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
+			cond.Status == corev1.ConditionTrue {
+			return ackerr.ResourceReferenceTerminalFor(
+				"Key",
+				namespace, name)
+		}
+	}
+	if refResourceTerminal {
+		return ackerr.ResourceReferenceTerminalFor(
+			"Key",
+			namespace, name)
+	}
+	if !refResourceSynced {
+		return ackerr.ResourceReferenceNotSyncedFor(
+			"Key",
+			namespace, name)
+	}
+	if obj.Status.ACKResourceMetadata == nil || obj.Status.ACKResourceMetadata.ARN == nil {
+		return ackerr.ResourceReferenceMissingTargetFieldFor(
+			"Key",
+			namespace, name,
+			"Status.ACKResourceMetadata.ARN")
 	}
 	return nil
 }

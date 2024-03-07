@@ -40,6 +40,11 @@ MODIFY_WAIT_AFTER_SECONDS = 60
 # Time to wait after the cluster has changed status, for the CR to update
 CHECK_STATUS_WAIT_SECONDS = 30
 
+# Testing KMS Key.
+# NOTE(a-hilaly) Can't wait to rewrite all this stuff in Go. The current bootstrapping
+# is a mess.
+ACK_KMS_KEY_ARN = "arn:aws:kms:us-west-2:632556926448:key/aac8cabd-2a52-43dd-96dc-266c03a9b412"
+
 def wait_for_cluster_active(eks_client, cluster_name):
     waiter = eks_client.get_waiter(
         'cluster_active',
@@ -280,3 +285,45 @@ class TestCluster:
 
         # Ensure status is updating properly and set as not synced
         get_and_assert_status(ref, 'ACTIVE', True)
+
+    def test_associate_cluster_encryption_config(self, eks_client, simple_cluster):
+        (ref, cr) = simple_cluster
+
+        cluster_name = cr["spec"]["name"]
+
+        try:
+            aws_res = eks_client.describe_cluster(name=cluster_name)
+            assert aws_res is not None
+        except eks_client.exceptions.ResourceNotFoundException:
+            pytest.fail(f"Could not find cluster '{cluster_name}' in EKS")
+
+
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        updates = {
+            "spec": {
+                "encryptionConfig": [
+                    {
+                        "resources": ["secrets"],
+                        "provider": {
+                            "keyARN": ACK_KMS_KEY_ARN
+                        }
+                    }
+                ]
+            }
+        }
+
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS*2)
+
+        # Ensure status is updating properly and set as not synced
+        get_and_assert_status(ref, 'UPDATING', False)
+
+        # Wait for the updating to become active again
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        # At this point, the cluster should be active again at version 1.28
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        assert len(aws_res["cluster"]["encryptionConfig"]) == 1
+        assert aws_res["cluster"]["encryptionConfig"][0]["resources"] == ["secrets"]
+        assert aws_res["cluster"]["encryptionConfig"][0]["provider"]["keyArn"] == ACK_KMS_KEY_ARN

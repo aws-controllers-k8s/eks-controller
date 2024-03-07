@@ -239,6 +239,20 @@ rules:
   - get
   - list
 - apiGroups:
+  - kms.services.k8s.aws
+  resources:
+  - keys
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - kms.services.k8s.aws
+  resources:
+  - keys/status
+  verbs:
+  - get
+  - list
+- apiGroups:
   - services.k8s.aws
   resources:
   - adoptedresources
