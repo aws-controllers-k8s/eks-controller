@@ -372,7 +372,7 @@ resources:
         type: string
         index: 20
       - name: SERVICEACCOUNT
-        json_path: .spec.serviceaccount
+        json_path: .spec.serviceAccount
         type: string
         index: 30
       - name: ROLEARN

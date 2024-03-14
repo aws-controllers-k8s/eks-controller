@@ -21,7 +21,7 @@ spec:
     - jsonPath: .spec.namespace
       name: NAMESPACE
       type: string
-    - jsonPath: .spec.serviceaccount
+    - jsonPath: .spec.serviceAccount
       name: SERVICEACCOUNT
       type: string
     - jsonPath: .spec.roleARN
