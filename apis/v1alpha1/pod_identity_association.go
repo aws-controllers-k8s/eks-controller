@@ -108,7 +108,7 @@ type PodIdentityAssociationStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="CLUSTER",type=string,priority=0,JSONPath=`.spec.clusterName`
 // +kubebuilder:printcolumn:name="NAMESPACE",type=string,priority=0,JSONPath=`.spec.namespace`
-// +kubebuilder:printcolumn:name="SERVICEACCOUNT",type=string,priority=0,JSONPath=`.spec.serviceaccount`
+// +kubebuilder:printcolumn:name="SERVICEACCOUNT",type=string,priority=0,JSONPath=`.spec.serviceAccount`
 // +kubebuilder:printcolumn:name="ROLEARN",type=string,priority=1,JSONPath=`.spec.roleARN`
 // +kubebuilder:printcolumn:name="ASSOCIATIONID",type=string,priority=1,JSONPath=`.status.associationID`
 // +kubebuilder:printcolumn:name="Synced",type="string",priority=0,JSONPath=".status.conditions[?(@.type==\"ACK.ResourceSynced\")].status"
