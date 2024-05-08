@@ -1,0 +1,15 @@
+apiVersion: eks.services.k8s.aws/v1alpha1
+kind: IdentityProviderConfig
+metadata:
+  name: $CR_NAME
+spec:
+  clusterName: $CLUSTER_NAME
+  oidc:
+    clientID: client
+    identityProviderConfigName: $IDP_NAME
+    issuerURL: https://some-url.com/
+    usernameClaim: user
+    groupsClaim: group
+  tags:
+    tkey: tval
+

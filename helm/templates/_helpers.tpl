@@ -188,6 +188,26 @@ rules:
 - apiGroups:
   - eks.services.k8s.aws
   resources:
+  - identityproviderconfigs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
+  - identityproviderconfigs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - eks.services.k8s.aws
+  resources:
   - nodegroups
   verbs:
   - create

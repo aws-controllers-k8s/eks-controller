@@ -13,6 +13,7 @@ rules:
   - addons
   - clusters
   - fargateprofiles
+  - identityproviderconfigs
   - nodegroups
   - podidentityassociations
   verbs:
@@ -30,6 +31,7 @@ rules:
   - addons
   - clusters
   - fargateprofiles
+  - identityproviderconfigs
   - nodegroups
   - podidentityassociations
   verbs:
