@@ -440,8 +440,15 @@ type Identity struct {
 	OIDC *OIDC `json:"oidc,omitempty"`
 }
 
+// The full description of your identity configuration.
+type IdentityProviderConfigResponse struct {
+	// An object representing the configuration for an OpenID Connect (OIDC) identity
+	// provider.
+	OIDC *OIDCIdentityProviderConfig `json:"oidc,omitempty"`
+}
+
 // An object representing an identity provider configuration.
-type IdentityProviderConfig struct {
+type IdentityProviderConfig_SDK struct {
 	Name *string `json:"name,omitempty"`
 	Type *string `json:"type_,omitempty"`
 }
@@ -656,13 +663,15 @@ type OIDC struct {
 // An object representing the configuration for an OpenID Connect (OIDC) identity
 // provider.
 type OIDCIdentityProviderConfig struct {
-	ClientID                   *string `json:"clientID,omitempty"`
-	ClusterName                *string `json:"clusterName,omitempty"`
-	GroupsClaim                *string `json:"groupsClaim,omitempty"`
-	GroupsPrefix               *string `json:"groupsPrefix,omitempty"`
-	IdentityProviderConfigARN  *string `json:"identityProviderConfigARN,omitempty"`
-	IdentityProviderConfigName *string `json:"identityProviderConfigName,omitempty"`
-	IssuerURL                  *string `json:"issuerURL,omitempty"`
+	ClientID                   *string            `json:"clientID,omitempty"`
+	ClusterName                *string            `json:"clusterName,omitempty"`
+	GroupsClaim                *string            `json:"groupsClaim,omitempty"`
+	GroupsPrefix               *string            `json:"groupsPrefix,omitempty"`
+	IdentityProviderConfigARN  *string            `json:"identityProviderConfigARN,omitempty"`
+	IdentityProviderConfigName *string            `json:"identityProviderConfigName,omitempty"`
+	IssuerURL                  *string            `json:"issuerURL,omitempty"`
+	RequiredClaims             map[string]*string `json:"requiredClaims,omitempty"`
+	Status                     *string            `json:"status,omitempty"`
 	// The metadata that you apply to a resource to help you categorize and organize
 	// them. Each tag consists of a key and an optional value. You define them.
 	//
@@ -698,13 +707,14 @@ type OIDCIdentityProviderConfig struct {
 // users for your cluster from an OIDC identity provider (https://docs.aws.amazon.com/eks/latest/userguide/authenticate-oidc-identity-provider.html)
 // in the Amazon EKS User Guide.
 type OIDCIdentityProviderConfigRequest struct {
-	ClientID                   *string `json:"clientID,omitempty"`
-	GroupsClaim                *string `json:"groupsClaim,omitempty"`
-	GroupsPrefix               *string `json:"groupsPrefix,omitempty"`
-	IdentityProviderConfigName *string `json:"identityProviderConfigName,omitempty"`
-	IssuerURL                  *string `json:"issuerURL,omitempty"`
-	UsernameClaim              *string `json:"usernameClaim,omitempty"`
-	UsernamePrefix             *string `json:"usernamePrefix,omitempty"`
+	ClientID                   *string            `json:"clientID,omitempty"`
+	GroupsClaim                *string            `json:"groupsClaim,omitempty"`
+	GroupsPrefix               *string            `json:"groupsPrefix,omitempty"`
+	IdentityProviderConfigName *string            `json:"identityProviderConfigName,omitempty"`
+	IssuerURL                  *string            `json:"issuerURL,omitempty"`
+	RequiredClaims             map[string]*string `json:"requiredClaims,omitempty"`
+	UsernameClaim              *string            `json:"usernameClaim,omitempty"`
+	UsernamePrefix             *string            `json:"usernamePrefix,omitempty"`
 }
 
 // The configuration of your local Amazon EKS cluster on an Amazon Web Services

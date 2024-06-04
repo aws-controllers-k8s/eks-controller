@@ -46,6 +46,7 @@ import (
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/addon"
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/cluster"
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/fargate_profile"
+	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/identity_provider_config"
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/nodegroup"
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/pod_identity_association"
 

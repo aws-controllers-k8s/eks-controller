@@ -1,3 +1,16 @@
+operations:
+  AssociateIdentityProviderConfig:
+    operation_type:
+    - Create
+    resource_name:
+      IdentityProviderConfig
+  DisassociateIdentityProviderConfig:
+    operation_type:
+    - Delete
+    resource_name:
+      IdentityProviderConfig
+  DescribeIdentityProviderConfig:
+      custom_check_required_fields_missing_method: customCheckRequiredFieldsMissing
 resources:
   Addon:
     hooks:
@@ -71,6 +84,34 @@ resources:
         type: string
         index: 50
         priority: 1
+  IdentityProviderConfig:
+    fields:
+      ClusterName:
+        references:
+          resource: Cluster
+          path: Spec.Name
+        is_primary_key: true
+        is_immutable: true
+      OIDC:
+        is_immutable: true
+      Status:
+        is_read_only: true
+        from:
+          operation: DescribeIdentityProviderConfig
+          path: IdentityProviderConfig.Oidc.Status
+      Tags:
+        is_immutable: true
+    hooks:
+      sdk_delete_post_build_request:
+        template_path: hooks/identity_provider_config/sdk_delete_post_build_request.go.tpl
+      sdk_read_one_post_build_request:
+          template_path: hooks/identity_provider_config/sdk_read_one_post_build_request.go.tpl
+      sdk_create_post_set_output:
+        template_path: hooks/identity_provider_config/sdk_create_post_set_output.go.tpl
+      sdk_read_one_post_set_output:
+        template_path: hooks/identity_provider_config/sdk_read_one_post_set_output.go.tpl
+    update_operation:
+      custom_method_name: customUpdate
   Cluster:
     fields:
       EncryptionConfig.Provider.KeyArn:
@@ -435,5 +476,7 @@ ignore:
   - EksAnywhereSubscription
   field_paths:
   - CreateAccessEntryInput.ClientRequestToken
+  - AssociateIdentityProviderConfigInput.ClientRequestToken
+  - AssociateIdentityProviderConfigOutput.Update
   - AssociateAccessPolicyInput.PrincipalArn
   - AssociateAccessPolicyInput.ClusterName
