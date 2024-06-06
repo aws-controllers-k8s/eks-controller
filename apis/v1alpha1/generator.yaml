@@ -101,6 +101,8 @@ resources:
           path: IdentityProviderConfig.Oidc.Status
       Tags:
         is_immutable: true
+        compare:
+          is_ignored: true
     hooks:
       sdk_delete_post_build_request:
         template_path: hooks/identity_provider_config/sdk_delete_post_build_request.go.tpl

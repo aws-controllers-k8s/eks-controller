@@ -113,9 +113,6 @@ func newResourceDelta(
 			}
 		}
 	}
-	if !ackcompare.MapStringStringEqual(ToACKTags(a.ko.Spec.Tags), ToACKTags(b.ko.Spec.Tags)) {
-		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
-	}
 
 	return delta
 }
