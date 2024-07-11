@@ -1,0 +1,13 @@
+apiVersion: eks.services.k8s.aws/v1alpha1
+kind: Addon
+metadata:
+  name: $CR_NAME
+spec:
+  name: $ADDON_NAME
+  addonVersion: $ADDON_VERSION
+  clusterName: $CLUSTER_NAME
+  podIdentityAssociations:
+  - serviceAccount: adot-col-otlp-ingest
+    roleARN: $ROLE_ARN
+  - serviceAccount: adot-col-container-logs
+    roleARN: $ROLE_ARN

@@ -189,18 +189,28 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.Status = nil
 	}
 	if resp.Addon.Tags != nil {
-		f13 := map[string]*string{}
-		for f13key, f13valiter := range resp.Addon.Tags {
-			var f13val string
-			f13val = *f13valiter
-			f13[f13key] = &f13val
+		f14 := map[string]*string{}
+		for f14key, f14valiter := range resp.Addon.Tags {
+			var f14val string
+			f14val = *f14valiter
+			f14[f14key] = &f14val
 		}
-		ko.Spec.Tags = f13
+		ko.Spec.Tags = f14
 	} else {
 		ko.Spec.Tags = nil
 	}
 
 	rm.setStatusDefaults(ko)
+	if err := rm.setResourceAdditionalFields(ctx, ko, resp.Addon.PodIdentityAssociations); err != nil {
+		return nil, err
+	}
+	if !addonActive(&resource{ko}) {
+		// Setting resource synced condition to false will trigger a requeue of
+		// the resource. No need to return a requeue error here.
+		ackcondition.SetSynced(&resource{ko}, corev1.ConditionFalse, nil, nil)
+	} else {
+		ackcondition.SetSynced(&resource{ko}, corev1.ConditionTrue, nil, nil)
+	}
 	return &resource{ko}, nil
 }
 
@@ -358,18 +368,27 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.Status = nil
 	}
 	if resp.Addon.Tags != nil {
-		f13 := map[string]*string{}
-		for f13key, f13valiter := range resp.Addon.Tags {
-			var f13val string
-			f13val = *f13valiter
-			f13[f13key] = &f13val
+		f14 := map[string]*string{}
+		for f14key, f14valiter := range resp.Addon.Tags {
+			var f14val string
+			f14val = *f14valiter
+			f14[f14key] = &f14val
 		}
-		ko.Spec.Tags = f13
+		ko.Spec.Tags = f14
 	} else {
 		ko.Spec.Tags = nil
 	}
 
 	rm.setStatusDefaults(ko)
+	// We expect the addon to be in 'CREATING' status since we just issued
+	// the call to create it, but I suppose it doesn't hurt to check here.
+	if addonCreating(&resource{ko}) {
+		// Setting resource synced condition to false will trigger a requeue of
+		// the resource. No need to return a requeue error here.
+		ackcondition.SetSynced(&resource{ko}, corev1.ConditionFalse, nil, nil)
+		return &resource{ko}, nil
+	}
+
 	return &resource{ko}, nil
 }
 
@@ -396,6 +415,20 @@ func (rm *resourceManager) newCreateRequestPayload(
 	if r.ko.Spec.ConfigurationValues != nil {
 		res.SetConfigurationValues(*r.ko.Spec.ConfigurationValues)
 	}
+	if r.ko.Spec.PodIdentityAssociations != nil {
+		f5 := []*svcsdk.AddonPodIdentityAssociations{}
+		for _, f5iter := range r.ko.Spec.PodIdentityAssociations {
+			f5elem := &svcsdk.AddonPodIdentityAssociations{}
+			if f5iter.RoleARN != nil {
+				f5elem.SetRoleArn(*f5iter.RoleARN)
+			}
+			if f5iter.ServiceAccount != nil {
+				f5elem.SetServiceAccount(*f5iter.ServiceAccount)
+			}
+			f5 = append(f5, f5elem)
+		}
+		res.SetPodIdentityAssociations(f5)
+	}
 	if r.ko.Spec.ResolveConflicts != nil {
 		res.SetResolveConflicts(*r.ko.Spec.ResolveConflicts)
 	}
@@ -403,13 +436,13 @@ func (rm *resourceManager) newCreateRequestPayload(
 		res.SetServiceAccountRoleArn(*r.ko.Spec.ServiceAccountRoleARN)
 	}
 	if r.ko.Spec.Tags != nil {
-		f7 := map[string]*string{}
-		for f7key, f7valiter := range r.ko.Spec.Tags {
-			var f7val string
-			f7val = *f7valiter
-			f7[f7key] = &f7val
+		f8 := map[string]*string{}
+		for f8key, f8valiter := range r.ko.Spec.Tags {
+			var f8val string
+			f8val = *f8valiter
+			f8[f8key] = &f8val
 		}
-		res.SetTags(f7)
+		res.SetTags(f8)
 	}
 
 	return res, nil
@@ -428,6 +461,21 @@ func (rm *resourceManager) sdkUpdate(
 	defer func() {
 		exit(err)
 	}()
+	if addonDeleting(latest) {
+		msg := "Addon is currently being deleted"
+		ackcondition.SetSynced(latest, corev1.ConditionFalse, &msg, nil)
+		return latest, requeueWaitWhileDeleting
+	}
+	if !addonActive(latest) {
+		msg := "Addon is in '" + *latest.ko.Status.Status + "' status"
+		ackcondition.SetSynced(latest, corev1.ConditionFalse, &msg, nil)
+		if addonHasTerminalStatus(latest) {
+			ackcondition.SetTerminal(latest, corev1.ConditionTrue, &msg, nil)
+			return latest, nil
+		}
+		return latest, requeueWaitUntilCanModify(latest)
+	}
+
 	if delta.DifferentAt("Spec.Tags") {
 		err := syncTags(
 			ctx, rm.sdkapi, rm.metrics,
@@ -444,6 +492,10 @@ func (rm *resourceManager) sdkUpdate(
 	input, err := rm.newUpdateRequestPayload(ctx, desired, delta)
 	if err != nil {
 		return nil, err
+	}
+	// If a user deleted all the PodIdentityAssociations we should send an empty list to the API
+	if delta.DifferentAt("Spec.PodIdentityAssociations") && len(desired.ko.Spec.PodIdentityAssociations) == 0 {
+		input.SetPodIdentityAssociations([]*svcsdk.AddonPodIdentityAssociations{})
 	}
 
 	var resp *svcsdk.UpdateAddonOutput
@@ -469,6 +521,9 @@ func (rm *resourceManager) sdkUpdate(
 	}
 
 	rm.setStatusDefaults(ko)
+	// Updating addons will very likely change the state of the addon
+	// so we should requeue the resource to check the status again.
+	returnAddonUpdating(&resource{ko})
 	return &resource{ko}, nil
 }
 
@@ -495,6 +550,20 @@ func (rm *resourceManager) newUpdateRequestPayload(
 	}
 	if r.ko.Spec.ConfigurationValues != nil {
 		res.SetConfigurationValues(*r.ko.Spec.ConfigurationValues)
+	}
+	if r.ko.Spec.PodIdentityAssociations != nil {
+		f5 := []*svcsdk.AddonPodIdentityAssociations{}
+		for _, f5iter := range r.ko.Spec.PodIdentityAssociations {
+			f5elem := &svcsdk.AddonPodIdentityAssociations{}
+			if f5iter.RoleARN != nil {
+				f5elem.SetRoleArn(*f5iter.RoleARN)
+			}
+			if f5iter.ServiceAccount != nil {
+				f5elem.SetServiceAccount(*f5iter.ServiceAccount)
+			}
+			f5 = append(f5, f5elem)
+		}
+		res.SetPodIdentityAssociations(f5)
 	}
 	if r.ko.Spec.ResolveConflicts != nil {
 		res.SetResolveConflicts(*r.ko.Spec.ResolveConflicts)

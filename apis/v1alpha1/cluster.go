@@ -106,9 +106,7 @@ type ClusterStatus struct {
 	// The endpoint for your Kubernetes API server.
 	// +kubebuilder:validation:Optional
 	Endpoint *string `json:"endpoint,omitempty"`
-	// An object representing the health of your local Amazon EKS cluster on an
-	// Amazon Web Services Outpost. This object isn't available for clusters on
-	// the Amazon Web Services cloud.
+	// An object representing the health of your Amazon EKS cluster.
 	// +kubebuilder:validation:Optional
 	Health *ClusterHealth `json:"health,omitempty"`
 	// The ID of your local Amazon EKS cluster on an Amazon Web Services Outpost.

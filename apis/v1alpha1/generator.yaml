@@ -14,8 +14,18 @@ operations:
 resources:
   Addon:
     hooks:
+      delta_pre_compare:
+        code: customPreCompare(delta, a, b)
+      sdk_read_one_post_set_output:
+        template_path: hooks/addons/sdk_read_one_post_set_output.go.tpl
+      sdk_create_post_set_output:
+        template_path: hooks/addons/sdk_create_post_set_output.go.tpl
       sdk_update_pre_build_request:
         template_path: hooks/addons/sdk_update_pre_build_request.go.tpl
+      sdk_update_post_build_request:
+        template_path: hooks/addons/sdk_update_post_build_request.go.tpl
+      sdk_update_post_set_output:
+        template_path: hooks/addons/sdk_update_post_set_output.go.tpl
     fields:
       ClusterName:
         references:
@@ -26,6 +36,29 @@ resources:
           service_name: iam
           resource: Role
           path: Status.ACKResourceMetadata.ARN
+      PodIdentityAssociations:
+        set:
+        - ignore: true
+          method: Create
+        - ignore: true
+          method: ReadOne
+        compare:
+          is_ignored: true
+      # Note(a-hilaly): Ideally, we would like to have the following configuration
+      # but the generator doesn't support such a unique case. PodIdentityAssociations
+      # Is already defined in the spec and leveraging set[*].ignore: true, which is
+      # influencing the set configurations for PodIdentityAssociationIDs.
+      # We need to extend the code-generator (and build better APIs).
+      #
+      # PodIdentityAssociationIDs:
+      #  is_read_only: true
+      #  custom_field:
+      #    list_of: String
+      #  set:
+      #  - method: ReadOne
+      #    from: PodIdentityAssociations
+      #  - method: Create
+      #    from: PodIdentityAssociations
     renames:
       operations:
         CreateAddon:

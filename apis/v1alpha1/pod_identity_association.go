@@ -101,6 +101,9 @@ type PodIdentityAssociationStatus struct {
 	// The most recent timestamp that the association was modified at
 	// +kubebuilder:validation:Optional
 	ModifiedAt *metav1.Time `json:"modifiedAt,omitempty"`
+	// If defined, the Pod Identity Association is owned by an Amazon EKS Addon.
+	// +kubebuilder:validation:Optional
+	OwnerARN *string `json:"ownerARN,omitempty"`
 }
 
 // PodIdentityAssociation is the Schema for the PodIdentityAssociations API

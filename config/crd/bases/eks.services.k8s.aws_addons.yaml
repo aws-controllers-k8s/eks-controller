@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.16.2
   name: addons.eks.services.k8s.aws
 spec:
   group: eks.services.k8s.aws
@@ -64,7 +64,6 @@ spec:
             description: |-
               AddonSpec defines the desired state of Addon.
 
-
               An Amazon EKS add-on. For more information, see Amazon EKS add-ons (https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html)
               in the Amazon EKS User Guide.
             properties:
@@ -84,7 +83,7 @@ spec:
               clusterRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
                   *AWSResourceReference\ntype to provide more user friendly syntax
-                  for references using 'from' field\nEx:\nAPIIDRef:\n\n\n\tfrom:\n\t
+                  for references using 'from' field\nEx:\nAPIIDRef:\n\n\tfrom:\n\t
                   \ name: my-api"
                 properties:
                   from:
@@ -108,29 +107,50 @@ spec:
                   The name of the add-on. The name must match one of the names returned by
                   DescribeAddonVersions.
                 type: string
+              podIdentityAssociations:
+                description: |-
+                  An array of Pod Identity Assocations to be created. Each EKS Pod Identity
+                  association maps a Kubernetes service account to an IAM Role.
+
+                  For more information, see Attach an IAM Role to an Amazon EKS add-on using
+                  Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
+                  in the EKS User Guide.
+                items:
+                  description: |-
+                    A type of Pod Identity Association owned by an Amazon EKS Add-on.
+
+                    Each EKS Pod Identity Association maps a role to a service account in a namespace
+                    in the cluster.
+
+                    For more information, see Attach an IAM Role to an Amazon EKS add-on using
+                    Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
+                    in the EKS User Guide.
+                  properties:
+                    roleARN:
+                      type: string
+                    serviceAccount:
+                      type: string
+                  type: object
+                type: array
               resolveConflicts:
                 description: |-
                   How to resolve field value conflicts for an Amazon EKS add-on. Conflicts
                   are handled based on the value you choose:
 
-
                      * None – If the self-managed version of the add-on is installed on your
                      cluster, Amazon EKS doesn't change the value. Creation of the add-on might
                      fail.
-
 
                      * Overwrite – If the self-managed version of the add-on is installed
                      on your cluster and the Amazon EKS default value is different than the
                      existing value, Amazon EKS changes the value to the Amazon EKS default
                      value.
 
-
                      * Preserve – This is similar to the NONE option. If the self-managed
                      version of the add-on is installed on your cluster Amazon EKS doesn't
                      change the add-on resource properties. Creation of the add-on might fail
                      if conflicts are detected. This option works differently during the update
                      operation. For more information, see UpdateAddon (https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html).
-
 
                   If you don't currently have the self-managed version of the add-on installed
                   on your cluster, the Amazon EKS add-on is installed. Amazon EKS sets all
@@ -145,7 +165,6 @@ spec:
                   Amazon EKS node IAM role (https://docs.aws.amazon.com/eks/latest/userguide/create-node-role.html)
                   in the Amazon EKS User Guide.
 
-
                   To specify an existing IAM role, you must have an IAM OpenID Connect (OIDC)
                   provider created for your cluster. For more information, see Enabling IAM
                   roles for service accounts on your cluster (https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html)
@@ -154,7 +173,7 @@ spec:
               serviceAccountRoleRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
                   *AWSResourceReference\ntype to provide more user friendly syntax
-                  for references using 'from' field\nEx:\nAPIIDRef:\n\n\n\tfrom:\n\t
+                  for references using 'from' field\nEx:\nAPIIDRef:\n\n\tfrom:\n\t
                   \ name: my-api"
                 properties:
                   from:
@@ -196,7 +215,6 @@ spec:
                       when it has verified that an "adopted" resource (a resource where the
                       ARN annotation was set by the Kubernetes user on the CR) exists and
                       matches the supplied CR's Spec field values.
-                      TODO(vijat@): Find a better strategy for resources that do not have ARN in CreateOutputResponse
                       https://github.com/aws/aws-controllers-k8s/issues/270
                     type: string
                   ownerAccountID:
