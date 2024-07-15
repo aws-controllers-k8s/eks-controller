@@ -17,7 +17,6 @@
 import boto3
 import logging
 import time
-from typing import Dict
 
 import pytest
 
@@ -25,6 +24,7 @@ from acktest.k8s import resource as k8s
 from acktest.k8s import condition
 from acktest.resources import random_suffix_name
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_eks_resource
+from e2e.bootstrap_resources import get_bootstrap_resources
 from e2e.common.types import CLUSTER_RESOURCE_PLURAL
 from e2e.common.waiter import wait_until_deleted
 from e2e.replacement_values import REPLACEMENT_VALUES
@@ -156,7 +156,7 @@ class TestCluster:
 
         wait_for_cluster_active(eks_client, cluster_name)
 
-        # Update the logging and VPC config fields
+        # Update VPC endpoint public access config field
         updates = {
             "spec": {
                 "resourcesVPCConfig": {
@@ -180,6 +180,28 @@ class TestCluster:
         aws_res = eks_client.describe_cluster(name=cluster_name)
         assert aws_res["cluster"]["resourcesVpcConfig"]["endpointPublicAccess"] == False
 
+        # Update the VPC subnets config field
+        vpc_subnets_ids = get_bootstrap_resources().ClusterVPC.public_subnets.subnet_ids
+        # We substitute the first subnet with the last one which is in the same AZ
+        subnets_ids = [vpc_subnets_ids[len(vpc_subnets_ids)-1], vpc_subnets_ids[1]]
+        
+        updates = {
+            "spec": {
+                "resourcesVPCConfig": {
+                    "subnetIDs": subnets_ids,
+                }
+            }
+        }
+
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        assert sorted(aws_res["cluster"]["resourcesVpcConfig"]["subnetIds"]) == sorted(subnets_ids)
+
+        # Update the logging fields
         updates = {
             "spec": {
                 "logging": {
@@ -245,7 +267,7 @@ class TestCluster:
 
         wait_for_cluster_active(eks_client, cluster_name)
 
-       # Bump two minor versions 1.27 -> 1.29
+        # Bump two minor versions 1.27 -> 1.29
         updates = {
             "spec": {
                 "version": "1.29"
