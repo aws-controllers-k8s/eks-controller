@@ -14,15 +14,26 @@
 """
 import logging
 
+import boto3
+from acktest.aws.identity import get_region
 from acktest.bootstrapping import Resources, BootstrapFailureException
 from acktest.bootstrapping.iam import Role
 from acktest.bootstrapping.vpc import VPC
 from e2e import bootstrap_directory
 from e2e.bootstrap_resources import BootstrapResources
 
+def get_availability_zone_names():
+    ec2_client = boto3.client("ec2", region_name=get_region())
+    zones = ec2_client.describe_availability_zones()
+    return list(map(lambda x: x['ZoneName'], zones['AvailabilityZones']))
+
 def service_bootstrap() -> Resources:
     logging.getLogger().setLevel(logging.INFO)
     
+    zones = get_availability_zone_names()
+    # We create one subnet more than the number of AZs in order to have the last subnet in the same AZ as the first one
+    num_public_subnet=len(zones) + 1
+
     resources = BootstrapResources(
         ClusterRole=Role("cluster-role", "eks.amazonaws.com", managed_policies=["arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"]),
         FargatePodRole=Role("fargate-pod-role", "eks-fargate-pods.amazonaws.com", managed_policies=["arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy"]),
@@ -42,7 +53,7 @@ def service_bootstrap() -> Resources:
             "ack-access-entry-principal-role",
             "eks.amazonaws.com",
         ),
-        ClusterVPC=VPC(name_prefix="cluster-vpc", num_public_subnet=2, num_private_subnet=2)
+        ClusterVPC=VPC(name_prefix="cluster-vpc", num_public_subnet=num_public_subnet, num_private_subnet=2),
     )
 
     try:

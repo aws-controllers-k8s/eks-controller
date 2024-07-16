@@ -220,8 +220,27 @@ func (rm *resourceManager) customUpdate(
 		}
 		return returnClusterUpdating(updatedRes)
 	}
-	if delta.DifferentAt("Spec.ResourcesVPCConfig") {
-		if err := rm.updateConfigResourcesVPCConfig(ctx, desired); err != nil {
+	if delta.DifferentAt("Spec.ResourcesVPCConfig.EndpointPrivateAccess") ||
+		delta.DifferentAt("Spec.ResourcesVPCConfig.EndpointPublicAccess") ||
+		delta.DifferentAt("Spec.ResourcesVPCConfig.PublicAccessCIDRs") {
+		if err := rm.updateConfigResourcesVPCConfigPublicAndPrivateAccess(ctx, desired); err != nil {
+			awserr, ok := ackerr.AWSError(err)
+
+			// Check to see if we've raced an async update call and need to
+			// requeue
+			if ok && awserr.Code() == "ResourceInUseException" {
+				return nil, requeueAfterAsyncUpdate()
+			}
+
+			return nil, err
+		}
+		return returnClusterUpdating(updatedRes)
+	}
+	if delta.DifferentAt("Spec.ResourcesVPCConfig.SecurityGroupIDs") ||
+		delta.DifferentAt("Spec.ResourcesVPCConfig.SecurityGroupRefs") ||
+		delta.DifferentAt("Spec.ResourcesVPCConfig.SubnetIDs") ||
+		delta.DifferentAt("Spec.ResourcesVPCConfig.SubnetRefs") {
+		if err := rm.updateConfigResourcesVPCConfigSubnetsAndSecurityGroups(ctx, desired); err != nil {
 			awserr, ok := ackerr.AWSError(err)
 
 			// Check to see if we've raced an async update call and need to
@@ -406,23 +425,48 @@ func (rm *resourceManager) updateAccessConfig(
 	return nil
 }
 
-func (rm *resourceManager) updateConfigResourcesVPCConfig(
+func (rm *resourceManager) updateConfigResourcesVPCConfigPublicAndPrivateAccess(
 	ctx context.Context,
 	r *resource,
 ) (err error) {
 	rlog := ackrtlog.FromContext(ctx)
-	exit := rlog.Trace("rm.updateConfigResourcesVPCConfig")
+	exit := rlog.Trace("rm.updateConfigResourcesVPCConfigPublicAndPrivateAccess")
 	defer exit(err)
 	input := &svcsdk.UpdateClusterConfigInput{
 		Name:               r.ko.Spec.Name,
 		ResourcesVpcConfig: rm.newVpcConfigRequest(r),
 	}
 
-	// From the EKS documentation:
-	// "You can't update the subnets or security group IDs for an existing
-	// cluster."
+	// We only want to update endpointPrivateAccess, endpointPublicAccess and
+	// publicAccessCidrs
 	input.ResourcesVpcConfig.SetSubnetIds(nil)
 	input.ResourcesVpcConfig.SetSecurityGroupIds(nil)
+
+	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (rm *resourceManager) updateConfigResourcesVPCConfigSubnetsAndSecurityGroups(
+	ctx context.Context,
+	r *resource,
+) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateConfigResourcesVPCConfigSubnetsAndSecurityGroups")
+	defer exit(err)
+	input := &svcsdk.UpdateClusterConfigInput{
+		Name:               r.ko.Spec.Name,
+		ResourcesVpcConfig: rm.newVpcConfigRequest(r),
+	}
+
+	// We only want to update securityGroupIds and subnetIds
+	input.ResourcesVpcConfig.EndpointPublicAccess = nil
+	input.ResourcesVpcConfig.EndpointPrivateAccess = nil
+	input.ResourcesVpcConfig.SetPublicAccessCidrs(nil)
 
 	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
