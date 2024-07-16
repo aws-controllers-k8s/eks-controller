@@ -252,6 +252,10 @@ spec:
                   at
                 format: date-time
                 type: string
+              ownerARN:
+                description: If defined, the Pod Identity Association is owned by
+                  an Amazon EKS Addon.
+                type: string
             type: object
         type: object
     served: true

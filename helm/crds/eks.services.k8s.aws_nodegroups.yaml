@@ -83,7 +83,7 @@ spec:
                   group deployment will fail. If your launch template uses a Windows custom
                   AMI, then add eks:kube-proxy-windows to your Windows nodes rolearn in the
                   aws-auth ConfigMap. For more information about using launch templates with
-                  Amazon EKS, see Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+                  Amazon EKS, see Customizing managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
                   in the Amazon EKS User Guide.
                 type: string
               capacityType:
@@ -118,7 +118,8 @@ spec:
                   disk size is 20 GiB for Linux and Bottlerocket. The default disk size is
                   50 GiB for Windows. If you specify launchTemplate, then don't specify diskSize,
                   or the node group deployment will fail. For more information about using
-                  launch templates with Amazon EKS, see Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+                  launch templates with Amazon EKS, see Customizing managed nodes with launch
+                  templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
                   in the Amazon EKS User Guide.
                 format: int64
                 type: integer
@@ -134,7 +135,7 @@ spec:
                   then t3.medium is used, by default. If you specify Spot for capacityType,
                   then we recommend specifying multiple values for instanceTypes. For more
                   information, see Managed node group capacity types (https://docs.aws.amazon.com/eks/latest/userguide/managed-node-groups.html#managed-node-group-capacity-types)
-                  and Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+                  and Customizing managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
                   in the Amazon EKS User Guide.
                 items:
                   type: string
@@ -148,9 +149,11 @@ spec:
                 type: object
               launchTemplate:
                 description: |-
-                  An object representing a node group's launch template specification. If specified,
-                  then do not specify instanceTypes, diskSize, or remoteAccess and make sure
-                  that the launch template meets the requirements in launchTemplateSpecification.
+                  An object representing a node group's launch template specification. When
+                  using this object, don't directly specify instanceTypes, diskSize, or remoteAccess.
+                  Make sure that the launch template meets the requirements in launchTemplateSpecification.
+                  Also refer to Customizing managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+                  in the Amazon EKS User Guide.
                 properties:
                   id:
                     type: string
@@ -174,8 +177,8 @@ spec:
                   in the Amazon EKS User Guide . If you specify launchTemplate, then don't
                   specify IamInstanceProfile (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IamInstanceProfile.html)
                   in your launch template, or the node group deployment will fail. For more
-                  information about using launch templates with Amazon EKS, see Launch template
-                  support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+                  information about using launch templates with Amazon EKS, see Customizing
+                  managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
                   in the Amazon EKS User Guide.
                 type: string
               nodeRoleRef:
@@ -207,8 +210,8 @@ spec:
 
                   If you specify launchTemplate, and your launch template uses a custom AMI,
                   then don't specify releaseVersion, or the node group deployment will fail.
-                  For more information about using launch templates with Amazon EKS, see Launch
-                  template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+                  For more information about using launch templates with Amazon EKS, see Customizing
+                  managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
                   in the Amazon EKS User Guide.
                 type: string
               remoteAccess:
@@ -216,8 +219,8 @@ spec:
                   The remote access configuration to use with your node group. For Linux, the
                   protocol is SSH. For Windows, the protocol is RDP. If you specify launchTemplate,
                   then don't specify remoteAccess, or the node group deployment will fail.
-                  For more information about using launch templates with Amazon EKS, see Launch
-                  template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+                  For more information about using launch templates with Amazon EKS, see Customizing
+                  managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
                   in the Amazon EKS User Guide.
                 properties:
                   ec2SshKey:
@@ -282,8 +285,8 @@ spec:
                   The subnets to use for the Auto Scaling group that is created for your node
                   group. If you specify launchTemplate, then don't specify SubnetId (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateNetworkInterface.html)
                   in your launch template, or the node group deployment will fail. For more
-                  information about using launch templates with Amazon EKS, see Launch template
-                  support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+                  information about using launch templates with Amazon EKS, see Customizing
+                  managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
                   in the Amazon EKS User Guide.
                 items:
                   type: string
@@ -330,8 +333,8 @@ spec:
                   version of the cluster is used, and this is the only accepted specified value.
                   If you specify launchTemplate, and your launch template uses a custom AMI,
                   then don't specify version, or the node group deployment will fail. For more
-                  information about using launch templates with Amazon EKS, see Launch template
-                  support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+                  information about using launch templates with Amazon EKS, see Customizing
+                  managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
                   in the Amazon EKS User Guide.
                 type: string
             required:

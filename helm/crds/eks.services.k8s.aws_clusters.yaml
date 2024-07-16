@@ -375,17 +375,12 @@ spec:
                 description: The endpoint for your Kubernetes API server.
                 type: string
               health:
-                description: |-
-                  An object representing the health of your local Amazon EKS cluster on an
-                  Amazon Web Services Outpost. This object isn't available for clusters on
-                  the Amazon Web Services cloud.
+                description: An object representing the health of your Amazon EKS
+                  cluster.
                 properties:
                   issues:
                     items:
-                      description: |-
-                        An issue with your local Amazon EKS cluster on an Amazon Web Services Outpost.
-                        You can't use this API with an Amazon EKS cluster on the Amazon Web Services
-                        cloud.
+                      description: An issue with your Amazon EKS cluster.
                       properties:
                         code:
                           type: string

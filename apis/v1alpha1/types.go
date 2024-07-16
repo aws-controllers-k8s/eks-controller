@@ -119,11 +119,31 @@ type AddonIssue struct {
 	ResourceIDs []*string `json:"resourceIDs,omitempty"`
 }
 
+// A type of Pod Identity Association owned by an Amazon EKS Add-on.
+//
+// Each EKS Pod Identity Association maps a role to a service account in a namespace
+// in the cluster.
+//
+// For more information, see Attach an IAM Role to an Amazon EKS add-on using
+// Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
+// in the EKS User Guide.
+type AddonPodIdentityAssociations struct {
+	RoleARN        *string `json:"roleARN,omitempty"`
+	ServiceAccount *string `json:"serviceAccount,omitempty"`
+}
+
+// Information about how to configure IAM for an Addon.
+type AddonPodIdentityConfiguration struct {
+	RecommendedManagedPolicies []*string `json:"recommendedManagedPolicies,omitempty"`
+	ServiceAccount             *string   `json:"serviceAccount,omitempty"`
+}
+
 // Information about an add-on version.
 type AddonVersionInfo struct {
-	AddonVersion          *string   `json:"addonVersion,omitempty"`
-	Architecture          []*string `json:"architecture,omitempty"`
-	RequiresConfiguration *bool     `json:"requiresConfiguration,omitempty"`
+	AddonVersion           *string   `json:"addonVersion,omitempty"`
+	Architecture           []*string `json:"architecture,omitempty"`
+	RequiresConfiguration  *bool     `json:"requiresConfiguration,omitempty"`
+	RequiresIAMPermissions *bool     `json:"requiresIAMPermissions,omitempty"`
 }
 
 // An Amazon EKS add-on. For more information, see Amazon EKS add-ons (https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html)
@@ -138,12 +158,13 @@ type Addon_SDK struct {
 	// The health of the add-on.
 	Health *AddonHealth `json:"health,omitempty"`
 	// Information about an Amazon EKS add-on from the Amazon Web Services Marketplace.
-	MarketplaceInformation *MarketplaceInformation `json:"marketplaceInformation,omitempty"`
-	ModifiedAt             *metav1.Time            `json:"modifiedAt,omitempty"`
-	Owner                  *string                 `json:"owner,omitempty"`
-	Publisher              *string                 `json:"publisher,omitempty"`
-	ServiceAccountRoleARN  *string                 `json:"serviceAccountRoleARN,omitempty"`
-	Status                 *string                 `json:"status,omitempty"`
+	MarketplaceInformation  *MarketplaceInformation `json:"marketplaceInformation,omitempty"`
+	ModifiedAt              *metav1.Time            `json:"modifiedAt,omitempty"`
+	Owner                   *string                 `json:"owner,omitempty"`
+	PodIdentityAssociations []*string               `json:"podIdentityAssociations,omitempty"`
+	Publisher               *string                 `json:"publisher,omitempty"`
+	ServiceAccountRoleARN   *string                 `json:"serviceAccountRoleARN,omitempty"`
+	Status                  *string                 `json:"status,omitempty"`
 	// The metadata that you apply to a resource to help you categorize and organize
 	// them. Each tag consists of a key and an optional value. You define them.
 	//
@@ -204,16 +225,12 @@ type ClientStat struct {
 	UserAgent       *string      `json:"userAgent,omitempty"`
 }
 
-// An object representing the health of your local Amazon EKS cluster on an
-// Amazon Web Services Outpost. You can't use this API with an Amazon EKS cluster
-// on the Amazon Web Services cloud.
+// An object representing the health of your Amazon EKS cluster.
 type ClusterHealth struct {
 	Issues []*ClusterIssue `json:"issues,omitempty"`
 }
 
-// An issue with your local Amazon EKS cluster on an Amazon Web Services Outpost.
-// You can't use this API with an Amazon EKS cluster on the Amazon Web Services
-// cloud.
+// An issue with your Amazon EKS cluster.
 type ClusterIssue struct {
 	Code        *string   `json:"code,omitempty"`
 	Message     *string   `json:"message,omitempty"`
@@ -233,9 +250,7 @@ type Cluster_SDK struct {
 	CreatedAt        *metav1.Time             `json:"createdAt,omitempty"`
 	EncryptionConfig []*EncryptionConfig      `json:"encryptionConfig,omitempty"`
 	Endpoint         *string                  `json:"endpoint,omitempty"`
-	// An object representing the health of your local Amazon EKS cluster on an
-	// Amazon Web Services Outpost. You can't use this API with an Amazon EKS cluster
-	// on the Amazon Web Services cloud.
+	// An object representing the health of your Amazon EKS cluster.
 	Health *ClusterHealth `json:"health,omitempty"`
 	ID     *string        `json:"id,omitempty"`
 	// An object representing an identity provider.
@@ -521,7 +536,8 @@ type KubernetesNetworkConfigResponse struct {
 // or the node group deployment or update will fail. For more information about
 // launch templates, see CreateLaunchTemplate (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateLaunchTemplate.html)
 // in the Amazon EC2 API Reference. For more information about using launch
-// templates with Amazon EKS, see Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+// templates with Amazon EKS, see Customizing managed nodes with launch templates
+// (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 // in the Amazon EKS User Guide.
 //
 // You must specify either the launch template ID or the launch template name
@@ -598,7 +614,8 @@ type Nodegroup_SDK struct {
 	// or the node group deployment or update will fail. For more information about
 	// launch templates, see CreateLaunchTemplate (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateLaunchTemplate.html)
 	// in the Amazon EC2 API Reference. For more information about using launch
-	// templates with Amazon EKS, see Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+	// templates with Amazon EKS, see Customizing managed nodes with launch templates
+	// (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
 	//
 	// You must specify either the launch template ID or the launch template name
@@ -762,6 +779,7 @@ type PodIdentityAssociationSummary struct {
 	AssociationID  *string `json:"associationID,omitempty"`
 	ClusterName    *string `json:"clusterName,omitempty"`
 	Namespace      *string `json:"namespace,omitempty"`
+	OwnerARN       *string `json:"ownerARN,omitempty"`
 	ServiceAccount *string `json:"serviceAccount,omitempty"`
 }
 
@@ -775,6 +793,7 @@ type PodIdentityAssociation_SDK struct {
 	CreatedAt      *metav1.Time `json:"createdAt,omitempty"`
 	ModifiedAt     *metav1.Time `json:"modifiedAt,omitempty"`
 	Namespace      *string      `json:"namespace,omitempty"`
+	OwnerARN       *string      `json:"ownerARN,omitempty"`
 	RoleARN        *string      `json:"roleARN,omitempty"`
 	ServiceAccount *string      `json:"serviceAccount,omitempty"`
 	// The metadata that you apply to a resource to help you categorize and organize

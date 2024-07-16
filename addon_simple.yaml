@@ -1,0 +1,15 @@
+apiVersion: eks.services.k8s.aws/v1alpha1
+kind: Addon
+metadata:
+  name: addon1
+spec:
+  name: adot
+  addonVersion: v0.94.1-eksbuild.1
+  clusterName: astro-arm
+  podIdentityAssociations:
+  - serviceAccount: adot-col-container-logs
+    roleARN: arn:aws:iam::095708837592:role/abc-admin-pia-role
+  - serviceAccount: adot-col-otlp-ingest
+    roleARN: arn:aws:iam::095708837592:role/abc-admin-pia-role
+  - serviceAccount: adot-col-prom-metrics
+    roleARN: arn:aws:iam::095708837592:role/abc-admin-pia-role
