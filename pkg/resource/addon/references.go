@@ -64,18 +64,17 @@ func (rm *resourceManager) ResolveReferences(
 	apiReader client.Reader,
 	res acktypes.AWSResource,
 ) (acktypes.AWSResource, bool, error) {
-	namespace := res.MetaObject().GetNamespace()
 	ko := rm.concreteResource(res).ko
 
 	resourceHasReferences := false
 	err := validateReferenceFields(ko)
-	if fieldHasReferences, err := rm.resolveReferenceForClusterName(ctx, apiReader, namespace, ko); err != nil {
+	if fieldHasReferences, err := rm.resolveReferenceForClusterName(ctx, apiReader, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
 
-	if fieldHasReferences, err := rm.resolveReferenceForServiceAccountRoleARN(ctx, apiReader, namespace, ko); err != nil {
+	if fieldHasReferences, err := rm.resolveReferenceForServiceAccountRoleARN(ctx, apiReader, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
@@ -108,7 +107,6 @@ func validateReferenceFields(ko *svcapitypes.Addon) error {
 func (rm *resourceManager) resolveReferenceForClusterName(
 	ctx context.Context,
 	apiReader client.Reader,
-	namespace string,
 	ko *svcapitypes.Addon,
 ) (hasReferences bool, err error) {
 	if ko.Spec.ClusterRef != nil && ko.Spec.ClusterRef.From != nil {
@@ -116,6 +114,10 @@ func (rm *resourceManager) resolveReferenceForClusterName(
 		arr := ko.Spec.ClusterRef.From
 		if arr.Name == nil || *arr.Name == "" {
 			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: ClusterRef")
+		}
+		namespace := ko.ObjectMeta.GetNamespace()
+		if arr.Namespace != nil && *arr.Namespace != "" {
+			namespace = *arr.Namespace
 		}
 		obj := &svcapitypes.Cluster{}
 		if err := getReferencedResourceState_Cluster(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
@@ -185,7 +187,6 @@ func getReferencedResourceState_Cluster(
 func (rm *resourceManager) resolveReferenceForServiceAccountRoleARN(
 	ctx context.Context,
 	apiReader client.Reader,
-	namespace string,
 	ko *svcapitypes.Addon,
 ) (hasReferences bool, err error) {
 	if ko.Spec.ServiceAccountRoleRef != nil && ko.Spec.ServiceAccountRoleRef.From != nil {
@@ -193,6 +194,10 @@ func (rm *resourceManager) resolveReferenceForServiceAccountRoleARN(
 		arr := ko.Spec.ServiceAccountRoleRef.From
 		if arr.Name == nil || *arr.Name == "" {
 			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: ServiceAccountRoleRef")
+		}
+		namespace := ko.ObjectMeta.GetNamespace()
+		if arr.Namespace != nil && *arr.Namespace != "" {
+			namespace = *arr.Namespace
 		}
 		obj := &iamapitypes.Role{}
 		if err := getReferencedResourceState_Role(ctx, apiReader, obj, *arr.Name, namespace); err != nil {

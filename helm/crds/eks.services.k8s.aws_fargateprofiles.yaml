@@ -81,6 +81,8 @@ spec:
                     properties:
                       name:
                         type: string
+                      namespace:
+                        type: string
                     type: object
                 type: object
               name:
@@ -107,6 +109,8 @@ spec:
                       k8s resource for finding the identifier(Id/ARN/Name)
                     properties:
                       name:
+                        type: string
+                      namespace:
                         type: string
                     type: object
                 type: object
@@ -140,6 +144,8 @@ spec:
                         k8s resource for finding the identifier(Id/ARN/Name)
                       properties:
                         name:
+                          type: string
+                        namespace:
                           type: string
                       type: object
                   type: object

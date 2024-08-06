@@ -91,30 +91,29 @@ func (rm *resourceManager) ResolveReferences(
 	apiReader client.Reader,
 	res acktypes.AWSResource,
 ) (acktypes.AWSResource, bool, error) {
-	namespace := res.MetaObject().GetNamespace()
 	ko := rm.concreteResource(res).ko
 
 	resourceHasReferences := false
 	err := validateReferenceFields(ko)
-	if fieldHasReferences, err := rm.resolveReferenceForEncryptionConfig_Provider_KeyARN(ctx, apiReader, namespace, ko); err != nil {
+	if fieldHasReferences, err := rm.resolveReferenceForEncryptionConfig_Provider_KeyARN(ctx, apiReader, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
 
-	if fieldHasReferences, err := rm.resolveReferenceForResourcesVPCConfig_SecurityGroupIDs(ctx, apiReader, namespace, ko); err != nil {
+	if fieldHasReferences, err := rm.resolveReferenceForResourcesVPCConfig_SecurityGroupIDs(ctx, apiReader, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
 
-	if fieldHasReferences, err := rm.resolveReferenceForResourcesVPCConfig_SubnetIDs(ctx, apiReader, namespace, ko); err != nil {
+	if fieldHasReferences, err := rm.resolveReferenceForResourcesVPCConfig_SubnetIDs(ctx, apiReader, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
 
-	if fieldHasReferences, err := rm.resolveReferenceForRoleARN(ctx, apiReader, namespace, ko); err != nil {
+	if fieldHasReferences, err := rm.resolveReferenceForRoleARN(ctx, apiReader, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
@@ -163,7 +162,6 @@ func validateReferenceFields(ko *svcapitypes.Cluster) error {
 func (rm *resourceManager) resolveReferenceForEncryptionConfig_Provider_KeyARN(
 	ctx context.Context,
 	apiReader client.Reader,
-	namespace string,
 	ko *svcapitypes.Cluster,
 ) (hasReferences bool, err error) {
 	for f0idx, f0iter := range ko.Spec.EncryptionConfig {
@@ -173,6 +171,10 @@ func (rm *resourceManager) resolveReferenceForEncryptionConfig_Provider_KeyARN(
 				arr := f0iter.Provider.KeyRef.From
 				if arr.Name == nil || *arr.Name == "" {
 					return hasReferences, fmt.Errorf("provided resource reference is nil or empty: EncryptionConfig.Provider.KeyRef")
+				}
+				namespace := ko.ObjectMeta.GetNamespace()
+				if arr.Namespace != nil && *arr.Namespace != "" {
+					namespace = *arr.Namespace
 				}
 				obj := &kmsapitypes.Key{}
 				if err := getReferencedResourceState_Key(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
@@ -244,7 +246,6 @@ func getReferencedResourceState_Key(
 func (rm *resourceManager) resolveReferenceForResourcesVPCConfig_SecurityGroupIDs(
 	ctx context.Context,
 	apiReader client.Reader,
-	namespace string,
 	ko *svcapitypes.Cluster,
 ) (hasReferences bool, err error) {
 	if ko.Spec.ResourcesVPCConfig != nil {
@@ -254,6 +255,10 @@ func (rm *resourceManager) resolveReferenceForResourcesVPCConfig_SecurityGroupID
 				arr := f0iter.From
 				if arr.Name == nil || *arr.Name == "" {
 					return hasReferences, fmt.Errorf("provided resource reference is nil or empty: ResourcesVPCConfig.SecurityGroupRefs")
+				}
+				namespace := ko.ObjectMeta.GetNamespace()
+				if arr.Namespace != nil && *arr.Namespace != "" {
+					namespace = *arr.Namespace
 				}
 				obj := &ec2apitypes.SecurityGroup{}
 				if err := getReferencedResourceState_SecurityGroup(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
@@ -328,7 +333,6 @@ func getReferencedResourceState_SecurityGroup(
 func (rm *resourceManager) resolveReferenceForResourcesVPCConfig_SubnetIDs(
 	ctx context.Context,
 	apiReader client.Reader,
-	namespace string,
 	ko *svcapitypes.Cluster,
 ) (hasReferences bool, err error) {
 	if ko.Spec.ResourcesVPCConfig != nil {
@@ -338,6 +342,10 @@ func (rm *resourceManager) resolveReferenceForResourcesVPCConfig_SubnetIDs(
 				arr := f0iter.From
 				if arr.Name == nil || *arr.Name == "" {
 					return hasReferences, fmt.Errorf("provided resource reference is nil or empty: ResourcesVPCConfig.SubnetRefs")
+				}
+				namespace := ko.ObjectMeta.GetNamespace()
+				if arr.Namespace != nil && *arr.Namespace != "" {
+					namespace = *arr.Namespace
 				}
 				obj := &ec2apitypes.Subnet{}
 				if err := getReferencedResourceState_Subnet(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
@@ -412,7 +420,6 @@ func getReferencedResourceState_Subnet(
 func (rm *resourceManager) resolveReferenceForRoleARN(
 	ctx context.Context,
 	apiReader client.Reader,
-	namespace string,
 	ko *svcapitypes.Cluster,
 ) (hasReferences bool, err error) {
 	if ko.Spec.RoleRef != nil && ko.Spec.RoleRef.From != nil {
@@ -420,6 +427,10 @@ func (rm *resourceManager) resolveReferenceForRoleARN(
 		arr := ko.Spec.RoleRef.From
 		if arr.Name == nil || *arr.Name == "" {
 			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: RoleRef")
+		}
+		namespace := ko.ObjectMeta.GetNamespace()
+		if arr.Namespace != nil && *arr.Namespace != "" {
+			namespace = *arr.Namespace
 		}
 		obj := &iamapitypes.Role{}
 		if err := getReferencedResourceState_Role(ctx, apiReader, obj, *arr.Name, namespace); err != nil {

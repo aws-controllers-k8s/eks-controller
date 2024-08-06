@@ -81,30 +81,29 @@ func (rm *resourceManager) ResolveReferences(
 	apiReader client.Reader,
 	res acktypes.AWSResource,
 ) (acktypes.AWSResource, bool, error) {
-	namespace := res.MetaObject().GetNamespace()
 	ko := rm.concreteResource(res).ko
 
 	resourceHasReferences := false
 	err := validateReferenceFields(ko)
-	if fieldHasReferences, err := rm.resolveReferenceForClusterName(ctx, apiReader, namespace, ko); err != nil {
+	if fieldHasReferences, err := rm.resolveReferenceForClusterName(ctx, apiReader, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
 
-	if fieldHasReferences, err := rm.resolveReferenceForNodeRole(ctx, apiReader, namespace, ko); err != nil {
+	if fieldHasReferences, err := rm.resolveReferenceForNodeRole(ctx, apiReader, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
 
-	if fieldHasReferences, err := rm.resolveReferenceForRemoteAccess_SourceSecurityGroups(ctx, apiReader, namespace, ko); err != nil {
+	if fieldHasReferences, err := rm.resolveReferenceForRemoteAccess_SourceSecurityGroups(ctx, apiReader, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
 
-	if fieldHasReferences, err := rm.resolveReferenceForSubnets(ctx, apiReader, namespace, ko); err != nil {
+	if fieldHasReferences, err := rm.resolveReferenceForSubnets(ctx, apiReader, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
@@ -153,7 +152,6 @@ func validateReferenceFields(ko *svcapitypes.Nodegroup) error {
 func (rm *resourceManager) resolveReferenceForClusterName(
 	ctx context.Context,
 	apiReader client.Reader,
-	namespace string,
 	ko *svcapitypes.Nodegroup,
 ) (hasReferences bool, err error) {
 	if ko.Spec.ClusterRef != nil && ko.Spec.ClusterRef.From != nil {
@@ -161,6 +159,10 @@ func (rm *resourceManager) resolveReferenceForClusterName(
 		arr := ko.Spec.ClusterRef.From
 		if arr.Name == nil || *arr.Name == "" {
 			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: ClusterRef")
+		}
+		namespace := ko.ObjectMeta.GetNamespace()
+		if arr.Namespace != nil && *arr.Namespace != "" {
+			namespace = *arr.Namespace
 		}
 		obj := &svcapitypes.Cluster{}
 		if err := getReferencedResourceState_Cluster(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
@@ -230,7 +232,6 @@ func getReferencedResourceState_Cluster(
 func (rm *resourceManager) resolveReferenceForNodeRole(
 	ctx context.Context,
 	apiReader client.Reader,
-	namespace string,
 	ko *svcapitypes.Nodegroup,
 ) (hasReferences bool, err error) {
 	if ko.Spec.NodeRoleRef != nil && ko.Spec.NodeRoleRef.From != nil {
@@ -238,6 +239,10 @@ func (rm *resourceManager) resolveReferenceForNodeRole(
 		arr := ko.Spec.NodeRoleRef.From
 		if arr.Name == nil || *arr.Name == "" {
 			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: NodeRoleRef")
+		}
+		namespace := ko.ObjectMeta.GetNamespace()
+		if arr.Namespace != nil && *arr.Namespace != "" {
+			namespace = *arr.Namespace
 		}
 		obj := &iamapitypes.Role{}
 		if err := getReferencedResourceState_Role(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
@@ -307,7 +312,6 @@ func getReferencedResourceState_Role(
 func (rm *resourceManager) resolveReferenceForRemoteAccess_SourceSecurityGroups(
 	ctx context.Context,
 	apiReader client.Reader,
-	namespace string,
 	ko *svcapitypes.Nodegroup,
 ) (hasReferences bool, err error) {
 	if ko.Spec.RemoteAccess != nil {
@@ -317,6 +321,10 @@ func (rm *resourceManager) resolveReferenceForRemoteAccess_SourceSecurityGroups(
 				arr := f0iter.From
 				if arr.Name == nil || *arr.Name == "" {
 					return hasReferences, fmt.Errorf("provided resource reference is nil or empty: RemoteAccess.SourceSecurityGroupRefs")
+				}
+				namespace := ko.ObjectMeta.GetNamespace()
+				if arr.Namespace != nil && *arr.Namespace != "" {
+					namespace = *arr.Namespace
 				}
 				obj := &ec2apitypes.SecurityGroup{}
 				if err := getReferencedResourceState_SecurityGroup(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
@@ -391,7 +399,6 @@ func getReferencedResourceState_SecurityGroup(
 func (rm *resourceManager) resolveReferenceForSubnets(
 	ctx context.Context,
 	apiReader client.Reader,
-	namespace string,
 	ko *svcapitypes.Nodegroup,
 ) (hasReferences bool, err error) {
 	for _, f0iter := range ko.Spec.SubnetRefs {
@@ -400,6 +407,10 @@ func (rm *resourceManager) resolveReferenceForSubnets(
 			arr := f0iter.From
 			if arr.Name == nil || *arr.Name == "" {
 				return hasReferences, fmt.Errorf("provided resource reference is nil or empty: SubnetRefs")
+			}
+			namespace := ko.ObjectMeta.GetNamespace()
+			if arr.Namespace != nil && *arr.Namespace != "" {
+				namespace = *arr.Namespace
 			}
 			obj := &ec2apitypes.Subnet{}
 			if err := getReferencedResourceState_Subnet(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
