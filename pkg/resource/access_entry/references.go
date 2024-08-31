@@ -130,12 +130,8 @@ func getReferencedResourceState_Cluster(
 	if err != nil {
 		return err
 	}
-	var refResourceSynced, refResourceTerminal bool
+	var refResourceTerminal bool
 	for _, cond := range obj.Status.Conditions {
-		if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
-			cond.Status == corev1.ConditionTrue {
-			refResourceSynced = true
-		}
 		if cond.Type == ackv1alpha1.ConditionTypeTerminal &&
 			cond.Status == corev1.ConditionTrue {
 			return ackerr.ResourceReferenceTerminalFor(
@@ -147,6 +143,13 @@ func getReferencedResourceState_Cluster(
 		return ackerr.ResourceReferenceTerminalFor(
 			"Cluster",
 			namespace, name)
+	}
+	var refResourceSynced bool
+	for _, cond := range obj.Status.Conditions {
+		if cond.Type == ackv1alpha1.ConditionTypeResourceSynced &&
+			cond.Status == corev1.ConditionTrue {
+			refResourceSynced = true
+		}
 	}
 	if !refResourceSynced {
 		return ackerr.ResourceReferenceNotSyncedFor(
