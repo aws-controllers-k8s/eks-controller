@@ -367,6 +367,14 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	rm.setStatusDefaults(ko)
+	if r.ko.Spec.ResourcesVPCConfig.SubnetRefs != nil {
+		ko.Spec.ResourcesVPCConfig.SubnetRefs = r.ko.Spec.ResourcesVPCConfig.SubnetRefs
+	}
+
+	if r.ko.Spec.ResourcesVPCConfig.SecurityGroupRefs != nil {
+		ko.Spec.ResourcesVPCConfig.SecurityGroupRefs = r.ko.Spec.ResourcesVPCConfig.SecurityGroupRefs
+	}
+
 	if !clusterActive(&resource{ko}) {
 		// Setting resource synced condition to false will trigger a requeue of
 		// the resource. No need to return a requeue error here.
@@ -374,7 +382,6 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ackcondition.SetSynced(&resource{ko}, corev1.ConditionTrue, nil, nil)
 	}
-
 	return &resource{ko}, nil
 }
 
@@ -707,6 +714,14 @@ func (rm *resourceManager) sdkCreate(
 	}
 
 	rm.setStatusDefaults(ko)
+	if desired.ko.Spec.ResourcesVPCConfig.SubnetRefs != nil {
+		ko.Spec.ResourcesVPCConfig.SubnetRefs = desired.ko.Spec.ResourcesVPCConfig.SubnetRefs
+	}
+
+	if desired.ko.Spec.ResourcesVPCConfig.SecurityGroupRefs != nil {
+		ko.Spec.ResourcesVPCConfig.SecurityGroupRefs = desired.ko.Spec.ResourcesVPCConfig.SecurityGroupRefs
+	}
+
 	// We expect the cluster to be in 'CREATING' status since we just issued
 	// the call to create it, but I suppose it doesn't hurt to check here.
 	if clusterCreating(&resource{ko}) {
