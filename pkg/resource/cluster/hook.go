@@ -192,10 +192,12 @@ func (rm *resourceManager) customUpdate(
 		return updatedRes, requeueWaitUntilCanModify(latest)
 	}
 
+	// Ensure ACKResourceMetadata and ARN are not nil before derefrencing
+	// This can occur when adopting a resource
 	if delta.DifferentAt("Spec.Tags") {
 		if err := tags.SyncTags(
 			ctx, rm.sdkapi, rm.metrics,
-			string(*desired.ko.Status.ACKResourceMetadata.ARN),
+			string(*latest.ko.Status.ACKResourceMetadata.ARN),
 			desired.ko.Spec.Tags, latest.ko.Spec.Tags,
 		); err != nil {
 			return nil, err

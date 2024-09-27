@@ -367,11 +367,11 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	rm.setStatusDefaults(ko)
-	if r.ko.Spec.ResourcesVPCConfig.SubnetRefs != nil {
+	if r.ko.Spec.ResourcesVPCConfig != nil && r.ko.Spec.ResourcesVPCConfig.SubnetRefs != nil {
 		ko.Spec.ResourcesVPCConfig.SubnetRefs = r.ko.Spec.ResourcesVPCConfig.SubnetRefs
 	}
 
-	if r.ko.Spec.ResourcesVPCConfig.SecurityGroupRefs != nil {
+	if r.ko.Spec.ResourcesVPCConfig != nil && r.ko.Spec.ResourcesVPCConfig.SecurityGroupRefs != nil {
 		ko.Spec.ResourcesVPCConfig.SecurityGroupRefs = r.ko.Spec.ResourcesVPCConfig.SecurityGroupRefs
 	}
 
