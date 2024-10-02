@@ -42,6 +42,7 @@ func newResourceDelta(
 		delta.Add("", a, b)
 		return delta
 	}
+	customPreCompare(delta, a, b)
 
 	if ackcompare.HasNilDifference(a.ko.Spec.AddonVersion, b.ko.Spec.AddonVersion) {
 		delta.Add("Spec.AddonVersion", a.ko.Spec.AddonVersion, b.ko.Spec.AddonVersion)

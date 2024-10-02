@@ -55,6 +55,7 @@ rules:
   - ""
   resources:
   - configmaps
+  - secrets
   verbs:
   - get
   - list
@@ -69,38 +70,11 @@ rules:
   - list
   - watch
 - apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - get
-  - list
-  - patch
-  - watch
-- apiGroups:
   - ec2.services.k8s.aws
   resources:
   - securitygroups
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - ec2.services.k8s.aws
-  resources:
   - securitygroups/status
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - ec2.services.k8s.aws
-  resources:
   - subnets
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - ec2.services.k8s.aws
-  resources:
   - subnets/status
   verbs:
   - get
@@ -109,125 +83,11 @@ rules:
   - eks.services.k8s.aws
   resources:
   - accessentries
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - eks.services.k8s.aws
-  resources:
-  - accessentries/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - eks.services.k8s.aws
-  resources:
   - addons
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - eks.services.k8s.aws
-  resources:
-  - addons/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - eks.services.k8s.aws
-  resources:
   - clusters
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - eks.services.k8s.aws
-  resources:
-  - clusters/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - eks.services.k8s.aws
-  resources:
   - fargateprofiles
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - eks.services.k8s.aws
-  resources:
-  - fargateprofiles/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - eks.services.k8s.aws
-  resources:
   - identityproviderconfigs
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - eks.services.k8s.aws
-  resources:
-  - identityproviderconfigs/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - eks.services.k8s.aws
-  resources:
   - nodegroups
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - eks.services.k8s.aws
-  resources:
-  - nodegroups/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - eks.services.k8s.aws
-  resources:
   - podidentityassociations
   verbs:
   - create
@@ -240,6 +100,12 @@ rules:
 - apiGroups:
   - eks.services.k8s.aws
   resources:
+  - accessentries/status
+  - addons/status
+  - clusters/status
+  - fargateprofiles/status
+  - identityproviderconfigs/status
+  - nodegroups/status
   - podidentityassociations/status
   verbs:
   - get
@@ -249,12 +115,6 @@ rules:
   - iam.services.k8s.aws
   resources:
   - roles
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - iam.services.k8s.aws
-  resources:
   - roles/status
   verbs:
   - get
@@ -263,12 +123,6 @@ rules:
   - kms.services.k8s.aws
   resources:
   - keys
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - kms.services.k8s.aws
-  resources:
   - keys/status
   verbs:
   - get
@@ -277,25 +131,6 @@ rules:
   - services.k8s.aws
   resources:
   - adoptedresources
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - services.k8s.aws
-  resources:
-  - adoptedresources/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - services.k8s.aws
-  resources:
   - fieldexports
   verbs:
   - create
@@ -308,6 +143,7 @@ rules:
 - apiGroups:
   - services.k8s.aws
   resources:
+  - adoptedresources/status
   - fieldexports/status
   verbs:
   - get

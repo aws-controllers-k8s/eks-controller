@@ -120,6 +120,11 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Spec.Namespace = nil
 	}
+	if resp.Association.OwnerArn != nil {
+		ko.Status.OwnerARN = resp.Association.OwnerArn
+	} else {
+		ko.Status.OwnerARN = nil
+	}
 	if resp.Association.RoleArn != nil {
 		ko.Spec.RoleARN = resp.Association.RoleArn
 	} else {
@@ -131,13 +136,13 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.ServiceAccount = nil
 	}
 	if resp.Association.Tags != nil {
-		f8 := map[string]*string{}
-		for f8key, f8valiter := range resp.Association.Tags {
-			var f8val string
-			f8val = *f8valiter
-			f8[f8key] = &f8val
+		f9 := map[string]*string{}
+		for f9key, f9valiter := range resp.Association.Tags {
+			var f9val string
+			f9val = *f9valiter
+			f9[f9key] = &f9val
 		}
-		ko.Spec.Tags = f8
+		ko.Spec.Tags = f9
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -234,6 +239,11 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Spec.Namespace = nil
 	}
+	if resp.Association.OwnerArn != nil {
+		ko.Status.OwnerARN = resp.Association.OwnerArn
+	} else {
+		ko.Status.OwnerARN = nil
+	}
 	if resp.Association.RoleArn != nil {
 		ko.Spec.RoleARN = resp.Association.RoleArn
 	} else {
@@ -245,13 +255,13 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.ServiceAccount = nil
 	}
 	if resp.Association.Tags != nil {
-		f8 := map[string]*string{}
-		for f8key, f8valiter := range resp.Association.Tags {
-			var f8val string
-			f8val = *f8valiter
-			f8[f8key] = &f8val
+		f9 := map[string]*string{}
+		for f9key, f9valiter := range resp.Association.Tags {
+			var f9val string
+			f9val = *f9valiter
+			f9[f9key] = &f9val
 		}
-		ko.Spec.Tags = f8
+		ko.Spec.Tags = f9
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -379,6 +389,11 @@ func (rm *resourceManager) sdkUpdate(
 	} else {
 		ko.Spec.Namespace = nil
 	}
+	if resp.Association.OwnerArn != nil {
+		ko.Status.OwnerARN = resp.Association.OwnerArn
+	} else {
+		ko.Status.OwnerARN = nil
+	}
 	if resp.Association.RoleArn != nil {
 		ko.Spec.RoleARN = resp.Association.RoleArn
 	} else {
@@ -390,13 +405,13 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Spec.ServiceAccount = nil
 	}
 	if resp.Association.Tags != nil {
-		f8 := map[string]*string{}
-		for f8key, f8valiter := range resp.Association.Tags {
-			var f8val string
-			f8val = *f8valiter
-			f8[f8key] = &f8val
+		f9 := map[string]*string{}
+		for f9key, f9valiter := range resp.Association.Tags {
+			var f9val string
+			f9val = *f9valiter
+			f9[f9key] = &f9val
 		}
-		ko.Spec.Tags = f8
+		ko.Spec.Tags = f9
 	} else {
 		ko.Spec.Tags = nil
 	}
