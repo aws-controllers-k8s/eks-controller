@@ -349,3 +349,34 @@ class TestCluster:
         assert len(aws_res["cluster"]["encryptionConfig"]) == 1
         assert aws_res["cluster"]["encryptionConfig"][0]["resources"] == ["secrets"]
         assert aws_res["cluster"]["encryptionConfig"][0]["provider"]["keyArn"] == ACK_KMS_KEY_ARN
+
+    def test_update_cluster_update_policy(self, eks_client, simple_cluster):
+        (ref, cr) = simple_cluster
+
+        cluster_name = cr["spec"]["name"]
+
+        try:
+            aws_res = eks_client.describe_cluster(name=cluster_name)
+            assert aws_res is not None
+        except eks_client.exceptions.ResourceNotFoundException:
+            pytest.fail(f"Could not find cluster '{cluster_name}' in EKS")
+
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        updates = {
+            "spec": {
+                "upgradePolicy": {
+                    "supportType": "STANDARD"
+                }
+            }
+        }
+
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS*2)
+
+        # Wait for the updating to become active again
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        # At this point, the cluster should be active again at version 1.28
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        assert aws_res["cluster"]["upgradePolicy"]["supportType"] == "STANDARD"
