@@ -71,6 +71,16 @@ spec:
                   bootstrapClusterCreatorAdminPermissions:
                     type: boolean
                 type: object
+              bootstrapSelfManagedAddons:
+                description: |-
+                  If you set this value to False when creating a cluster, the default networking
+                  add-ons will not be installed.
+
+                  The default networking addons include vpc-cni, coredns, and kube-proxy.
+
+                  Use this option when you plan to install third-party alternative add-ons
+                  or self-manage the default networking add-ons.
+                type: boolean
               clientRequestToken:
                 description: |-
                   A unique, case-sensitive identifier that you provide to ensure the idempotency
@@ -271,6 +281,14 @@ spec:
                   Metadata that assists with categorization and organization. Each tag consists
                   of a key and an optional value. You define both. Tags don't propagate to
                   any other cluster or Amazon Web Services resources.
+                type: object
+              upgradePolicy:
+                description: |-
+                  New clusters, by default, have extended support enabled. You can disable
+                  extended support when creating a cluster by setting this value to STANDARD.
+                properties:
+                  supportType:
+                    type: string
                 type: object
               version:
                 description: |-

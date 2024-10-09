@@ -172,6 +172,9 @@ resources:
       AccessConfig.BootstrapClusterCreatorAdminPermissions:
         compare:
           is_ignored: true
+      BootstrapSelfManagedAddons:
+        compare:
+          is_ignored: true
     exceptions:
       errors:
         404:

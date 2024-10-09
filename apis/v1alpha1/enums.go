@@ -80,8 +80,9 @@ const (
 type CapacityTypes string
 
 const (
-	CapacityTypes_ON_DEMAND CapacityTypes = "ON_DEMAND"
-	CapacityTypes_SPOT      CapacityTypes = "SPOT"
+	CapacityTypes_ON_DEMAND      CapacityTypes = "ON_DEMAND"
+	CapacityTypes_SPOT           CapacityTypes = "SPOT"
+	CapacityTypes_CAPACITY_BLOCK CapacityTypes = "CAPACITY_BLOCK"
 )
 
 type Category string
@@ -192,6 +193,15 @@ const (
 	ErrorCode_K8sResourceNotFound          ErrorCode = "K8sResourceNotFound"
 )
 
+type FargateProfileIssueCode string
+
+const (
+	FargateProfileIssueCode_PodExecutionRoleAlreadyInUse FargateProfileIssueCode = "PodExecutionRoleAlreadyInUse"
+	FargateProfileIssueCode_AccessDenied                 FargateProfileIssueCode = "AccessDenied"
+	FargateProfileIssueCode_ClusterUnreachable           FargateProfileIssueCode = "ClusterUnreachable"
+	FargateProfileIssueCode_InternalFailure              FargateProfileIssueCode = "InternalFailure"
+)
+
 type FargateProfileStatus_SDK string
 
 const (
@@ -288,6 +298,13 @@ const (
 	ResolveConflicts_PRESERVE  ResolveConflicts = "PRESERVE"
 )
 
+type SupportType string
+
+const (
+	SupportType_STANDARD SupportType = "STANDARD"
+	SupportType_EXTENDED SupportType = "EXTENDED"
+)
+
 type TaintEffect string
 
 const (
@@ -327,6 +344,7 @@ const (
 	UpdateParamType_Subnets                  UpdateParamType = "Subnets"
 	UpdateParamType_AuthenticationMode       UpdateParamType = "AuthenticationMode"
 	UpdateParamType_PodIdentityAssociations  UpdateParamType = "PodIdentityAssociations"
+	UpdateParamType_UpgradePolicy            UpdateParamType = "UpgradePolicy"
 )
 
 type UpdateStatus string
@@ -351,4 +369,5 @@ const (
 	UpdateType_AddonUpdate                        UpdateType = "AddonUpdate"
 	UpdateType_VpcConfigUpdate                    UpdateType = "VpcConfigUpdate"
 	UpdateType_AccessConfigUpdate                 UpdateType = "AccessConfigUpdate"
+	UpdateType_UpgradePolicyUpdate                UpdateType = "UpgradePolicyUpdate"
 )

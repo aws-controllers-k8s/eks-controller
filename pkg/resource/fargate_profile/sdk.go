@@ -112,30 +112,59 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Spec.Name = nil
 	}
+	if resp.FargateProfile.Health != nil {
+		f4 := &svcapitypes.FargateProfileHealth{}
+		if resp.FargateProfile.Health.Issues != nil {
+			f4f0 := []*svcapitypes.FargateProfileIssue{}
+			for _, f4f0iter := range resp.FargateProfile.Health.Issues {
+				f4f0elem := &svcapitypes.FargateProfileIssue{}
+				if f4f0iter.Code != nil {
+					f4f0elem.Code = f4f0iter.Code
+				}
+				if f4f0iter.Message != nil {
+					f4f0elem.Message = f4f0iter.Message
+				}
+				if f4f0iter.ResourceIds != nil {
+					f4f0elemf2 := []*string{}
+					for _, f4f0elemf2iter := range f4f0iter.ResourceIds {
+						var f4f0elemf2elem string
+						f4f0elemf2elem = *f4f0elemf2iter
+						f4f0elemf2 = append(f4f0elemf2, &f4f0elemf2elem)
+					}
+					f4f0elem.ResourceIDs = f4f0elemf2
+				}
+				f4f0 = append(f4f0, f4f0elem)
+			}
+			f4.Issues = f4f0
+		}
+		ko.Status.Health = f4
+	} else {
+		ko.Status.Health = nil
+	}
 	if resp.FargateProfile.PodExecutionRoleArn != nil {
 		ko.Spec.PodExecutionRoleARN = resp.FargateProfile.PodExecutionRoleArn
 	} else {
 		ko.Spec.PodExecutionRoleARN = nil
 	}
 	if resp.FargateProfile.Selectors != nil {
-		f5 := []*svcapitypes.FargateProfileSelector{}
-		for _, f5iter := range resp.FargateProfile.Selectors {
-			f5elem := &svcapitypes.FargateProfileSelector{}
-			if f5iter.Labels != nil {
-				f5elemf0 := map[string]*string{}
-				for f5elemf0key, f5elemf0valiter := range f5iter.Labels {
-					var f5elemf0val string
-					f5elemf0val = *f5elemf0valiter
-					f5elemf0[f5elemf0key] = &f5elemf0val
+		f6 := []*svcapitypes.FargateProfileSelector{}
+		for _, f6iter := range resp.FargateProfile.Selectors {
+			f6elem := &svcapitypes.FargateProfileSelector{}
+			if f6iter.Labels != nil {
+				f6elemf0 := map[string]*string{}
+				for f6elemf0key, f6elemf0valiter := range f6iter.Labels {
+					var f6elemf0val string
+					f6elemf0val = *f6elemf0valiter
+					f6elemf0[f6elemf0key] = &f6elemf0val
 				}
-				f5elem.Labels = f5elemf0
+				f6elem.Labels = f6elemf0
 			}
-			if f5iter.Namespace != nil {
-				f5elem.Namespace = f5iter.Namespace
+			if f6iter.Namespace != nil {
+				f6elem.Namespace = f6iter.Namespace
 			}
-			f5 = append(f5, f5elem)
+			f6 = append(f6, f6elem)
 		}
-		ko.Spec.Selectors = f5
+		ko.Spec.Selectors = f6
 	} else {
 		ko.Spec.Selectors = nil
 	}
@@ -145,24 +174,24 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.Status = nil
 	}
 	if resp.FargateProfile.Subnets != nil {
-		f7 := []*string{}
-		for _, f7iter := range resp.FargateProfile.Subnets {
-			var f7elem string
-			f7elem = *f7iter
-			f7 = append(f7, &f7elem)
+		f8 := []*string{}
+		for _, f8iter := range resp.FargateProfile.Subnets {
+			var f8elem string
+			f8elem = *f8iter
+			f8 = append(f8, &f8elem)
 		}
-		ko.Spec.Subnets = f7
+		ko.Spec.Subnets = f8
 	} else {
 		ko.Spec.Subnets = nil
 	}
 	if resp.FargateProfile.Tags != nil {
-		f8 := map[string]*string{}
-		for f8key, f8valiter := range resp.FargateProfile.Tags {
-			var f8val string
-			f8val = *f8valiter
-			f8[f8key] = &f8val
+		f9 := map[string]*string{}
+		for f9key, f9valiter := range resp.FargateProfile.Tags {
+			var f9val string
+			f9val = *f9valiter
+			f9[f9key] = &f9val
 		}
-		ko.Spec.Tags = f8
+		ko.Spec.Tags = f9
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -248,30 +277,59 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Spec.Name = nil
 	}
+	if resp.FargateProfile.Health != nil {
+		f4 := &svcapitypes.FargateProfileHealth{}
+		if resp.FargateProfile.Health.Issues != nil {
+			f4f0 := []*svcapitypes.FargateProfileIssue{}
+			for _, f4f0iter := range resp.FargateProfile.Health.Issues {
+				f4f0elem := &svcapitypes.FargateProfileIssue{}
+				if f4f0iter.Code != nil {
+					f4f0elem.Code = f4f0iter.Code
+				}
+				if f4f0iter.Message != nil {
+					f4f0elem.Message = f4f0iter.Message
+				}
+				if f4f0iter.ResourceIds != nil {
+					f4f0elemf2 := []*string{}
+					for _, f4f0elemf2iter := range f4f0iter.ResourceIds {
+						var f4f0elemf2elem string
+						f4f0elemf2elem = *f4f0elemf2iter
+						f4f0elemf2 = append(f4f0elemf2, &f4f0elemf2elem)
+					}
+					f4f0elem.ResourceIDs = f4f0elemf2
+				}
+				f4f0 = append(f4f0, f4f0elem)
+			}
+			f4.Issues = f4f0
+		}
+		ko.Status.Health = f4
+	} else {
+		ko.Status.Health = nil
+	}
 	if resp.FargateProfile.PodExecutionRoleArn != nil {
 		ko.Spec.PodExecutionRoleARN = resp.FargateProfile.PodExecutionRoleArn
 	} else {
 		ko.Spec.PodExecutionRoleARN = nil
 	}
 	if resp.FargateProfile.Selectors != nil {
-		f5 := []*svcapitypes.FargateProfileSelector{}
-		for _, f5iter := range resp.FargateProfile.Selectors {
-			f5elem := &svcapitypes.FargateProfileSelector{}
-			if f5iter.Labels != nil {
-				f5elemf0 := map[string]*string{}
-				for f5elemf0key, f5elemf0valiter := range f5iter.Labels {
-					var f5elemf0val string
-					f5elemf0val = *f5elemf0valiter
-					f5elemf0[f5elemf0key] = &f5elemf0val
+		f6 := []*svcapitypes.FargateProfileSelector{}
+		for _, f6iter := range resp.FargateProfile.Selectors {
+			f6elem := &svcapitypes.FargateProfileSelector{}
+			if f6iter.Labels != nil {
+				f6elemf0 := map[string]*string{}
+				for f6elemf0key, f6elemf0valiter := range f6iter.Labels {
+					var f6elemf0val string
+					f6elemf0val = *f6elemf0valiter
+					f6elemf0[f6elemf0key] = &f6elemf0val
 				}
-				f5elem.Labels = f5elemf0
+				f6elem.Labels = f6elemf0
 			}
-			if f5iter.Namespace != nil {
-				f5elem.Namespace = f5iter.Namespace
+			if f6iter.Namespace != nil {
+				f6elem.Namespace = f6iter.Namespace
 			}
-			f5 = append(f5, f5elem)
+			f6 = append(f6, f6elem)
 		}
-		ko.Spec.Selectors = f5
+		ko.Spec.Selectors = f6
 	} else {
 		ko.Spec.Selectors = nil
 	}
@@ -281,24 +339,24 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.Status = nil
 	}
 	if resp.FargateProfile.Subnets != nil {
-		f7 := []*string{}
-		for _, f7iter := range resp.FargateProfile.Subnets {
-			var f7elem string
-			f7elem = *f7iter
-			f7 = append(f7, &f7elem)
+		f8 := []*string{}
+		for _, f8iter := range resp.FargateProfile.Subnets {
+			var f8elem string
+			f8elem = *f8iter
+			f8 = append(f8, &f8elem)
 		}
-		ko.Spec.Subnets = f7
+		ko.Spec.Subnets = f8
 	} else {
 		ko.Spec.Subnets = nil
 	}
 	if resp.FargateProfile.Tags != nil {
-		f8 := map[string]*string{}
-		for f8key, f8valiter := range resp.FargateProfile.Tags {
-			var f8val string
-			f8val = *f8valiter
-			f8[f8key] = &f8val
+		f9 := map[string]*string{}
+		for f9key, f9valiter := range resp.FargateProfile.Tags {
+			var f9val string
+			f9val = *f9valiter
+			f9[f9key] = &f9val
 		}
-		ko.Spec.Tags = f8
+		ko.Spec.Tags = f9
 	} else {
 		ko.Spec.Tags = nil
 	}
