@@ -239,6 +239,26 @@ spec:
                 description: The Unix epoch timestamp at object creation.
                 format: date-time
                 type: string
+              health:
+                description: |-
+                  The health status of the Fargate profile. If there are issues with your Fargate
+                  profile's health, they are listed here.
+                properties:
+                  issues:
+                    items:
+                      description: An issue that is associated with the Fargate profile.
+                      properties:
+                        code:
+                          type: string
+                        message:
+                          type: string
+                        resourceIDs:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                type: object
               status:
                 description: The current status of the Fargate profile.
                 type: string

@@ -74,6 +74,10 @@ type FargateProfileStatus struct {
 	// The Unix epoch timestamp at object creation.
 	// +kubebuilder:validation:Optional
 	CreatedAt *metav1.Time `json:"createdAt,omitempty"`
+	// The health status of the Fargate profile. If there are issues with your Fargate
+	// profile's health, they are listed here.
+	// +kubebuilder:validation:Optional
+	Health *FargateProfileHealth `json:"health,omitempty"`
 	// The current status of the Fargate profile.
 	// +kubebuilder:validation:Optional
 	Status *string `json:"status,omitempty"`

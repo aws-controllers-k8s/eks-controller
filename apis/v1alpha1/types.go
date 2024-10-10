@@ -295,8 +295,12 @@ type Cluster_SDK struct {
 	//    as a prefix for either keys or values as it is reserved for Amazon Web
 	//    Services use. You cannot edit or delete tag keys or values with this prefix.
 	//    Tags with this prefix do not count against your tags per resource limit.
-	Tags    map[string]*string `json:"tags,omitempty"`
-	Version *string            `json:"version,omitempty"`
+	Tags map[string]*string `json:"tags,omitempty"`
+	// This value indicates if extended support is enabled or disabled for the cluster.
+	//
+	// Learn more about EKS Extended Support in the EKS User Guide. (https://docs.aws.amazon.com/eks/latest/userguide/extended-support-control.html)
+	UpgradePolicy *UpgradePolicyResponse `json:"upgradePolicy,omitempty"`
+	Version       *string                `json:"version,omitempty"`
 }
 
 // Compatibility information.
@@ -404,6 +408,19 @@ type ErrorDetail struct {
 	ResourceIDs  []*string `json:"resourceIDs,omitempty"`
 }
 
+// The health status of the Fargate profile. If there are issues with your Fargate
+// profile's health, they are listed here.
+type FargateProfileHealth struct {
+	Issues []*FargateProfileIssue `json:"issues,omitempty"`
+}
+
+// An issue that is associated with the Fargate profile.
+type FargateProfileIssue struct {
+	Code        *string   `json:"code,omitempty"`
+	Message     *string   `json:"message,omitempty"`
+	ResourceIDs []*string `json:"resourceIDs,omitempty"`
+}
+
 // An object representing an Fargate profile selector.
 type FargateProfileSelector struct {
 	Labels    map[string]*string `json:"labels,omitempty"`
@@ -412,10 +429,13 @@ type FargateProfileSelector struct {
 
 // An object representing an Fargate profile.
 type FargateProfile_SDK struct {
-	ClusterName         *string                   `json:"clusterName,omitempty"`
-	CreatedAt           *metav1.Time              `json:"createdAt,omitempty"`
-	FargateProfileARN   *string                   `json:"fargateProfileARN,omitempty"`
-	FargateProfileName  *string                   `json:"fargateProfileName,omitempty"`
+	ClusterName        *string      `json:"clusterName,omitempty"`
+	CreatedAt          *metav1.Time `json:"createdAt,omitempty"`
+	FargateProfileARN  *string      `json:"fargateProfileARN,omitempty"`
+	FargateProfileName *string      `json:"fargateProfileName,omitempty"`
+	// The health status of the Fargate profile. If there are issues with your Fargate
+	// profile's health, they are listed here.
+	Health              *FargateProfileHealth     `json:"health,omitempty"`
 	PodExecutionRoleARN *string                   `json:"podExecutionRoleARN,omitempty"`
 	Selectors           []*FargateProfileSelector `json:"selectors,omitempty"`
 	Status              *string                   `json:"status,omitempty"`
@@ -881,6 +901,23 @@ type UpdateParam struct {
 type UpdateTaintsPayload struct {
 	AddOrUpdateTaints []*Taint `json:"addOrUpdateTaints,omitempty"`
 	RemoveTaints      []*Taint `json:"removeTaints,omitempty"`
+}
+
+// The support policy to use for the cluster. Extended support allows you to
+// remain on specific Kubernetes versions for longer. Clusters in extended support
+// have higher costs. The default value is EXTENDED. Use STANDARD to disable
+// extended support.
+//
+// Learn more about EKS Extended Support in the EKS User Guide. (https://docs.aws.amazon.com/eks/latest/userguide/extended-support-control.html)
+type UpgradePolicyRequest struct {
+	SupportType *string `json:"supportType,omitempty"`
+}
+
+// This value indicates if extended support is enabled or disabled for the cluster.
+//
+// Learn more about EKS Extended Support in the EKS User Guide. (https://docs.aws.amazon.com/eks/latest/userguide/extended-support-control.html)
+type UpgradePolicyResponse struct {
+	SupportType *string `json:"supportType,omitempty"`
 }
 
 // An object representing the VPC configuration to use for an Amazon EKS cluster.

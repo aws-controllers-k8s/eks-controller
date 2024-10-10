@@ -185,6 +185,17 @@ func newResourceDelta(
 	if !ackcompare.MapStringStringEqual(ToACKTags(a.ko.Spec.Tags), ToACKTags(b.ko.Spec.Tags)) {
 		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.UpgradePolicy, b.ko.Spec.UpgradePolicy) {
+		delta.Add("Spec.UpgradePolicy", a.ko.Spec.UpgradePolicy, b.ko.Spec.UpgradePolicy)
+	} else if a.ko.Spec.UpgradePolicy != nil && b.ko.Spec.UpgradePolicy != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.UpgradePolicy.SupportType, b.ko.Spec.UpgradePolicy.SupportType) {
+			delta.Add("Spec.UpgradePolicy.SupportType", a.ko.Spec.UpgradePolicy.SupportType, b.ko.Spec.UpgradePolicy.SupportType)
+		} else if a.ko.Spec.UpgradePolicy.SupportType != nil && b.ko.Spec.UpgradePolicy.SupportType != nil {
+			if *a.ko.Spec.UpgradePolicy.SupportType != *b.ko.Spec.UpgradePolicy.SupportType {
+				delta.Add("Spec.UpgradePolicy.SupportType", a.ko.Spec.UpgradePolicy.SupportType, b.ko.Spec.UpgradePolicy.SupportType)
+			}
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Version, b.ko.Spec.Version) {
 		delta.Add("Spec.Version", a.ko.Spec.Version, b.ko.Spec.Version)
 	} else if a.ko.Spec.Version != nil && b.ko.Spec.Version != nil {
