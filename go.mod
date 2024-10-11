@@ -9,7 +9,7 @@ require (
 	github.com/aws-controllers-k8s/iam-controller v1.3.1
 	github.com/aws-controllers-k8s/kms-controller v1.0.9
 	github.com/aws-controllers-k8s/runtime v0.38.0
-	github.com/aws/aws-sdk-go v1.54.1
+	github.com/aws/aws-sdk-go v1.55.5
 	github.com/go-logr/logr v1.4.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4

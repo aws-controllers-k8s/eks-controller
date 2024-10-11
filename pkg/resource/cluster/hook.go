@@ -268,7 +268,18 @@ func (rm *resourceManager) customUpdate(
 		}
 		return returnClusterUpdating(updatedRes)
 	}
-
+	if delta.DifferentAt("Spec.UpgradePolicy") {
+		if err := rm.updateClusterUpgradePolicy(ctx, desired); err != nil {
+			awserr, ok := ackerr.AWSError(err)
+			// Check to see if we've raced an async update call and need to
+			// requeue
+			if ok && awserr.Code() == "ResourceInUseException" {
+				return nil, requeueAfterAsyncUpdate()
+			}
+			return nil, err
+		}
+		return returnClusterUpdating(updatedRes)
+	}
 	if delta.DifferentAt("Spec.EncryptionConfig") {
 		// Set a terminal condition if the observed cluster has encryption
 		// config and the desired cluster does not.
@@ -417,7 +428,28 @@ func (rm *resourceManager) updateAccessConfig(
 		Name:         r.ko.Spec.Name,
 		AccessConfig: newAccessConfig(r),
 	}
+	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
+	if err != nil {
+		return err
+	}
 
+	return nil
+}
+
+func (rm *resourceManager) updateClusterUpgradePolicy(
+	ctx context.Context,
+	r *resource,
+) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateClusterUpgradePolicy")
+	defer func() { exit(err) }()
+	input := &svcsdk.UpdateClusterConfigInput{
+		Name: r.ko.Spec.Name,
+		UpgradePolicy: &svcsdk.UpgradePolicyRequest{
+			SupportType: r.ko.Spec.UpgradePolicy.SupportType,
+		},
+	}
 	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
 	if err != nil {
