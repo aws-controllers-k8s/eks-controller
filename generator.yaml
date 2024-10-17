@@ -145,6 +145,8 @@ resources:
         template_path: hooks/identity_provider_config/sdk_create_post_set_output.go.tpl
       sdk_read_one_post_set_output:
         template_path: hooks/identity_provider_config/sdk_read_one_post_set_output.go.tpl
+      post_set_resource_identifiers:
+        template_path: hooks/identity_provider_config/post_set_resource_identifiers.go.tpl
     update_operation:
       custom_method_name: customUpdate
   Cluster:
