@@ -160,6 +160,15 @@ func (rm *resourceManager) clusterInUse(ctx context.Context, r *resource) (bool,
 	return (nodes != nil && len(nodes.Nodegroups) > 0), nil
 }
 
+func customPreCompare(
+	a *resource,
+	b *resource,
+) {
+	if a.ko.Spec.UpgradePolicy == nil && b.ko.Spec.UpgradePolicy != nil {
+		a.ko.Spec.UpgradePolicy = b.ko.Spec.UpgradePolicy.DeepCopy()
+	}
+}
+
 func (rm *resourceManager) customUpdate(
 	ctx context.Context,
 	desired *resource,

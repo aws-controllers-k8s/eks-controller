@@ -42,6 +42,7 @@ func newResourceDelta(
 		delta.Add("", a, b)
 		return delta
 	}
+	customPreCompare(a, b)
 
 	if ackcompare.HasNilDifference(a.ko.Spec.AccessConfig, b.ko.Spec.AccessConfig) {
 		delta.Add("Spec.AccessConfig", a.ko.Spec.AccessConfig, b.ko.Spec.AccessConfig)

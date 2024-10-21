@@ -195,6 +195,8 @@ resources:
         - MissingParameter
         - ValidationError
     hooks:
+      delta_pre_compare:
+        code: customPreCompare(a, b)
       sdk_create_post_set_output:
         template_path: hooks/cluster/sdk_create_post_set_output.go.tpl
       sdk_read_one_post_set_output:
