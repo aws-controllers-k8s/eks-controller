@@ -19,6 +19,7 @@ from acktest.aws.identity import get_region
 from acktest.bootstrapping import Resources, BootstrapFailureException
 from acktest.bootstrapping.iam import Role
 from acktest.bootstrapping.vpc import VPC
+from acktest.bootstrapping.eks import Cluster
 from e2e import bootstrap_directory
 from e2e.bootstrap_resources import BootstrapResources
 
@@ -54,6 +55,7 @@ def service_bootstrap() -> Resources:
             "eks.amazonaws.com",
         ),
         ClusterVPC=VPC(name_prefix="cluster-vpc", num_public_subnet=num_public_subnet, num_private_subnet=2),
+        AdoptionCluster=Cluster(name_prefix="adoption-cluster", num_managed_nodes=1)
     )
 
     try:

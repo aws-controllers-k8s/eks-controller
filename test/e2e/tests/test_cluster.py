@@ -139,6 +139,37 @@ def simple_cluster_version_minus_2(eks_client):
     except:
         pass
 
+@pytest.fixture
+def adoption_cluster(eks_client):
+    adopted_cluster = get_bootstrap_resources().AdoptionCluster
+    cluster_name = adopted_cluster.name
+    replacements = REPLACEMENT_VALUES.copy()
+    replacements["CLUSTER_ADOPTION_NAME"] = cluster_name
+    replacements["ADOPTION_POLICY"] = "adopt"
+    replacements["ADOPTION_FIELDS"] = f"{{\\\"name\\\": \\\"{cluster_name}\\\"}}"
+
+    resource_data = load_eks_resource(
+        "cluster_adoption",
+        additional_replacements=replacements,
+    )
+    logging.debug(resource_data)
+
+    # Create the k8s resource
+    ref = k8s.CustomResourceReference(
+        CRD_GROUP, CRD_VERSION, CLUSTER_RESOURCE_PLURAL,
+        cluster_name, namespace="default",
+    )
+    k8s.create_custom_resource(ref, resource_data)
+    cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=15)
+    assert cr is not None
+    assert k8s.get_resource_exists(ref)
+
+    yield (ref, cr)
+
+    _, deleted = k8s.delete_custom_resource(ref, 3, 10)
+    assert deleted
+
+
 @service_marker
 @pytest.mark.canary
 class TestCluster:
@@ -380,3 +411,41 @@ class TestCluster:
         # At this point, the cluster should be active again at version 1.28
         aws_res = eks_client.describe_cluster(name=cluster_name)
         assert aws_res["cluster"]["upgradePolicy"]["supportType"] == "STANDARD"
+    
+    def test_cluster_adopt_update(self, eks_client, adoption_cluster):
+        (ref, cr) = adoption_cluster
+
+        assert 'spec' in cr
+        assert 'name' in cr['spec']
+        cluster_name = cr["spec"]["name"]
+
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        assert 'upgradePolicy' in cr['spec']
+        assert 'supportType' in cr['spec']['upgradePolicy']
+        support_type = cr['spec']['upgradePolicy']['supportType']
+        if support_type == 'STANDARD':
+            support_type = 'EXTENDED'
+        else:
+            support_type = 'STANDARD'
+
+        # Update the cluster name
+        updates = {
+            "spec": {
+                "upgradePolicy": {
+                    "supportType": support_type
+                }
+            }
+        }
+
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS*2)
+
+        # Wait for the updating to become active again
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        # At this point, the cluster should be active again at version 1.28
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        assert aws_res
+        assert aws_res["cluster"]["upgradePolicy"]["supportType"] == support_type
+
