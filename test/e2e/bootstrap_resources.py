@@ -19,10 +19,12 @@ from dataclasses import dataclass
 from acktest.bootstrapping import Resources
 from acktest.bootstrapping.iam import Role
 from acktest.bootstrapping.vpc import VPC
+from acktest.bootstrapping.eks import Cluster
 from e2e import bootstrap_directory
 
 @dataclass
 class BootstrapResources(Resources):
+    AdoptionCluster: Cluster
     ClusterVPC: VPC
     ClusterRole: Role
     FargatePodRole: Role
