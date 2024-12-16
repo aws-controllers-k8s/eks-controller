@@ -113,6 +113,14 @@ func (r *resource) PopulateResourceFromAnnotation(fields map[string]string) erro
 	}
 	r.ko.Spec.ClusterName = &tmp
 
+	if f0, f0ok := fields["identityProviderConfigName"]; f0ok {
+		r.ko.Spec.OIDC = &svcapitypes.OIDCIdentityProviderConfigRequest{
+			IdentityProviderConfigName: &f0,
+		}
+	} else {
+		return ackerrors.MissingNameIdentifier
+	}
+
 	return nil
 }
 

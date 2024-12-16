@@ -147,6 +147,8 @@ resources:
         template_path: hooks/identity_provider_config/sdk_read_one_post_set_output.go.tpl
       post_set_resource_identifiers:
         template_path: hooks/identity_provider_config/post_set_resource_identifiers.go.tpl
+      post_populate_resource_from_annotation:
+        template_path: hooks/identity_provider_config/post_populate_resource_from_annotation.go.tpl
     update_operation:
       custom_method_name: customUpdate
   Cluster:
