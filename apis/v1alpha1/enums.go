@@ -18,20 +18,22 @@ package v1alpha1
 type AMITypes string
 
 const (
+	AMITypes_AL2023_ARM_64_STANDARD     AMITypes = "AL2023_ARM_64_STANDARD"
+	AMITypes_AL2023_x86_64_NEURON       AMITypes = "AL2023_x86_64_NEURON"
+	AMITypes_AL2023_x86_64_NVIDIA       AMITypes = "AL2023_x86_64_NVIDIA"
+	AMITypes_AL2023_x86_64_STANDARD     AMITypes = "AL2023_x86_64_STANDARD"
+	AMITypes_AL2_ARM_64                 AMITypes = "AL2_ARM_64"
 	AMITypes_AL2_x86_64                 AMITypes = "AL2_x86_64"
 	AMITypes_AL2_x86_64_GPU             AMITypes = "AL2_x86_64_GPU"
-	AMITypes_AL2_ARM_64                 AMITypes = "AL2_ARM_64"
-	AMITypes_CUSTOM                     AMITypes = "CUSTOM"
 	AMITypes_BOTTLEROCKET_ARM_64        AMITypes = "BOTTLEROCKET_ARM_64"
-	AMITypes_BOTTLEROCKET_x86_64        AMITypes = "BOTTLEROCKET_x86_64"
 	AMITypes_BOTTLEROCKET_ARM_64_NVIDIA AMITypes = "BOTTLEROCKET_ARM_64_NVIDIA"
+	AMITypes_BOTTLEROCKET_x86_64        AMITypes = "BOTTLEROCKET_x86_64"
 	AMITypes_BOTTLEROCKET_x86_64_NVIDIA AMITypes = "BOTTLEROCKET_x86_64_NVIDIA"
+	AMITypes_CUSTOM                     AMITypes = "CUSTOM"
 	AMITypes_WINDOWS_CORE_2019_x86_64   AMITypes = "WINDOWS_CORE_2019_x86_64"
-	AMITypes_WINDOWS_FULL_2019_x86_64   AMITypes = "WINDOWS_FULL_2019_x86_64"
 	AMITypes_WINDOWS_CORE_2022_x86_64   AMITypes = "WINDOWS_CORE_2022_x86_64"
+	AMITypes_WINDOWS_FULL_2019_x86_64   AMITypes = "WINDOWS_FULL_2019_x86_64"
 	AMITypes_WINDOWS_FULL_2022_x86_64   AMITypes = "WINDOWS_FULL_2022_x86_64"
-	AMITypes_AL2023_x86_64_STANDARD     AMITypes = "AL2023_x86_64_STANDARD"
-	AMITypes_AL2023_ARM_64_STANDARD     AMITypes = "AL2023_ARM_64_STANDARD"
 )
 
 type AccessScopeType string
@@ -44,29 +46,29 @@ const (
 type AddonIssueCode string
 
 const (
-	AddonIssueCode_AccessDenied                 AddonIssueCode = "AccessDenied"
-	AddonIssueCode_InternalFailure              AddonIssueCode = "InternalFailure"
-	AddonIssueCode_ClusterUnreachable           AddonIssueCode = "ClusterUnreachable"
-	AddonIssueCode_InsufficientNumberOfReplicas AddonIssueCode = "InsufficientNumberOfReplicas"
-	AddonIssueCode_ConfigurationConflict        AddonIssueCode = "ConfigurationConflict"
-	AddonIssueCode_AdmissionRequestDenied       AddonIssueCode = "AdmissionRequestDenied"
-	AddonIssueCode_UnsupportedAddonModification AddonIssueCode = "UnsupportedAddonModification"
-	AddonIssueCode_K8sResourceNotFound          AddonIssueCode = "K8sResourceNotFound"
-	AddonIssueCode_AddonSubscriptionNeeded      AddonIssueCode = "AddonSubscriptionNeeded"
-	AddonIssueCode_AddonPermissionFailure       AddonIssueCode = "AddonPermissionFailure"
+	AddonIssueCode_ACCESS_DENIED                   AddonIssueCode = "ACCESS_DENIED"
+	AddonIssueCode_ADDON_PERMISSION_FAILURE        AddonIssueCode = "ADDON_PERMISSION_FAILURE"
+	AddonIssueCode_ADDON_SUBSCRIPTION_NEEDED       AddonIssueCode = "ADDON_SUBSCRIPTION_NEEDED"
+	AddonIssueCode_ADMISSION_REQUEST_DENIED        AddonIssueCode = "ADMISSION_REQUEST_DENIED"
+	AddonIssueCode_CLUSTER_UNREACHABLE             AddonIssueCode = "CLUSTER_UNREACHABLE"
+	AddonIssueCode_CONFIGURATION_CONFLICT          AddonIssueCode = "CONFIGURATION_CONFLICT"
+	AddonIssueCode_INSUFFICIENT_NUMBER_OF_REPLICAS AddonIssueCode = "INSUFFICIENT_NUMBER_OF_REPLICAS"
+	AddonIssueCode_INTERNAL_FAILURE                AddonIssueCode = "INTERNAL_FAILURE"
+	AddonIssueCode_K8S_RESOURCE_NOT_FOUND          AddonIssueCode = "K8S_RESOURCE_NOT_FOUND"
+	AddonIssueCode_UNSUPPORTED_ADDON_MODIFICATION  AddonIssueCode = "UNSUPPORTED_ADDON_MODIFICATION"
 )
 
 type AddonStatus_SDK string
 
 const (
-	AddonStatus_SDK_CREATING      AddonStatus_SDK = "CREATING"
 	AddonStatus_SDK_ACTIVE        AddonStatus_SDK = "ACTIVE"
 	AddonStatus_SDK_CREATE_FAILED AddonStatus_SDK = "CREATE_FAILED"
-	AddonStatus_SDK_UPDATING      AddonStatus_SDK = "UPDATING"
-	AddonStatus_SDK_DELETING      AddonStatus_SDK = "DELETING"
-	AddonStatus_SDK_DELETE_FAILED AddonStatus_SDK = "DELETE_FAILED"
+	AddonStatus_SDK_CREATING      AddonStatus_SDK = "CREATING"
 	AddonStatus_SDK_DEGRADED      AddonStatus_SDK = "DEGRADED"
+	AddonStatus_SDK_DELETE_FAILED AddonStatus_SDK = "DELETE_FAILED"
+	AddonStatus_SDK_DELETING      AddonStatus_SDK = "DELETING"
 	AddonStatus_SDK_UPDATE_FAILED AddonStatus_SDK = "UPDATE_FAILED"
+	AddonStatus_SDK_UPDATING      AddonStatus_SDK = "UPDATING"
 )
 
 type AuthenticationMode string
@@ -80,9 +82,9 @@ const (
 type CapacityTypes string
 
 const (
+	CapacityTypes_CAPACITY_BLOCK CapacityTypes = "CAPACITY_BLOCK"
 	CapacityTypes_ON_DEMAND      CapacityTypes = "ON_DEMAND"
 	CapacityTypes_SPOT           CapacityTypes = "SPOT"
-	CapacityTypes_CAPACITY_BLOCK CapacityTypes = "CAPACITY_BLOCK"
 )
 
 type Category string
@@ -94,58 +96,58 @@ const (
 type ClusterIssueCode string
 
 const (
-	ClusterIssueCode_AccessDenied                ClusterIssueCode = "AccessDenied"
-	ClusterIssueCode_ClusterUnreachable          ClusterIssueCode = "ClusterUnreachable"
-	ClusterIssueCode_ConfigurationConflict       ClusterIssueCode = "ConfigurationConflict"
-	ClusterIssueCode_InternalFailure             ClusterIssueCode = "InternalFailure"
-	ClusterIssueCode_ResourceLimitExceeded       ClusterIssueCode = "ResourceLimitExceeded"
-	ClusterIssueCode_ResourceNotFound            ClusterIssueCode = "ResourceNotFound"
-	ClusterIssueCode_IamRoleNotFound             ClusterIssueCode = "IamRoleNotFound"
-	ClusterIssueCode_VpcNotFound                 ClusterIssueCode = "VpcNotFound"
-	ClusterIssueCode_InsufficientFreeAddresses   ClusterIssueCode = "InsufficientFreeAddresses"
-	ClusterIssueCode_Ec2ServiceNotSubscribed     ClusterIssueCode = "Ec2ServiceNotSubscribed"
-	ClusterIssueCode_Ec2SubnetNotFound           ClusterIssueCode = "Ec2SubnetNotFound"
-	ClusterIssueCode_Ec2SecurityGroupNotFound    ClusterIssueCode = "Ec2SecurityGroupNotFound"
-	ClusterIssueCode_KmsGrantRevoked             ClusterIssueCode = "KmsGrantRevoked"
-	ClusterIssueCode_KmsKeyNotFound              ClusterIssueCode = "KmsKeyNotFound"
-	ClusterIssueCode_KmsKeyMarkedForDeletion     ClusterIssueCode = "KmsKeyMarkedForDeletion"
-	ClusterIssueCode_KmsKeyDisabled              ClusterIssueCode = "KmsKeyDisabled"
-	ClusterIssueCode_StsRegionalEndpointDisabled ClusterIssueCode = "StsRegionalEndpointDisabled"
-	ClusterIssueCode_UnsupportedVersion          ClusterIssueCode = "UnsupportedVersion"
-	ClusterIssueCode_Other                       ClusterIssueCode = "Other"
+	ClusterIssueCode_ACCESS_DENIED                  ClusterIssueCode = "ACCESS_DENIED"
+	ClusterIssueCode_CLUSTER_UNREACHABLE            ClusterIssueCode = "CLUSTER_UNREACHABLE"
+	ClusterIssueCode_CONFIGURATION_CONFLICT         ClusterIssueCode = "CONFIGURATION_CONFLICT"
+	ClusterIssueCode_EC2_SECURITY_GROUP_NOT_FOUND   ClusterIssueCode = "EC2_SECURITY_GROUP_NOT_FOUND"
+	ClusterIssueCode_EC2_SERVICE_NOT_SUBSCRIBED     ClusterIssueCode = "EC2_SERVICE_NOT_SUBSCRIBED"
+	ClusterIssueCode_EC2_SUBNET_NOT_FOUND           ClusterIssueCode = "EC2_SUBNET_NOT_FOUND"
+	ClusterIssueCode_IAM_ROLE_NOT_FOUND             ClusterIssueCode = "IAM_ROLE_NOT_FOUND"
+	ClusterIssueCode_INSUFFICIENT_FREE_ADDRESSES    ClusterIssueCode = "INSUFFICIENT_FREE_ADDRESSES"
+	ClusterIssueCode_INTERNAL_FAILURE               ClusterIssueCode = "INTERNAL_FAILURE"
+	ClusterIssueCode_KMS_GRANT_REVOKED              ClusterIssueCode = "KMS_GRANT_REVOKED"
+	ClusterIssueCode_KMS_KEY_DISABLED               ClusterIssueCode = "KMS_KEY_DISABLED"
+	ClusterIssueCode_KMS_KEY_MARKED_FOR_DELETION    ClusterIssueCode = "KMS_KEY_MARKED_FOR_DELETION"
+	ClusterIssueCode_KMS_KEY_NOT_FOUND              ClusterIssueCode = "KMS_KEY_NOT_FOUND"
+	ClusterIssueCode_OTHER                          ClusterIssueCode = "OTHER"
+	ClusterIssueCode_RESOURCE_LIMIT_EXCEEDED        ClusterIssueCode = "RESOURCE_LIMIT_EXCEEDED"
+	ClusterIssueCode_RESOURCE_NOT_FOUND             ClusterIssueCode = "RESOURCE_NOT_FOUND"
+	ClusterIssueCode_STS_REGIONAL_ENDPOINT_DISABLED ClusterIssueCode = "STS_REGIONAL_ENDPOINT_DISABLED"
+	ClusterIssueCode_UNSUPPORTED_VERSION            ClusterIssueCode = "UNSUPPORTED_VERSION"
+	ClusterIssueCode_VPC_NOT_FOUND                  ClusterIssueCode = "VPC_NOT_FOUND"
 )
 
 type ClusterStatus_SDK string
 
 const (
-	ClusterStatus_SDK_CREATING ClusterStatus_SDK = "CREATING"
 	ClusterStatus_SDK_ACTIVE   ClusterStatus_SDK = "ACTIVE"
+	ClusterStatus_SDK_CREATING ClusterStatus_SDK = "CREATING"
 	ClusterStatus_SDK_DELETING ClusterStatus_SDK = "DELETING"
 	ClusterStatus_SDK_FAILED   ClusterStatus_SDK = "FAILED"
-	ClusterStatus_SDK_UPDATING ClusterStatus_SDK = "UPDATING"
 	ClusterStatus_SDK_PENDING  ClusterStatus_SDK = "PENDING"
+	ClusterStatus_SDK_UPDATING ClusterStatus_SDK = "UPDATING"
 )
 
 type ConfigStatus string
 
 const (
+	ConfigStatus_ACTIVE   ConfigStatus = "ACTIVE"
 	ConfigStatus_CREATING ConfigStatus = "CREATING"
 	ConfigStatus_DELETING ConfigStatus = "DELETING"
-	ConfigStatus_ACTIVE   ConfigStatus = "ACTIVE"
 )
 
 type ConnectorConfigProvider string
 
 const (
-	ConnectorConfigProvider_EKS_ANYWHERE ConnectorConfigProvider = "EKS_ANYWHERE"
-	ConnectorConfigProvider_ANTHOS       ConnectorConfigProvider = "ANTHOS"
-	ConnectorConfigProvider_GKE          ConnectorConfigProvider = "GKE"
 	ConnectorConfigProvider_AKS          ConnectorConfigProvider = "AKS"
-	ConnectorConfigProvider_OPENSHIFT    ConnectorConfigProvider = "OPENSHIFT"
-	ConnectorConfigProvider_TANZU        ConnectorConfigProvider = "TANZU"
-	ConnectorConfigProvider_RANCHER      ConnectorConfigProvider = "RANCHER"
+	ConnectorConfigProvider_ANTHOS       ConnectorConfigProvider = "ANTHOS"
 	ConnectorConfigProvider_EC2          ConnectorConfigProvider = "EC2"
+	ConnectorConfigProvider_EKS_ANYWHERE ConnectorConfigProvider = "EKS_ANYWHERE"
+	ConnectorConfigProvider_GKE          ConnectorConfigProvider = "GKE"
+	ConnectorConfigProvider_OPENSHIFT    ConnectorConfigProvider = "OPENSHIFT"
 	ConnectorConfigProvider_OTHER        ConnectorConfigProvider = "OTHER"
+	ConnectorConfigProvider_RANCHER      ConnectorConfigProvider = "RANCHER"
+	ConnectorConfigProvider_TANZU        ConnectorConfigProvider = "TANZU"
 )
 
 type EKSAnywhereSubscriptionLicenseType string
@@ -157,12 +159,12 @@ const (
 type EKSAnywhereSubscriptionStatus string
 
 const (
-	EKSAnywhereSubscriptionStatus_CREATING EKSAnywhereSubscriptionStatus = "CREATING"
 	EKSAnywhereSubscriptionStatus_ACTIVE   EKSAnywhereSubscriptionStatus = "ACTIVE"
-	EKSAnywhereSubscriptionStatus_UPDATING EKSAnywhereSubscriptionStatus = "UPDATING"
-	EKSAnywhereSubscriptionStatus_EXPIRING EKSAnywhereSubscriptionStatus = "EXPIRING"
-	EKSAnywhereSubscriptionStatus_EXPIRED  EKSAnywhereSubscriptionStatus = "EXPIRED"
+	EKSAnywhereSubscriptionStatus_CREATING EKSAnywhereSubscriptionStatus = "CREATING"
 	EKSAnywhereSubscriptionStatus_DELETING EKSAnywhereSubscriptionStatus = "DELETING"
+	EKSAnywhereSubscriptionStatus_EXPIRED  EKSAnywhereSubscriptionStatus = "EXPIRED"
+	EKSAnywhereSubscriptionStatus_EXPIRING EKSAnywhereSubscriptionStatus = "EXPIRING"
+	EKSAnywhereSubscriptionStatus_UPDATING EKSAnywhereSubscriptionStatus = "UPDATING"
 )
 
 type EKSAnywhereSubscriptionTermUnit string
@@ -174,200 +176,207 @@ const (
 type ErrorCode string
 
 const (
-	ErrorCode_SubnetNotFound               ErrorCode = "SubnetNotFound"
-	ErrorCode_SecurityGroupNotFound        ErrorCode = "SecurityGroupNotFound"
-	ErrorCode_EniLimitReached              ErrorCode = "EniLimitReached"
-	ErrorCode_IpNotAvailable               ErrorCode = "IpNotAvailable"
-	ErrorCode_AccessDenied                 ErrorCode = "AccessDenied"
-	ErrorCode_OperationNotPermitted        ErrorCode = "OperationNotPermitted"
-	ErrorCode_VpcIdNotFound                ErrorCode = "VpcIdNotFound"
-	ErrorCode_Unknown                      ErrorCode = "Unknown"
-	ErrorCode_NodeCreationFailure          ErrorCode = "NodeCreationFailure"
-	ErrorCode_PodEvictionFailure           ErrorCode = "PodEvictionFailure"
-	ErrorCode_InsufficientFreeAddresses    ErrorCode = "InsufficientFreeAddresses"
-	ErrorCode_ClusterUnreachable           ErrorCode = "ClusterUnreachable"
-	ErrorCode_InsufficientNumberOfReplicas ErrorCode = "InsufficientNumberOfReplicas"
-	ErrorCode_ConfigurationConflict        ErrorCode = "ConfigurationConflict"
-	ErrorCode_AdmissionRequestDenied       ErrorCode = "AdmissionRequestDenied"
-	ErrorCode_UnsupportedAddonModification ErrorCode = "UnsupportedAddonModification"
-	ErrorCode_K8sResourceNotFound          ErrorCode = "K8sResourceNotFound"
+	ErrorCode_ACCESS_DENIED                   ErrorCode = "ACCESS_DENIED"
+	ErrorCode_ADMISSION_REQUEST_DENIED        ErrorCode = "ADMISSION_REQUEST_DENIED"
+	ErrorCode_CLUSTER_UNREACHABLE             ErrorCode = "CLUSTER_UNREACHABLE"
+	ErrorCode_CONFIGURATION_CONFLICT          ErrorCode = "CONFIGURATION_CONFLICT"
+	ErrorCode_ENI_LIMIT_REACHED               ErrorCode = "ENI_LIMIT_REACHED"
+	ErrorCode_INSUFFICIENT_FREE_ADDRESSES     ErrorCode = "INSUFFICIENT_FREE_ADDRESSES"
+	ErrorCode_INSUFFICIENT_NUMBER_OF_REPLICAS ErrorCode = "INSUFFICIENT_NUMBER_OF_REPLICAS"
+	ErrorCode_IP_NOT_AVAILABLE                ErrorCode = "IP_NOT_AVAILABLE"
+	ErrorCode_K8S_RESOURCE_NOT_FOUND          ErrorCode = "K8S_RESOURCE_NOT_FOUND"
+	ErrorCode_NODE_CREATION_FAILURE           ErrorCode = "NODE_CREATION_FAILURE"
+	ErrorCode_OPERATION_NOT_PERMITTED         ErrorCode = "OPERATION_NOT_PERMITTED"
+	ErrorCode_POD_EVICTION_FAILURE            ErrorCode = "POD_EVICTION_FAILURE"
+	ErrorCode_SECURITY_GROUP_NOT_FOUND        ErrorCode = "SECURITY_GROUP_NOT_FOUND"
+	ErrorCode_SUBNET_NOT_FOUND                ErrorCode = "SUBNET_NOT_FOUND"
+	ErrorCode_UNKNOWN                         ErrorCode = "UNKNOWN"
+	ErrorCode_UNSUPPORTED_ADDON_MODIFICATION  ErrorCode = "UNSUPPORTED_ADDON_MODIFICATION"
+	ErrorCode_VPC_ID_NOT_FOUND                ErrorCode = "VPC_ID_NOT_FOUND"
 )
 
 type FargateProfileIssueCode string
 
 const (
-	FargateProfileIssueCode_PodExecutionRoleAlreadyInUse FargateProfileIssueCode = "PodExecutionRoleAlreadyInUse"
-	FargateProfileIssueCode_AccessDenied                 FargateProfileIssueCode = "AccessDenied"
-	FargateProfileIssueCode_ClusterUnreachable           FargateProfileIssueCode = "ClusterUnreachable"
-	FargateProfileIssueCode_InternalFailure              FargateProfileIssueCode = "InternalFailure"
+	FargateProfileIssueCode_ACCESS_DENIED                     FargateProfileIssueCode = "ACCESS_DENIED"
+	FargateProfileIssueCode_CLUSTER_UNREACHABLE               FargateProfileIssueCode = "CLUSTER_UNREACHABLE"
+	FargateProfileIssueCode_INTERNAL_FAILURE                  FargateProfileIssueCode = "INTERNAL_FAILURE"
+	FargateProfileIssueCode_POD_EXECUTION_ROLE_ALREADY_IN_USE FargateProfileIssueCode = "POD_EXECUTION_ROLE_ALREADY_IN_USE"
 )
 
 type FargateProfileStatus_SDK string
 
 const (
-	FargateProfileStatus_SDK_CREATING      FargateProfileStatus_SDK = "CREATING"
 	FargateProfileStatus_SDK_ACTIVE        FargateProfileStatus_SDK = "ACTIVE"
-	FargateProfileStatus_SDK_DELETING      FargateProfileStatus_SDK = "DELETING"
 	FargateProfileStatus_SDK_CREATE_FAILED FargateProfileStatus_SDK = "CREATE_FAILED"
+	FargateProfileStatus_SDK_CREATING      FargateProfileStatus_SDK = "CREATING"
 	FargateProfileStatus_SDK_DELETE_FAILED FargateProfileStatus_SDK = "DELETE_FAILED"
+	FargateProfileStatus_SDK_DELETING      FargateProfileStatus_SDK = "DELETING"
 )
 
 type IPFamily string
 
 const (
-	IPFamily_ipv4 IPFamily = "ipv4"
-	IPFamily_ipv6 IPFamily = "ipv6"
+	IPFamily_IPV4 IPFamily = "IPV4"
+	IPFamily_IPV6 IPFamily = "IPV6"
 )
 
 type InsightStatusValue string
 
 const (
-	InsightStatusValue_PASSING InsightStatusValue = "PASSING"
-	InsightStatusValue_WARNING InsightStatusValue = "WARNING"
 	InsightStatusValue_ERROR   InsightStatusValue = "ERROR"
+	InsightStatusValue_PASSING InsightStatusValue = "PASSING"
 	InsightStatusValue_UNKNOWN InsightStatusValue = "UNKNOWN"
+	InsightStatusValue_WARNING InsightStatusValue = "WARNING"
 )
 
 type LogType string
 
 const (
-	LogType_api               LogType = "api"
-	LogType_audit             LogType = "audit"
-	LogType_authenticator     LogType = "authenticator"
-	LogType_controllerManager LogType = "controllerManager"
-	LogType_scheduler         LogType = "scheduler"
+	LogType_API                LogType = "API"
+	LogType_AUDIT              LogType = "AUDIT"
+	LogType_AUTHENTICATOR      LogType = "AUTHENTICATOR"
+	LogType_CONTROLLER_MANAGER LogType = "CONTROLLER_MANAGER"
+	LogType_SCHEDULER          LogType = "SCHEDULER"
 )
 
 type NodegroupIssueCode string
 
 const (
-	NodegroupIssueCode_AutoScalingGroupNotFound                 NodegroupIssueCode = "AutoScalingGroupNotFound"
-	NodegroupIssueCode_AutoScalingGroupInvalidConfiguration     NodegroupIssueCode = "AutoScalingGroupInvalidConfiguration"
-	NodegroupIssueCode_Ec2SecurityGroupNotFound                 NodegroupIssueCode = "Ec2SecurityGroupNotFound"
-	NodegroupIssueCode_Ec2SecurityGroupDeletionFailure          NodegroupIssueCode = "Ec2SecurityGroupDeletionFailure"
-	NodegroupIssueCode_Ec2LaunchTemplateNotFound                NodegroupIssueCode = "Ec2LaunchTemplateNotFound"
-	NodegroupIssueCode_Ec2LaunchTemplateVersionMismatch         NodegroupIssueCode = "Ec2LaunchTemplateVersionMismatch"
-	NodegroupIssueCode_Ec2SubnetNotFound                        NodegroupIssueCode = "Ec2SubnetNotFound"
-	NodegroupIssueCode_Ec2SubnetInvalidConfiguration            NodegroupIssueCode = "Ec2SubnetInvalidConfiguration"
-	NodegroupIssueCode_IamInstanceProfileNotFound               NodegroupIssueCode = "IamInstanceProfileNotFound"
-	NodegroupIssueCode_Ec2SubnetMissingIpv6Assignment           NodegroupIssueCode = "Ec2SubnetMissingIpv6Assignment"
-	NodegroupIssueCode_IamLimitExceeded                         NodegroupIssueCode = "IamLimitExceeded"
-	NodegroupIssueCode_IamNodeRoleNotFound                      NodegroupIssueCode = "IamNodeRoleNotFound"
-	NodegroupIssueCode_NodeCreationFailure                      NodegroupIssueCode = "NodeCreationFailure"
-	NodegroupIssueCode_AsgInstanceLaunchFailures                NodegroupIssueCode = "AsgInstanceLaunchFailures"
-	NodegroupIssueCode_InstanceLimitExceeded                    NodegroupIssueCode = "InstanceLimitExceeded"
-	NodegroupIssueCode_InsufficientFreeAddresses                NodegroupIssueCode = "InsufficientFreeAddresses"
-	NodegroupIssueCode_AccessDenied                             NodegroupIssueCode = "AccessDenied"
-	NodegroupIssueCode_InternalFailure                          NodegroupIssueCode = "InternalFailure"
-	NodegroupIssueCode_ClusterUnreachable                       NodegroupIssueCode = "ClusterUnreachable"
-	NodegroupIssueCode_AmiIdNotFound                            NodegroupIssueCode = "AmiIdNotFound"
-	NodegroupIssueCode_AutoScalingGroupOptInRequired            NodegroupIssueCode = "AutoScalingGroupOptInRequired"
-	NodegroupIssueCode_AutoScalingGroupRateLimitExceeded        NodegroupIssueCode = "AutoScalingGroupRateLimitExceeded"
-	NodegroupIssueCode_Ec2LaunchTemplateDeletionFailure         NodegroupIssueCode = "Ec2LaunchTemplateDeletionFailure"
-	NodegroupIssueCode_Ec2LaunchTemplateInvalidConfiguration    NodegroupIssueCode = "Ec2LaunchTemplateInvalidConfiguration"
-	NodegroupIssueCode_Ec2LaunchTemplateMaxLimitExceeded        NodegroupIssueCode = "Ec2LaunchTemplateMaxLimitExceeded"
-	NodegroupIssueCode_Ec2SubnetListTooLong                     NodegroupIssueCode = "Ec2SubnetListTooLong"
-	NodegroupIssueCode_IamThrottling                            NodegroupIssueCode = "IamThrottling"
-	NodegroupIssueCode_NodeTerminationFailure                   NodegroupIssueCode = "NodeTerminationFailure"
-	NodegroupIssueCode_PodEvictionFailure                       NodegroupIssueCode = "PodEvictionFailure"
-	NodegroupIssueCode_SourceEc2LaunchTemplateNotFound          NodegroupIssueCode = "SourceEc2LaunchTemplateNotFound"
-	NodegroupIssueCode_LimitExceeded                            NodegroupIssueCode = "LimitExceeded"
-	NodegroupIssueCode_Unknown                                  NodegroupIssueCode = "Unknown"
-	NodegroupIssueCode_AutoScalingGroupInstanceRefreshActive    NodegroupIssueCode = "AutoScalingGroupInstanceRefreshActive"
-	NodegroupIssueCode_KubernetesLabelInvalid                   NodegroupIssueCode = "KubernetesLabelInvalid"
-	NodegroupIssueCode_Ec2LaunchTemplateVersionMaxLimitExceeded NodegroupIssueCode = "Ec2LaunchTemplateVersionMaxLimitExceeded"
+	NodegroupIssueCode_ACCESS_DENIED                                  NodegroupIssueCode = "ACCESS_DENIED"
+	NodegroupIssueCode_AMI_ID_NOT_FOUND                               NodegroupIssueCode = "AMI_ID_NOT_FOUND"
+	NodegroupIssueCode_ASG_INSTANCE_LAUNCH_FAILURES                   NodegroupIssueCode = "ASG_INSTANCE_LAUNCH_FAILURES"
+	NodegroupIssueCode_AUTO_SCALING_GROUP_INSTANCE_REFRESH_ACTIVE     NodegroupIssueCode = "AUTO_SCALING_GROUP_INSTANCE_REFRESH_ACTIVE"
+	NodegroupIssueCode_AUTO_SCALING_GROUP_INVALID_CONFIGURATION       NodegroupIssueCode = "AUTO_SCALING_GROUP_INVALID_CONFIGURATION"
+	NodegroupIssueCode_AUTO_SCALING_GROUP_NOT_FOUND                   NodegroupIssueCode = "AUTO_SCALING_GROUP_NOT_FOUND"
+	NodegroupIssueCode_AUTO_SCALING_GROUP_OPT_IN_REQUIRED             NodegroupIssueCode = "AUTO_SCALING_GROUP_OPT_IN_REQUIRED"
+	NodegroupIssueCode_AUTO_SCALING_GROUP_RATE_LIMIT_EXCEEDED         NodegroupIssueCode = "AUTO_SCALING_GROUP_RATE_LIMIT_EXCEEDED"
+	NodegroupIssueCode_CLUSTER_UNREACHABLE                            NodegroupIssueCode = "CLUSTER_UNREACHABLE"
+	NodegroupIssueCode_EC2_INSTANCE_TYPE_DOES_NOT_EXIST               NodegroupIssueCode = "EC2_INSTANCE_TYPE_DOES_NOT_EXIST"
+	NodegroupIssueCode_EC2_LAUNCH_TEMPLATE_DELETION_FAILURE           NodegroupIssueCode = "EC2_LAUNCH_TEMPLATE_DELETION_FAILURE"
+	NodegroupIssueCode_EC2_LAUNCH_TEMPLATE_INVALID_CONFIGURATION      NodegroupIssueCode = "EC2_LAUNCH_TEMPLATE_INVALID_CONFIGURATION"
+	NodegroupIssueCode_EC2_LAUNCH_TEMPLATE_MAX_LIMIT_EXCEEDED         NodegroupIssueCode = "EC2_LAUNCH_TEMPLATE_MAX_LIMIT_EXCEEDED"
+	NodegroupIssueCode_EC2_LAUNCH_TEMPLATE_NOT_FOUND                  NodegroupIssueCode = "EC2_LAUNCH_TEMPLATE_NOT_FOUND"
+	NodegroupIssueCode_EC2_LAUNCH_TEMPLATE_VERSION_MAX_LIMIT_EXCEEDED NodegroupIssueCode = "EC2_LAUNCH_TEMPLATE_VERSION_MAX_LIMIT_EXCEEDED"
+	NodegroupIssueCode_EC2_LAUNCH_TEMPLATE_VERSION_MISMATCH           NodegroupIssueCode = "EC2_LAUNCH_TEMPLATE_VERSION_MISMATCH"
+	NodegroupIssueCode_EC2_SECURITY_GROUP_DELETION_FAILURE            NodegroupIssueCode = "EC2_SECURITY_GROUP_DELETION_FAILURE"
+	NodegroupIssueCode_EC2_SECURITY_GROUP_NOT_FOUND                   NodegroupIssueCode = "EC2_SECURITY_GROUP_NOT_FOUND"
+	NodegroupIssueCode_EC2_SUBNET_INVALID_CONFIGURATION               NodegroupIssueCode = "EC2_SUBNET_INVALID_CONFIGURATION"
+	NodegroupIssueCode_EC2_SUBNET_LIST_TOO_LONG                       NodegroupIssueCode = "EC2_SUBNET_LIST_TOO_LONG"
+	NodegroupIssueCode_EC2_SUBNET_MISSING_IPV6_ASSIGNMENT             NodegroupIssueCode = "EC2_SUBNET_MISSING_IPV6_ASSIGNMENT"
+	NodegroupIssueCode_EC2_SUBNET_NOT_FOUND                           NodegroupIssueCode = "EC2_SUBNET_NOT_FOUND"
+	NodegroupIssueCode_IAM_INSTANCE_PROFILE_NOT_FOUND                 NodegroupIssueCode = "IAM_INSTANCE_PROFILE_NOT_FOUND"
+	NodegroupIssueCode_IAM_LIMIT_EXCEEDED                             NodegroupIssueCode = "IAM_LIMIT_EXCEEDED"
+	NodegroupIssueCode_IAM_NODE_ROLE_NOT_FOUND                        NodegroupIssueCode = "IAM_NODE_ROLE_NOT_FOUND"
+	NodegroupIssueCode_IAM_THROTTLING                                 NodegroupIssueCode = "IAM_THROTTLING"
+	NodegroupIssueCode_INSTANCE_LIMIT_EXCEEDED                        NodegroupIssueCode = "INSTANCE_LIMIT_EXCEEDED"
+	NodegroupIssueCode_INSUFFICIENT_FREE_ADDRESSES                    NodegroupIssueCode = "INSUFFICIENT_FREE_ADDRESSES"
+	NodegroupIssueCode_INTERNAL_FAILURE                               NodegroupIssueCode = "INTERNAL_FAILURE"
+	NodegroupIssueCode_KUBERNETES_LABEL_INVALID                       NodegroupIssueCode = "KUBERNETES_LABEL_INVALID"
+	NodegroupIssueCode_LIMIT_EXCEEDED                                 NodegroupIssueCode = "LIMIT_EXCEEDED"
+	NodegroupIssueCode_NODE_CREATION_FAILURE                          NodegroupIssueCode = "NODE_CREATION_FAILURE"
+	NodegroupIssueCode_NODE_TERMINATION_FAILURE                       NodegroupIssueCode = "NODE_TERMINATION_FAILURE"
+	NodegroupIssueCode_POD_EVICTION_FAILURE                           NodegroupIssueCode = "POD_EVICTION_FAILURE"
+	NodegroupIssueCode_SOURCE_EC2_LAUNCH_TEMPLATE_NOT_FOUND           NodegroupIssueCode = "SOURCE_EC2_LAUNCH_TEMPLATE_NOT_FOUND"
+	NodegroupIssueCode_UNKNOWN                                        NodegroupIssueCode = "UNKNOWN"
 )
 
 type NodegroupStatus_SDK string
 
 const (
-	NodegroupStatus_SDK_CREATING      NodegroupStatus_SDK = "CREATING"
 	NodegroupStatus_SDK_ACTIVE        NodegroupStatus_SDK = "ACTIVE"
-	NodegroupStatus_SDK_UPDATING      NodegroupStatus_SDK = "UPDATING"
-	NodegroupStatus_SDK_DELETING      NodegroupStatus_SDK = "DELETING"
 	NodegroupStatus_SDK_CREATE_FAILED NodegroupStatus_SDK = "CREATE_FAILED"
-	NodegroupStatus_SDK_DELETE_FAILED NodegroupStatus_SDK = "DELETE_FAILED"
+	NodegroupStatus_SDK_CREATING      NodegroupStatus_SDK = "CREATING"
 	NodegroupStatus_SDK_DEGRADED      NodegroupStatus_SDK = "DEGRADED"
+	NodegroupStatus_SDK_DELETE_FAILED NodegroupStatus_SDK = "DELETE_FAILED"
+	NodegroupStatus_SDK_DELETING      NodegroupStatus_SDK = "DELETING"
+	NodegroupStatus_SDK_UPDATING      NodegroupStatus_SDK = "UPDATING"
 )
 
 type ResolveConflicts string
 
 const (
-	ResolveConflicts_OVERWRITE ResolveConflicts = "OVERWRITE"
 	ResolveConflicts_NONE      ResolveConflicts = "NONE"
+	ResolveConflicts_OVERWRITE ResolveConflicts = "OVERWRITE"
 	ResolveConflicts_PRESERVE  ResolveConflicts = "PRESERVE"
 )
 
 type SupportType string
 
 const (
-	SupportType_STANDARD SupportType = "STANDARD"
 	SupportType_EXTENDED SupportType = "EXTENDED"
+	SupportType_STANDARD SupportType = "STANDARD"
 )
 
 type TaintEffect string
 
 const (
-	TaintEffect_NO_SCHEDULE        TaintEffect = "NO_SCHEDULE"
 	TaintEffect_NO_EXECUTE         TaintEffect = "NO_EXECUTE"
+	TaintEffect_NO_SCHEDULE        TaintEffect = "NO_SCHEDULE"
 	TaintEffect_PREFER_NO_SCHEDULE TaintEffect = "PREFER_NO_SCHEDULE"
 )
 
 type UpdateParamType string
 
 const (
-	UpdateParamType_Version                  UpdateParamType = "Version"
-	UpdateParamType_PlatformVersion          UpdateParamType = "PlatformVersion"
-	UpdateParamType_EndpointPrivateAccess    UpdateParamType = "EndpointPrivateAccess"
-	UpdateParamType_EndpointPublicAccess     UpdateParamType = "EndpointPublicAccess"
-	UpdateParamType_ClusterLogging           UpdateParamType = "ClusterLogging"
-	UpdateParamType_DesiredSize              UpdateParamType = "DesiredSize"
-	UpdateParamType_LabelsToAdd              UpdateParamType = "LabelsToAdd"
-	UpdateParamType_LabelsToRemove           UpdateParamType = "LabelsToRemove"
-	UpdateParamType_TaintsToAdd              UpdateParamType = "TaintsToAdd"
-	UpdateParamType_TaintsToRemove           UpdateParamType = "TaintsToRemove"
-	UpdateParamType_MaxSize                  UpdateParamType = "MaxSize"
-	UpdateParamType_MinSize                  UpdateParamType = "MinSize"
-	UpdateParamType_ReleaseVersion           UpdateParamType = "ReleaseVersion"
-	UpdateParamType_PublicAccessCidrs        UpdateParamType = "PublicAccessCidrs"
-	UpdateParamType_LaunchTemplateName       UpdateParamType = "LaunchTemplateName"
-	UpdateParamType_LaunchTemplateVersion    UpdateParamType = "LaunchTemplateVersion"
-	UpdateParamType_IdentityProviderConfig   UpdateParamType = "IdentityProviderConfig"
-	UpdateParamType_EncryptionConfig         UpdateParamType = "EncryptionConfig"
-	UpdateParamType_AddonVersion             UpdateParamType = "AddonVersion"
-	UpdateParamType_ServiceAccountRoleArn    UpdateParamType = "ServiceAccountRoleArn"
-	UpdateParamType_ResolveConflicts         UpdateParamType = "ResolveConflicts"
-	UpdateParamType_MaxUnavailable           UpdateParamType = "MaxUnavailable"
-	UpdateParamType_MaxUnavailablePercentage UpdateParamType = "MaxUnavailablePercentage"
-	UpdateParamType_ConfigurationValues      UpdateParamType = "ConfigurationValues"
-	UpdateParamType_SecurityGroups           UpdateParamType = "SecurityGroups"
-	UpdateParamType_Subnets                  UpdateParamType = "Subnets"
-	UpdateParamType_AuthenticationMode       UpdateParamType = "AuthenticationMode"
-	UpdateParamType_PodIdentityAssociations  UpdateParamType = "PodIdentityAssociations"
-	UpdateParamType_UpgradePolicy            UpdateParamType = "UpgradePolicy"
+	UpdateParamType_ADDON_VERSION              UpdateParamType = "ADDON_VERSION"
+	UpdateParamType_AUTHENTICATION_MODE        UpdateParamType = "AUTHENTICATION_MODE"
+	UpdateParamType_CLUSTER_LOGGING            UpdateParamType = "CLUSTER_LOGGING"
+	UpdateParamType_COMPUTE_CONFIG             UpdateParamType = "COMPUTE_CONFIG"
+	UpdateParamType_CONFIGURATION_VALUES       UpdateParamType = "CONFIGURATION_VALUES"
+	UpdateParamType_DESIRED_SIZE               UpdateParamType = "DESIRED_SIZE"
+	UpdateParamType_ENCRYPTION_CONFIG          UpdateParamType = "ENCRYPTION_CONFIG"
+	UpdateParamType_ENDPOINT_PRIVATE_ACCESS    UpdateParamType = "ENDPOINT_PRIVATE_ACCESS"
+	UpdateParamType_ENDPOINT_PUBLIC_ACCESS     UpdateParamType = "ENDPOINT_PUBLIC_ACCESS"
+	UpdateParamType_IDENTITY_PROVIDER_CONFIG   UpdateParamType = "IDENTITY_PROVIDER_CONFIG"
+	UpdateParamType_KUBERNETES_NETWORK_CONFIG  UpdateParamType = "KUBERNETES_NETWORK_CONFIG"
+	UpdateParamType_LABELS_TO_ADD              UpdateParamType = "LABELS_TO_ADD"
+	UpdateParamType_LABELS_TO_REMOVE           UpdateParamType = "LABELS_TO_REMOVE"
+	UpdateParamType_LAUNCH_TEMPLATE_NAME       UpdateParamType = "LAUNCH_TEMPLATE_NAME"
+	UpdateParamType_LAUNCH_TEMPLATE_VERSION    UpdateParamType = "LAUNCH_TEMPLATE_VERSION"
+	UpdateParamType_MAX_SIZE                   UpdateParamType = "MAX_SIZE"
+	UpdateParamType_MAX_UNAVAILABLE            UpdateParamType = "MAX_UNAVAILABLE"
+	UpdateParamType_MAX_UNAVAILABLE_PERCENTAGE UpdateParamType = "MAX_UNAVAILABLE_PERCENTAGE"
+	UpdateParamType_MIN_SIZE                   UpdateParamType = "MIN_SIZE"
+	UpdateParamType_PLATFORM_VERSION           UpdateParamType = "PLATFORM_VERSION"
+	UpdateParamType_POD_IDENTITY_ASSOCIATIONS  UpdateParamType = "POD_IDENTITY_ASSOCIATIONS"
+	UpdateParamType_PUBLIC_ACCESS_CIDRS        UpdateParamType = "PUBLIC_ACCESS_CIDRS"
+	UpdateParamType_RELEASE_VERSION            UpdateParamType = "RELEASE_VERSION"
+	UpdateParamType_RESOLVE_CONFLICTS          UpdateParamType = "RESOLVE_CONFLICTS"
+	UpdateParamType_SECURITY_GROUPS            UpdateParamType = "SECURITY_GROUPS"
+	UpdateParamType_SERVICE_ACCOUNT_ROLE_ARN   UpdateParamType = "SERVICE_ACCOUNT_ROLE_ARN"
+	UpdateParamType_STORAGE_CONFIG             UpdateParamType = "STORAGE_CONFIG"
+	UpdateParamType_SUBNETS                    UpdateParamType = "SUBNETS"
+	UpdateParamType_TAINTS_TO_ADD              UpdateParamType = "TAINTS_TO_ADD"
+	UpdateParamType_TAINTS_TO_REMOVE           UpdateParamType = "TAINTS_TO_REMOVE"
+	UpdateParamType_UPGRADE_POLICY             UpdateParamType = "UPGRADE_POLICY"
+	UpdateParamType_VERSION                    UpdateParamType = "VERSION"
+	UpdateParamType_ZONAL_SHIFT_CONFIG         UpdateParamType = "ZONAL_SHIFT_CONFIG"
 )
 
 type UpdateStatus string
 
 const (
-	UpdateStatus_InProgress UpdateStatus = "InProgress"
-	UpdateStatus_Failed     UpdateStatus = "Failed"
-	UpdateStatus_Cancelled  UpdateStatus = "Cancelled"
-	UpdateStatus_Successful UpdateStatus = "Successful"
+	UpdateStatus_CANCELLED   UpdateStatus = "CANCELLED"
+	UpdateStatus_FAILED      UpdateStatus = "FAILED"
+	UpdateStatus_IN_PROGRESS UpdateStatus = "IN_PROGRESS"
+	UpdateStatus_SUCCESSFUL  UpdateStatus = "SUCCESSFUL"
 )
 
 type UpdateType string
 
 const (
-	UpdateType_VersionUpdate                      UpdateType = "VersionUpdate"
-	UpdateType_EndpointAccessUpdate               UpdateType = "EndpointAccessUpdate"
-	UpdateType_LoggingUpdate                      UpdateType = "LoggingUpdate"
-	UpdateType_ConfigUpdate                       UpdateType = "ConfigUpdate"
-	UpdateType_AssociateIdentityProviderConfig    UpdateType = "AssociateIdentityProviderConfig"
-	UpdateType_DisassociateIdentityProviderConfig UpdateType = "DisassociateIdentityProviderConfig"
-	UpdateType_AssociateEncryptionConfig          UpdateType = "AssociateEncryptionConfig"
-	UpdateType_AddonUpdate                        UpdateType = "AddonUpdate"
-	UpdateType_VpcConfigUpdate                    UpdateType = "VpcConfigUpdate"
-	UpdateType_AccessConfigUpdate                 UpdateType = "AccessConfigUpdate"
-	UpdateType_UpgradePolicyUpdate                UpdateType = "UpgradePolicyUpdate"
+	UpdateType_ACCESS_CONFIG_UPDATE                  UpdateType = "ACCESS_CONFIG_UPDATE"
+	UpdateType_ADDON_UPDATE                          UpdateType = "ADDON_UPDATE"
+	UpdateType_ASSOCIATE_ENCRYPTION_CONFIG           UpdateType = "ASSOCIATE_ENCRYPTION_CONFIG"
+	UpdateType_ASSOCIATE_IDENTITY_PROVIDER_CONFIG    UpdateType = "ASSOCIATE_IDENTITY_PROVIDER_CONFIG"
+	UpdateType_AUTO_MODE_UPDATE                      UpdateType = "AUTO_MODE_UPDATE"
+	UpdateType_CONFIG_UPDATE                         UpdateType = "CONFIG_UPDATE"
+	UpdateType_DISASSOCIATE_IDENTITY_PROVIDER_CONFIG UpdateType = "DISASSOCIATE_IDENTITY_PROVIDER_CONFIG"
+	UpdateType_ENDPOINT_ACCESS_UPDATE                UpdateType = "ENDPOINT_ACCESS_UPDATE"
+	UpdateType_LOGGING_UPDATE                        UpdateType = "LOGGING_UPDATE"
+	UpdateType_UPGRADE_POLICY_UPDATE                 UpdateType = "UPGRADE_POLICY_UPDATE"
+	UpdateType_VERSION_UPDATE                        UpdateType = "VERSION_UPDATE"
+	UpdateType_VPC_CONFIG_UPDATE                     UpdateType = "VPC_CONFIG_UPDATE"
+	UpdateType_ZONAL_SHIFT_CONFIG_UPDATE             UpdateType = "ZONAL_SHIFT_CONFIG_UPDATE"
 )

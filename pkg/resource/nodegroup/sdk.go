@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"strings"
 
@@ -28,8 +29,9 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/eks"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/eks"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -40,8 +42,7 @@ import (
 var (
 	_ = &metav1.Time{}
 	_ = strings.ToLower("")
-	_ = &aws.JSONValue{}
-	_ = &svcsdk.EKS{}
+	_ = &svcsdk.Client{}
 	_ = &svcapitypes.Nodegroup{}
 	_ = ackv1alpha1.AWSAccountID("")
 	_ = &ackerr.NotFound
@@ -49,6 +50,7 @@ var (
 	_ = &reflect.Value{}
 	_ = fmt.Sprintf("")
 	_ = &ackrequeue.NoRequeue{}
+	_ = &aws.Config{}
 )
 
 // sdkFind returns SDK-specific information about a supplied resource
@@ -74,13 +76,13 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	var resp *svcsdk.DescribeNodegroupOutput
-	resp, err = rm.sdkapi.DescribeNodegroupWithContext(ctx, input)
+	resp, err = rm.sdkapi.DescribeNodegroup(ctx, input)
 	rm.metrics.RecordAPICall("READ_ONE", "DescribeNodegroup", err)
 	if err != nil {
 		if reqErr, ok := ackerr.AWSRequestFailure(err); ok && reqErr.StatusCode() == 404 {
 			return nil, ackerr.NotFound
 		}
-		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "ResourceNotFoundException" {
+		if strings.Contains(err.Error(), "ResourceNotFoundException") {
 			return nil, ackerr.NotFound
 		}
 		return nil, err
@@ -90,13 +92,13 @@ func (rm *resourceManager) sdkFind(
 	// the original Kubernetes object we passed to the function
 	ko := r.ko.DeepCopy()
 
-	if resp.Nodegroup.AmiType != nil {
-		ko.Spec.AMIType = resp.Nodegroup.AmiType
+	if resp.Nodegroup.AmiType != "" {
+		ko.Spec.AMIType = aws.String(string(resp.Nodegroup.AmiType))
 	} else {
 		ko.Spec.AMIType = nil
 	}
-	if resp.Nodegroup.CapacityType != nil {
-		ko.Spec.CapacityType = resp.Nodegroup.CapacityType
+	if resp.Nodegroup.CapacityType != "" {
+		ko.Spec.CapacityType = aws.String(string(resp.Nodegroup.CapacityType))
 	} else {
 		ko.Spec.CapacityType = nil
 	}
@@ -111,7 +113,8 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.CreatedAt = nil
 	}
 	if resp.Nodegroup.DiskSize != nil {
-		ko.Spec.DiskSize = resp.Nodegroup.DiskSize
+		temp := int64(*resp.Nodegroup.DiskSize)
+		ko.Spec.DiskSize = &temp
 	} else {
 		ko.Spec.DiskSize = nil
 	}
@@ -121,20 +124,14 @@ func (rm *resourceManager) sdkFind(
 			f5f0 := []*svcapitypes.Issue{}
 			for _, f5f0iter := range resp.Nodegroup.Health.Issues {
 				f5f0elem := &svcapitypes.Issue{}
-				if f5f0iter.Code != nil {
-					f5f0elem.Code = f5f0iter.Code
+				if f5f0iter.Code != "" {
+					f5f0elem.Code = aws.String(string(f5f0iter.Code))
 				}
 				if f5f0iter.Message != nil {
 					f5f0elem.Message = f5f0iter.Message
 				}
 				if f5f0iter.ResourceIds != nil {
-					f5f0elemf2 := []*string{}
-					for _, f5f0elemf2iter := range f5f0iter.ResourceIds {
-						var f5f0elemf2elem string
-						f5f0elemf2elem = *f5f0elemf2iter
-						f5f0elemf2 = append(f5f0elemf2, &f5f0elemf2elem)
-					}
-					f5f0elem.ResourceIDs = f5f0elemf2
+					f5f0elem.ResourceIDs = aws.StringSlice(f5f0iter.ResourceIds)
 				}
 				f5f0 = append(f5f0, f5f0elem)
 			}
@@ -145,24 +142,12 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.Health = nil
 	}
 	if resp.Nodegroup.InstanceTypes != nil {
-		f6 := []*string{}
-		for _, f6iter := range resp.Nodegroup.InstanceTypes {
-			var f6elem string
-			f6elem = *f6iter
-			f6 = append(f6, &f6elem)
-		}
-		ko.Spec.InstanceTypes = f6
+		ko.Spec.InstanceTypes = aws.StringSlice(resp.Nodegroup.InstanceTypes)
 	} else {
 		ko.Spec.InstanceTypes = nil
 	}
 	if resp.Nodegroup.Labels != nil {
-		f7 := map[string]*string{}
-		for f7key, f7valiter := range resp.Nodegroup.Labels {
-			var f7val string
-			f7val = *f7valiter
-			f7[f7key] = &f7val
-		}
-		ko.Spec.Labels = f7
+		ko.Spec.Labels = aws.StringMap(resp.Nodegroup.Labels)
 	} else {
 		ko.Spec.Labels = nil
 	}
@@ -214,13 +199,7 @@ func (rm *resourceManager) sdkFind(
 			f14.EC2SshKey = resp.Nodegroup.RemoteAccess.Ec2SshKey
 		}
 		if resp.Nodegroup.RemoteAccess.SourceSecurityGroups != nil {
-			f14f1 := []*string{}
-			for _, f14f1iter := range resp.Nodegroup.RemoteAccess.SourceSecurityGroups {
-				var f14f1elem string
-				f14f1elem = *f14f1iter
-				f14f1 = append(f14f1, &f14f1elem)
-			}
-			f14.SourceSecurityGroups = f14f1
+			f14.SourceSecurityGroups = aws.StringSlice(resp.Nodegroup.RemoteAccess.SourceSecurityGroups)
 		}
 		ko.Spec.RemoteAccess = f14
 	} else {
@@ -249,42 +228,33 @@ func (rm *resourceManager) sdkFind(
 	if resp.Nodegroup.ScalingConfig != nil {
 		f16 := &svcapitypes.NodegroupScalingConfig{}
 		if resp.Nodegroup.ScalingConfig.DesiredSize != nil {
-			f16.DesiredSize = resp.Nodegroup.ScalingConfig.DesiredSize
+			temp := int64(*resp.Nodegroup.ScalingConfig.DesiredSize)
+			f16.DesiredSize = &temp
 		}
 		if resp.Nodegroup.ScalingConfig.MaxSize != nil {
-			f16.MaxSize = resp.Nodegroup.ScalingConfig.MaxSize
+			temp := int64(*resp.Nodegroup.ScalingConfig.MaxSize)
+			f16.MaxSize = &temp
 		}
 		if resp.Nodegroup.ScalingConfig.MinSize != nil {
-			f16.MinSize = resp.Nodegroup.ScalingConfig.MinSize
+			temp := int64(*resp.Nodegroup.ScalingConfig.MinSize)
+			f16.MinSize = &temp
 		}
 		ko.Spec.ScalingConfig = f16
 	} else {
 		ko.Spec.ScalingConfig = nil
 	}
-	if resp.Nodegroup.Status != nil {
-		ko.Status.Status = resp.Nodegroup.Status
+	if resp.Nodegroup.Status != "" {
+		ko.Status.Status = aws.String(string(resp.Nodegroup.Status))
 	} else {
 		ko.Status.Status = nil
 	}
 	if resp.Nodegroup.Subnets != nil {
-		f18 := []*string{}
-		for _, f18iter := range resp.Nodegroup.Subnets {
-			var f18elem string
-			f18elem = *f18iter
-			f18 = append(f18, &f18elem)
-		}
-		ko.Spec.Subnets = f18
+		ko.Spec.Subnets = aws.StringSlice(resp.Nodegroup.Subnets)
 	} else {
 		ko.Spec.Subnets = nil
 	}
 	if resp.Nodegroup.Tags != nil {
-		f19 := map[string]*string{}
-		for f19key, f19valiter := range resp.Nodegroup.Tags {
-			var f19val string
-			f19val = *f19valiter
-			f19[f19key] = &f19val
-		}
-		ko.Spec.Tags = f19
+		ko.Spec.Tags = aws.StringMap(resp.Nodegroup.Tags)
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -292,8 +262,8 @@ func (rm *resourceManager) sdkFind(
 		f20 := []*svcapitypes.Taint{}
 		for _, f20iter := range resp.Nodegroup.Taints {
 			f20elem := &svcapitypes.Taint{}
-			if f20iter.Effect != nil {
-				f20elem.Effect = f20iter.Effect
+			if f20iter.Effect != "" {
+				f20elem.Effect = aws.String(string(f20iter.Effect))
 			}
 			if f20iter.Key != nil {
 				f20elem.Key = f20iter.Key
@@ -310,10 +280,12 @@ func (rm *resourceManager) sdkFind(
 	if resp.Nodegroup.UpdateConfig != nil {
 		f21 := &svcapitypes.NodegroupUpdateConfig{}
 		if resp.Nodegroup.UpdateConfig.MaxUnavailable != nil {
-			f21.MaxUnavailable = resp.Nodegroup.UpdateConfig.MaxUnavailable
+			temp := int64(*resp.Nodegroup.UpdateConfig.MaxUnavailable)
+			f21.MaxUnavailable = &temp
 		}
 		if resp.Nodegroup.UpdateConfig.MaxUnavailablePercentage != nil {
-			f21.MaxUnavailablePercentage = resp.Nodegroup.UpdateConfig.MaxUnavailablePercentage
+			temp := int64(*resp.Nodegroup.UpdateConfig.MaxUnavailablePercentage)
+			f21.MaxUnavailablePercentage = &temp
 		}
 		ko.Spec.UpdateConfig = f21
 	} else {
@@ -355,10 +327,10 @@ func (rm *resourceManager) newDescribeRequestPayload(
 	res := &svcsdk.DescribeNodegroupInput{}
 
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 	if r.ko.Spec.Name != nil {
-		res.SetNodegroupName(*r.ko.Spec.Name)
+		res.NodegroupName = r.ko.Spec.Name
 	}
 
 	return res, nil
@@ -383,7 +355,7 @@ func (rm *resourceManager) sdkCreate(
 
 	var resp *svcsdk.CreateNodegroupOutput
 	_ = resp
-	resp, err = rm.sdkapi.CreateNodegroupWithContext(ctx, input)
+	resp, err = rm.sdkapi.CreateNodegroup(ctx, input)
 	rm.metrics.RecordAPICall("CREATE", "CreateNodegroup", err)
 	if err != nil {
 		return nil, err
@@ -392,13 +364,13 @@ func (rm *resourceManager) sdkCreate(
 	// the original Kubernetes object we passed to the function
 	ko := desired.ko.DeepCopy()
 
-	if resp.Nodegroup.AmiType != nil {
-		ko.Spec.AMIType = resp.Nodegroup.AmiType
+	if resp.Nodegroup.AmiType != "" {
+		ko.Spec.AMIType = aws.String(string(resp.Nodegroup.AmiType))
 	} else {
 		ko.Spec.AMIType = nil
 	}
-	if resp.Nodegroup.CapacityType != nil {
-		ko.Spec.CapacityType = resp.Nodegroup.CapacityType
+	if resp.Nodegroup.CapacityType != "" {
+		ko.Spec.CapacityType = aws.String(string(resp.Nodegroup.CapacityType))
 	} else {
 		ko.Spec.CapacityType = nil
 	}
@@ -413,7 +385,8 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.CreatedAt = nil
 	}
 	if resp.Nodegroup.DiskSize != nil {
-		ko.Spec.DiskSize = resp.Nodegroup.DiskSize
+		temp := int64(*resp.Nodegroup.DiskSize)
+		ko.Spec.DiskSize = &temp
 	} else {
 		ko.Spec.DiskSize = nil
 	}
@@ -423,20 +396,14 @@ func (rm *resourceManager) sdkCreate(
 			f5f0 := []*svcapitypes.Issue{}
 			for _, f5f0iter := range resp.Nodegroup.Health.Issues {
 				f5f0elem := &svcapitypes.Issue{}
-				if f5f0iter.Code != nil {
-					f5f0elem.Code = f5f0iter.Code
+				if f5f0iter.Code != "" {
+					f5f0elem.Code = aws.String(string(f5f0iter.Code))
 				}
 				if f5f0iter.Message != nil {
 					f5f0elem.Message = f5f0iter.Message
 				}
 				if f5f0iter.ResourceIds != nil {
-					f5f0elemf2 := []*string{}
-					for _, f5f0elemf2iter := range f5f0iter.ResourceIds {
-						var f5f0elemf2elem string
-						f5f0elemf2elem = *f5f0elemf2iter
-						f5f0elemf2 = append(f5f0elemf2, &f5f0elemf2elem)
-					}
-					f5f0elem.ResourceIDs = f5f0elemf2
+					f5f0elem.ResourceIDs = aws.StringSlice(f5f0iter.ResourceIds)
 				}
 				f5f0 = append(f5f0, f5f0elem)
 			}
@@ -447,24 +414,12 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.Health = nil
 	}
 	if resp.Nodegroup.InstanceTypes != nil {
-		f6 := []*string{}
-		for _, f6iter := range resp.Nodegroup.InstanceTypes {
-			var f6elem string
-			f6elem = *f6iter
-			f6 = append(f6, &f6elem)
-		}
-		ko.Spec.InstanceTypes = f6
+		ko.Spec.InstanceTypes = aws.StringSlice(resp.Nodegroup.InstanceTypes)
 	} else {
 		ko.Spec.InstanceTypes = nil
 	}
 	if resp.Nodegroup.Labels != nil {
-		f7 := map[string]*string{}
-		for f7key, f7valiter := range resp.Nodegroup.Labels {
-			var f7val string
-			f7val = *f7valiter
-			f7[f7key] = &f7val
-		}
-		ko.Spec.Labels = f7
+		ko.Spec.Labels = aws.StringMap(resp.Nodegroup.Labels)
 	} else {
 		ko.Spec.Labels = nil
 	}
@@ -516,13 +471,7 @@ func (rm *resourceManager) sdkCreate(
 			f14.EC2SshKey = resp.Nodegroup.RemoteAccess.Ec2SshKey
 		}
 		if resp.Nodegroup.RemoteAccess.SourceSecurityGroups != nil {
-			f14f1 := []*string{}
-			for _, f14f1iter := range resp.Nodegroup.RemoteAccess.SourceSecurityGroups {
-				var f14f1elem string
-				f14f1elem = *f14f1iter
-				f14f1 = append(f14f1, &f14f1elem)
-			}
-			f14.SourceSecurityGroups = f14f1
+			f14.SourceSecurityGroups = aws.StringSlice(resp.Nodegroup.RemoteAccess.SourceSecurityGroups)
 		}
 		ko.Spec.RemoteAccess = f14
 	} else {
@@ -551,42 +500,33 @@ func (rm *resourceManager) sdkCreate(
 	if resp.Nodegroup.ScalingConfig != nil {
 		f16 := &svcapitypes.NodegroupScalingConfig{}
 		if resp.Nodegroup.ScalingConfig.DesiredSize != nil {
-			f16.DesiredSize = resp.Nodegroup.ScalingConfig.DesiredSize
+			temp := int64(*resp.Nodegroup.ScalingConfig.DesiredSize)
+			f16.DesiredSize = &temp
 		}
 		if resp.Nodegroup.ScalingConfig.MaxSize != nil {
-			f16.MaxSize = resp.Nodegroup.ScalingConfig.MaxSize
+			temp := int64(*resp.Nodegroup.ScalingConfig.MaxSize)
+			f16.MaxSize = &temp
 		}
 		if resp.Nodegroup.ScalingConfig.MinSize != nil {
-			f16.MinSize = resp.Nodegroup.ScalingConfig.MinSize
+			temp := int64(*resp.Nodegroup.ScalingConfig.MinSize)
+			f16.MinSize = &temp
 		}
 		ko.Spec.ScalingConfig = f16
 	} else {
 		ko.Spec.ScalingConfig = nil
 	}
-	if resp.Nodegroup.Status != nil {
-		ko.Status.Status = resp.Nodegroup.Status
+	if resp.Nodegroup.Status != "" {
+		ko.Status.Status = aws.String(string(resp.Nodegroup.Status))
 	} else {
 		ko.Status.Status = nil
 	}
 	if resp.Nodegroup.Subnets != nil {
-		f18 := []*string{}
-		for _, f18iter := range resp.Nodegroup.Subnets {
-			var f18elem string
-			f18elem = *f18iter
-			f18 = append(f18, &f18elem)
-		}
-		ko.Spec.Subnets = f18
+		ko.Spec.Subnets = aws.StringSlice(resp.Nodegroup.Subnets)
 	} else {
 		ko.Spec.Subnets = nil
 	}
 	if resp.Nodegroup.Tags != nil {
-		f19 := map[string]*string{}
-		for f19key, f19valiter := range resp.Nodegroup.Tags {
-			var f19val string
-			f19val = *f19valiter
-			f19[f19key] = &f19val
-		}
-		ko.Spec.Tags = f19
+		ko.Spec.Tags = aws.StringMap(resp.Nodegroup.Tags)
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -594,8 +534,8 @@ func (rm *resourceManager) sdkCreate(
 		f20 := []*svcapitypes.Taint{}
 		for _, f20iter := range resp.Nodegroup.Taints {
 			f20elem := &svcapitypes.Taint{}
-			if f20iter.Effect != nil {
-				f20elem.Effect = f20iter.Effect
+			if f20iter.Effect != "" {
+				f20elem.Effect = aws.String(string(f20iter.Effect))
 			}
 			if f20iter.Key != nil {
 				f20elem.Key = f20iter.Key
@@ -612,10 +552,12 @@ func (rm *resourceManager) sdkCreate(
 	if resp.Nodegroup.UpdateConfig != nil {
 		f21 := &svcapitypes.NodegroupUpdateConfig{}
 		if resp.Nodegroup.UpdateConfig.MaxUnavailable != nil {
-			f21.MaxUnavailable = resp.Nodegroup.UpdateConfig.MaxUnavailable
+			temp := int64(*resp.Nodegroup.UpdateConfig.MaxUnavailable)
+			f21.MaxUnavailable = &temp
 		}
 		if resp.Nodegroup.UpdateConfig.MaxUnavailablePercentage != nil {
-			f21.MaxUnavailablePercentage = resp.Nodegroup.UpdateConfig.MaxUnavailablePercentage
+			temp := int64(*resp.Nodegroup.UpdateConfig.MaxUnavailablePercentage)
+			f21.MaxUnavailablePercentage = &temp
 		}
 		ko.Spec.UpdateConfig = f21
 	} else {
@@ -649,136 +591,130 @@ func (rm *resourceManager) newCreateRequestPayload(
 	res := &svcsdk.CreateNodegroupInput{}
 
 	if r.ko.Spec.AMIType != nil {
-		res.SetAmiType(*r.ko.Spec.AMIType)
+		res.AmiType = svcsdktypes.AMITypes(*r.ko.Spec.AMIType)
 	}
 	if r.ko.Spec.CapacityType != nil {
-		res.SetCapacityType(*r.ko.Spec.CapacityType)
+		res.CapacityType = svcsdktypes.CapacityTypes(*r.ko.Spec.CapacityType)
 	}
 	if r.ko.Spec.ClientRequestToken != nil {
-		res.SetClientRequestToken(*r.ko.Spec.ClientRequestToken)
+		res.ClientRequestToken = r.ko.Spec.ClientRequestToken
 	}
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 	if r.ko.Spec.DiskSize != nil {
-		res.SetDiskSize(*r.ko.Spec.DiskSize)
+		if *r.ko.Spec.DiskSize > math.MaxInt32 || *r.ko.Spec.DiskSize < math.MinInt32 {
+			return nil, fmt.Errorf("field is too large")
+		}
+		temp := int32(*r.ko.Spec.DiskSize)
+		res.DiskSize = &temp
 	}
 	if r.ko.Spec.InstanceTypes != nil {
-		f5 := []*string{}
-		for _, f5iter := range r.ko.Spec.InstanceTypes {
-			var f5elem string
-			f5elem = *f5iter
-			f5 = append(f5, &f5elem)
-		}
-		res.SetInstanceTypes(f5)
+		res.InstanceTypes = aws.ToStringSlice(r.ko.Spec.InstanceTypes)
 	}
 	if r.ko.Spec.Labels != nil {
-		f6 := map[string]*string{}
-		for f6key, f6valiter := range r.ko.Spec.Labels {
-			var f6val string
-			f6val = *f6valiter
-			f6[f6key] = &f6val
-		}
-		res.SetLabels(f6)
+		res.Labels = aws.ToStringMap(r.ko.Spec.Labels)
 	}
 	if r.ko.Spec.LaunchTemplate != nil {
-		f7 := &svcsdk.LaunchTemplateSpecification{}
+		f7 := &svcsdktypes.LaunchTemplateSpecification{}
 		if r.ko.Spec.LaunchTemplate.ID != nil {
-			f7.SetId(*r.ko.Spec.LaunchTemplate.ID)
+			f7.Id = r.ko.Spec.LaunchTemplate.ID
 		}
 		if r.ko.Spec.LaunchTemplate.Name != nil {
-			f7.SetName(*r.ko.Spec.LaunchTemplate.Name)
+			f7.Name = r.ko.Spec.LaunchTemplate.Name
 		}
 		if r.ko.Spec.LaunchTemplate.Version != nil {
-			f7.SetVersion(*r.ko.Spec.LaunchTemplate.Version)
+			f7.Version = r.ko.Spec.LaunchTemplate.Version
 		}
-		res.SetLaunchTemplate(f7)
+		res.LaunchTemplate = f7
 	}
 	if r.ko.Spec.NodeRole != nil {
-		res.SetNodeRole(*r.ko.Spec.NodeRole)
+		res.NodeRole = r.ko.Spec.NodeRole
 	}
 	if r.ko.Spec.Name != nil {
-		res.SetNodegroupName(*r.ko.Spec.Name)
+		res.NodegroupName = r.ko.Spec.Name
 	}
 	if r.ko.Spec.ReleaseVersion != nil {
-		res.SetReleaseVersion(*r.ko.Spec.ReleaseVersion)
+		res.ReleaseVersion = r.ko.Spec.ReleaseVersion
 	}
 	if r.ko.Spec.RemoteAccess != nil {
-		f11 := &svcsdk.RemoteAccessConfig{}
+		f11 := &svcsdktypes.RemoteAccessConfig{}
 		if r.ko.Spec.RemoteAccess.EC2SshKey != nil {
-			f11.SetEc2SshKey(*r.ko.Spec.RemoteAccess.EC2SshKey)
+			f11.Ec2SshKey = r.ko.Spec.RemoteAccess.EC2SshKey
 		}
 		if r.ko.Spec.RemoteAccess.SourceSecurityGroups != nil {
-			f11f1 := []*string{}
-			for _, f11f1iter := range r.ko.Spec.RemoteAccess.SourceSecurityGroups {
-				var f11f1elem string
-				f11f1elem = *f11f1iter
-				f11f1 = append(f11f1, &f11f1elem)
-			}
-			f11.SetSourceSecurityGroups(f11f1)
+			f11.SourceSecurityGroups = aws.ToStringSlice(r.ko.Spec.RemoteAccess.SourceSecurityGroups)
 		}
-		res.SetRemoteAccess(f11)
+		res.RemoteAccess = f11
 	}
 	if r.ko.Spec.ScalingConfig != nil {
-		f12 := &svcsdk.NodegroupScalingConfig{}
+		f12 := &svcsdktypes.NodegroupScalingConfig{}
 		if r.ko.Spec.ScalingConfig.DesiredSize != nil {
-			f12.SetDesiredSize(*r.ko.Spec.ScalingConfig.DesiredSize)
+			if *r.ko.Spec.ScalingConfig.DesiredSize > math.MaxInt32 || *r.ko.Spec.ScalingConfig.DesiredSize < math.MinInt32 {
+				return nil, fmt.Errorf("field is too large")
+			}
+			temp := int32(*r.ko.Spec.ScalingConfig.DesiredSize)
+			f12.DesiredSize = &temp
 		}
 		if r.ko.Spec.ScalingConfig.MaxSize != nil {
-			f12.SetMaxSize(*r.ko.Spec.ScalingConfig.MaxSize)
+			if *r.ko.Spec.ScalingConfig.MaxSize > math.MaxInt32 || *r.ko.Spec.ScalingConfig.MaxSize < math.MinInt32 {
+				return nil, fmt.Errorf("field is too large")
+			}
+			temp := int32(*r.ko.Spec.ScalingConfig.MaxSize)
+			f12.MaxSize = &temp
 		}
 		if r.ko.Spec.ScalingConfig.MinSize != nil {
-			f12.SetMinSize(*r.ko.Spec.ScalingConfig.MinSize)
+			if *r.ko.Spec.ScalingConfig.MinSize > math.MaxInt32 || *r.ko.Spec.ScalingConfig.MinSize < math.MinInt32 {
+				return nil, fmt.Errorf("field is too large")
+			}
+			temp := int32(*r.ko.Spec.ScalingConfig.MinSize)
+			f12.MinSize = &temp
 		}
-		res.SetScalingConfig(f12)
+		res.ScalingConfig = f12
 	}
 	if r.ko.Spec.Subnets != nil {
-		f13 := []*string{}
-		for _, f13iter := range r.ko.Spec.Subnets {
-			var f13elem string
-			f13elem = *f13iter
-			f13 = append(f13, &f13elem)
-		}
-		res.SetSubnets(f13)
+		res.Subnets = aws.ToStringSlice(r.ko.Spec.Subnets)
 	}
 	if r.ko.Spec.Tags != nil {
-		f14 := map[string]*string{}
-		for f14key, f14valiter := range r.ko.Spec.Tags {
-			var f14val string
-			f14val = *f14valiter
-			f14[f14key] = &f14val
-		}
-		res.SetTags(f14)
+		res.Tags = aws.ToStringMap(r.ko.Spec.Tags)
 	}
 	if r.ko.Spec.Taints != nil {
-		f15 := []*svcsdk.Taint{}
+		f15 := []svcsdktypes.Taint{}
 		for _, f15iter := range r.ko.Spec.Taints {
-			f15elem := &svcsdk.Taint{}
+			f15elem := &svcsdktypes.Taint{}
 			if f15iter.Effect != nil {
-				f15elem.SetEffect(*f15iter.Effect)
+				f15elem.Effect = svcsdktypes.TaintEffect(*f15iter.Effect)
 			}
 			if f15iter.Key != nil {
-				f15elem.SetKey(*f15iter.Key)
+				f15elem.Key = f15iter.Key
 			}
 			if f15iter.Value != nil {
-				f15elem.SetValue(*f15iter.Value)
+				f15elem.Value = f15iter.Value
 			}
-			f15 = append(f15, f15elem)
+			f15 = append(f15, *f15elem)
 		}
-		res.SetTaints(f15)
+		res.Taints = f15
 	}
 	if r.ko.Spec.UpdateConfig != nil {
-		f16 := &svcsdk.NodegroupUpdateConfig{}
+		f16 := &svcsdktypes.NodegroupUpdateConfig{}
 		if r.ko.Spec.UpdateConfig.MaxUnavailable != nil {
-			f16.SetMaxUnavailable(*r.ko.Spec.UpdateConfig.MaxUnavailable)
+			if *r.ko.Spec.UpdateConfig.MaxUnavailable > math.MaxInt32 || *r.ko.Spec.UpdateConfig.MaxUnavailable < math.MinInt32 {
+				return nil, fmt.Errorf("field is too large")
+			}
+			temp := int32(*r.ko.Spec.UpdateConfig.MaxUnavailable)
+			f16.MaxUnavailable = &temp
 		}
 		if r.ko.Spec.UpdateConfig.MaxUnavailablePercentage != nil {
-			f16.SetMaxUnavailablePercentage(*r.ko.Spec.UpdateConfig.MaxUnavailablePercentage)
+			if *r.ko.Spec.UpdateConfig.MaxUnavailablePercentage > math.MaxInt32 || *r.ko.Spec.UpdateConfig.MaxUnavailablePercentage < math.MinInt32 {
+				return nil, fmt.Errorf("field is too large")
+			}
+			temp := int32(*r.ko.Spec.UpdateConfig.MaxUnavailablePercentage)
+			f16.MaxUnavailablePercentage = &temp
 		}
-		res.SetUpdateConfig(f16)
+		res.UpdateConfig = f16
 	}
 	if r.ko.Spec.Version != nil {
-		res.SetVersion(*r.ko.Spec.Version)
+		res.Version = r.ko.Spec.Version
 	}
 
 	return res, nil
@@ -815,7 +751,7 @@ func (rm *resourceManager) sdkDelete(
 	}
 	var resp *svcsdk.DeleteNodegroupOutput
 	_ = resp
-	resp, err = rm.sdkapi.DeleteNodegroupWithContext(ctx, input)
+	resp, err = rm.sdkapi.DeleteNodegroup(ctx, input)
 	rm.metrics.RecordAPICall("DELETE", "DeleteNodegroup", err)
 	return nil, err
 }
@@ -828,10 +764,10 @@ func (rm *resourceManager) newDeleteRequestPayload(
 	res := &svcsdk.DeleteNodegroupInput{}
 
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 	if r.ko.Spec.Name != nil {
-		res.SetNodegroupName(*r.ko.Spec.Name)
+		res.NodegroupName = r.ko.Spec.Name
 	}
 
 	return res, nil
@@ -987,35 +923,55 @@ func (rm *resourceManager) getImmutableFieldChanges(
 // with each the field set by the resource's corresponding spec field.
 func (rm *resourceManager) newNodegroupScalingConfig(
 	r *resource,
-) *svcsdk.NodegroupScalingConfig {
-	res := &svcsdk.NodegroupScalingConfig{}
+) (*svcsdktypes.NodegroupScalingConfig, error) {
+	res := &svcsdktypes.NodegroupScalingConfig{}
 
 	if r.ko.Spec.ScalingConfig.DesiredSize != nil {
-		res.SetDesiredSize(*r.ko.Spec.ScalingConfig.DesiredSize)
+		if *r.ko.Spec.ScalingConfig.DesiredSize > math.MaxInt32 || *r.ko.Spec.ScalingConfig.DesiredSize < math.MinInt32 {
+			return nil, fmt.Errorf("field is too large")
+		}
+		temp := int32(*r.ko.Spec.ScalingConfig.DesiredSize)
+		res.DesiredSize = &temp
 	}
 	if r.ko.Spec.ScalingConfig.MaxSize != nil {
-		res.SetMaxSize(*r.ko.Spec.ScalingConfig.MaxSize)
+		if *r.ko.Spec.ScalingConfig.MaxSize > math.MaxInt32 || *r.ko.Spec.ScalingConfig.MaxSize < math.MinInt32 {
+			return nil, fmt.Errorf("field is too large")
+		}
+		temp := int32(*r.ko.Spec.ScalingConfig.MaxSize)
+		res.MaxSize = &temp
 	}
 	if r.ko.Spec.ScalingConfig.MinSize != nil {
-		res.SetMinSize(*r.ko.Spec.ScalingConfig.MinSize)
+		if *r.ko.Spec.ScalingConfig.MinSize > math.MaxInt32 || *r.ko.Spec.ScalingConfig.MinSize < math.MinInt32 {
+			return nil, fmt.Errorf("field is too large")
+		}
+		temp := int32(*r.ko.Spec.ScalingConfig.MinSize)
+		res.MinSize = &temp
 	}
 
-	return res
+	return res, nil
 }
 
 // newNodegroupUpdateConfig returns a NodegroupUpdateConfig object
 // with each the field set by the resource's corresponding spec field.
 func (rm *resourceManager) newNodegroupUpdateConfig(
 	r *resource,
-) *svcsdk.NodegroupUpdateConfig {
-	res := &svcsdk.NodegroupUpdateConfig{}
+) (*svcsdktypes.NodegroupUpdateConfig, error) {
+	res := &svcsdktypes.NodegroupUpdateConfig{}
 
 	if r.ko.Spec.UpdateConfig.MaxUnavailable != nil {
-		res.SetMaxUnavailable(*r.ko.Spec.UpdateConfig.MaxUnavailable)
+		if *r.ko.Spec.UpdateConfig.MaxUnavailable > math.MaxInt32 || *r.ko.Spec.UpdateConfig.MaxUnavailable < math.MinInt32 {
+			return nil, fmt.Errorf("field is too large")
+		}
+		temp := int32(*r.ko.Spec.UpdateConfig.MaxUnavailable)
+		res.MaxUnavailable = &temp
 	}
 	if r.ko.Spec.UpdateConfig.MaxUnavailablePercentage != nil {
-		res.SetMaxUnavailablePercentage(*r.ko.Spec.UpdateConfig.MaxUnavailablePercentage)
+		if *r.ko.Spec.UpdateConfig.MaxUnavailablePercentage > math.MaxInt32 || *r.ko.Spec.UpdateConfig.MaxUnavailablePercentage < math.MinInt32 {
+			return nil, fmt.Errorf("field is too large")
+		}
+		temp := int32(*r.ko.Spec.UpdateConfig.MaxUnavailablePercentage)
+		res.MaxUnavailablePercentage = &temp
 	}
 
-	return res
+	return res, nil
 }

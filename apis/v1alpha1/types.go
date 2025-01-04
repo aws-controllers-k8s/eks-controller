@@ -142,6 +142,7 @@ type AddonPodIdentityConfiguration struct {
 type AddonVersionInfo struct {
 	AddonVersion           *string   `json:"addonVersion,omitempty"`
 	Architecture           []*string `json:"architecture,omitempty"`
+	ComputeTypes           []*string `json:"computeTypes,omitempty"`
 	RequiresConfiguration  *bool     `json:"requiresConfiguration,omitempty"`
 	RequiresIAMPermissions *bool     `json:"requiresIAMPermissions,omitempty"`
 }
@@ -214,6 +215,15 @@ type AutoScalingGroup struct {
 	Name *string `json:"name,omitempty"`
 }
 
+// Indicates the current configuration of the block storage capability on your
+// EKS Auto Mode cluster. For example, if the capability is enabled or disabled.
+// If the block storage capability is enabled, EKS Auto Mode will create and
+// delete EBS volumes in your Amazon Web Services account. For more information,
+// see EKS Auto Mode block storage capability in the EKS User Guide.
+type BlockStorage struct {
+	Enabled *bool `json:"enabled,omitempty"`
+}
+
 // An object representing the certificate-authority-data for your cluster.
 type Certificate struct {
 	Data *string `json:"data,omitempty"`
@@ -245,6 +255,9 @@ type Cluster_SDK struct {
 	// An object representing the certificate-authority-data for your cluster.
 	CertificateAuthority *Certificate `json:"certificateAuthority,omitempty"`
 	ClientRequestToken   *string      `json:"clientRequestToken,omitempty"`
+	// Indicates the status of the request to update the compute capability of your
+	// EKS Auto Mode cluster.
+	ComputeConfig *ComputeConfigResponse `json:"computeConfig,omitempty"`
 	// The full description of your connected cluster.
 	ConnectorConfig  *ConnectorConfigResponse `json:"connectorConfig,omitempty"`
 	CreatedAt        *metav1.Time             `json:"createdAt,omitempty"`
@@ -266,10 +279,16 @@ type Cluster_SDK struct {
 	// clusters on the Amazon Web Services cloud.
 	OutpostConfig   *OutpostConfigResponse `json:"outpostConfig,omitempty"`
 	PlatformVersion *string                `json:"platformVersion,omitempty"`
+	// The configuration in the cluster for EKS Hybrid Nodes. You can't change or
+	// update this configuration after the cluster is created.
+	RemoteNetworkConfig *RemoteNetworkConfigResponse `json:"remoteNetworkConfig,omitempty"`
 	// An object representing an Amazon EKS cluster VPC configuration response.
 	ResourcesVPCConfig *VPCConfigResponse `json:"resourcesVPCConfig,omitempty"`
 	RoleARN            *string            `json:"roleARN,omitempty"`
 	Status             *string            `json:"status,omitempty"`
+	// Indicates the status of the request to update the block storage capability
+	// of your EKS Auto Mode cluster.
+	StorageConfig *StorageConfigResponse `json:"storageConfig,omitempty"`
 	// The metadata that you apply to a resource to help you categorize and organize
 	// them. Each tag consists of a key and an optional value. You define them.
 	//
@@ -301,6 +320,8 @@ type Cluster_SDK struct {
 	// Learn more about EKS Extended Support in the EKS User Guide. (https://docs.aws.amazon.com/eks/latest/userguide/extended-support-control.html)
 	UpgradePolicy *UpgradePolicyResponse `json:"upgradePolicy,omitempty"`
 	Version       *string                `json:"version,omitempty"`
+	// The status of zonal shift configuration for the cluster
+	ZonalShiftConfig *ZonalShiftConfigResponse `json:"zonalShiftConfig,omitempty"`
 }
 
 // Compatibility information.
@@ -308,6 +329,23 @@ type Compatibility struct {
 	ClusterVersion   *string   `json:"clusterVersion,omitempty"`
 	DefaultVersion   *bool     `json:"defaultVersion,omitempty"`
 	PlatformVersions []*string `json:"platformVersions,omitempty"`
+}
+
+// Request to update the configuration of the compute capability of your EKS
+// Auto Mode cluster. For example, enable the capability. For more information,
+// see EKS Auto Mode compute capability in the EKS User Guide.
+type ComputeConfigRequest struct {
+	Enabled     *bool     `json:"enabled,omitempty"`
+	NodePools   []*string `json:"nodePools,omitempty"`
+	NodeRoleARN *string   `json:"nodeRoleARN,omitempty"`
+}
+
+// Indicates the status of the request to update the compute capability of your
+// EKS Auto Mode cluster.
+type ComputeConfigResponse struct {
+	Enabled     *bool     `json:"enabled,omitempty"`
+	NodePools   []*string `json:"nodePools,omitempty"`
+	NodeRoleARN *string   `json:"nodeRoleARN,omitempty"`
 }
 
 // The configuration sent to a cluster for configuration.
@@ -392,6 +430,14 @@ type EKSAnywhereSubscription struct {
 	//    Services use. You cannot edit or delete tag keys or values with this prefix.
 	//    Tags with this prefix do not count against your tags per resource limit.
 	Tags map[string]*string `json:"tags,omitempty"`
+}
+
+// Indicates the current configuration of the load balancing capability on your
+// EKS Auto Mode cluster. For example, if the capability is enabled or disabled.
+// For more information, see EKS Auto Mode load balancing capability in the
+// EKS User Guide.
+type ElasticLoadBalancing struct {
+	Enabled *bool `json:"enabled,omitempty"`
 }
 
 // The encryption configuration for the cluster.
@@ -535,16 +581,26 @@ type Issue struct {
 
 // The Kubernetes network configuration for the cluster.
 type KubernetesNetworkConfigRequest struct {
-	IPFamily        *string `json:"ipFamily,omitempty"`
-	ServiceIPv4CIDR *string `json:"serviceIPv4CIDR,omitempty"`
+	// Indicates the current configuration of the load balancing capability on your
+	// EKS Auto Mode cluster. For example, if the capability is enabled or disabled.
+	// For more information, see EKS Auto Mode load balancing capability in the
+	// EKS User Guide.
+	ElasticLoadBalancing *ElasticLoadBalancing `json:"elasticLoadBalancing,omitempty"`
+	IPFamily             *string               `json:"ipFamily,omitempty"`
+	ServiceIPv4CIDR      *string               `json:"serviceIPv4CIDR,omitempty"`
 }
 
 // The Kubernetes network configuration for the cluster. The response contains
 // a value for serviceIpv6Cidr or serviceIpv4Cidr, but not both.
 type KubernetesNetworkConfigResponse struct {
-	IPFamily        *string `json:"ipFamily,omitempty"`
-	ServiceIPv4CIDR *string `json:"serviceIPv4CIDR,omitempty"`
-	ServiceIPv6CIDR *string `json:"serviceIPv6CIDR,omitempty"`
+	// Indicates the current configuration of the load balancing capability on your
+	// EKS Auto Mode cluster. For example, if the capability is enabled or disabled.
+	// For more information, see EKS Auto Mode load balancing capability in the
+	// EKS User Guide.
+	ElasticLoadBalancing *ElasticLoadBalancing `json:"elasticLoadBalancing,omitempty"`
+	IPFamily             *string               `json:"ipFamily,omitempty"`
+	ServiceIPv4CIDR      *string               `json:"serviceIPv4CIDR,omitempty"`
+	ServiceIPv6CIDR      *string               `json:"serviceIPv6CIDR,omitempty"`
 }
 
 // An object representing a node group launch template specification. The launch
@@ -860,6 +916,54 @@ type RemoteAccessConfig struct {
 	SourceSecurityGroups    []*string                                  `json:"sourceSecurityGroups,omitempty"`
 }
 
+// The configuration in the cluster for EKS Hybrid Nodes. You can't change or
+// update this configuration after the cluster is created.
+type RemoteNetworkConfigRequest struct {
+	RemoteNodeNetworks []*RemoteNodeNetwork `json:"remoteNodeNetworks,omitempty"`
+	RemotePodNetworks  []*RemotePodNetwork  `json:"remotePodNetworks,omitempty"`
+}
+
+// The configuration in the cluster for EKS Hybrid Nodes. You can't change or
+// update this configuration after the cluster is created.
+type RemoteNetworkConfigResponse struct {
+	RemoteNodeNetworks []*RemoteNodeNetwork `json:"remoteNodeNetworks,omitempty"`
+	RemotePodNetworks  []*RemotePodNetwork  `json:"remotePodNetworks,omitempty"`
+}
+
+// A network CIDR that can contain hybrid nodes.
+type RemoteNodeNetwork struct {
+	CIDRs []*string `json:"cidrs,omitempty"`
+}
+
+// A network CIDR that can contain pods that run Kubernetes webhooks on hybrid
+// nodes.
+type RemotePodNetwork struct {
+	CIDRs []*string `json:"cidrs,omitempty"`
+}
+
+// Request to update the configuration of the storage capability of your EKS
+// Auto Mode cluster. For example, enable the capability. For more information,
+// see EKS Auto Mode block storage capability in the EKS User Guide.
+type StorageConfigRequest struct {
+	// Indicates the current configuration of the block storage capability on your
+	// EKS Auto Mode cluster. For example, if the capability is enabled or disabled.
+	// If the block storage capability is enabled, EKS Auto Mode will create and
+	// delete EBS volumes in your Amazon Web Services account. For more information,
+	// see EKS Auto Mode block storage capability in the EKS User Guide.
+	BlockStorage *BlockStorage `json:"blockStorage,omitempty"`
+}
+
+// Indicates the status of the request to update the block storage capability
+// of your EKS Auto Mode cluster.
+type StorageConfigResponse struct {
+	// Indicates the current configuration of the block storage capability on your
+	// EKS Auto Mode cluster. For example, if the capability is enabled or disabled.
+	// If the block storage capability is enabled, EKS Auto Mode will create and
+	// delete EBS volumes in your Amazon Web Services account. For more information,
+	// see EKS Auto Mode block storage capability in the EKS User Guide.
+	BlockStorage *BlockStorage `json:"blockStorage,omitempty"`
+}
+
 // A property that allows a node to repel a Pod. For more information, see Node
 // taints on managed node groups (https://docs.aws.amazon.com/eks/latest/userguide/node-taints-managed-node-groups.html)
 // in the Amazon EKS User Guide.
@@ -942,4 +1046,14 @@ type VPCConfigResponse struct {
 	SecurityGroupIDs       []*string `json:"securityGroupIDs,omitempty"`
 	SubnetIDs              []*string `json:"subnetIDs,omitempty"`
 	VPCID                  *string   `json:"vpcID,omitempty"`
+}
+
+// The configuration for zonal shift for the cluster.
+type ZonalShiftConfigRequest struct {
+	Enabled *bool `json:"enabled,omitempty"`
+}
+
+// The status of zonal shift configuration for the cluster
+type ZonalShiftConfigResponse struct {
+	Enabled *bool `json:"enabled,omitempty"`
 }

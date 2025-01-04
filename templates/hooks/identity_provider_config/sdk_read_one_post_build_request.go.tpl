@@ -1,5 +1,5 @@
 	identityProviderConfigType := IdentityProviderConfigType
-	input.IdentityProviderConfig = &svcsdk.IdentityProviderConfig{
+	input.IdentityProviderConfig = &svcsdktypes.IdentityProviderConfig{
 		Name: r.ko.Spec.OIDC.IdentityProviderConfigName,
 		Type: &identityProviderConfigType,
 	}

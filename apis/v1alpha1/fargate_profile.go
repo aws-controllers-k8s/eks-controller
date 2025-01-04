@@ -25,7 +25,7 @@ import (
 // An object representing an Fargate profile.
 type FargateProfileSpec struct {
 
-	// A unique, case-sensitive identifier that you provide to ensure the idempotency
+	// A unique, case-sensitive identifier that you provide to ensurethe idempotency
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The name of your cluster.

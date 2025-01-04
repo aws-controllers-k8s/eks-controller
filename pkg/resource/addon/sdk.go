@@ -28,8 +28,9 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/eks"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/eks"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -40,8 +41,7 @@ import (
 var (
 	_ = &metav1.Time{}
 	_ = strings.ToLower("")
-	_ = &aws.JSONValue{}
-	_ = &svcsdk.EKS{}
+	_ = &svcsdk.Client{}
 	_ = &svcapitypes.Addon{}
 	_ = ackv1alpha1.AWSAccountID("")
 	_ = &ackerr.NotFound
@@ -49,6 +49,7 @@ var (
 	_ = &reflect.Value{}
 	_ = fmt.Sprintf("")
 	_ = &ackrequeue.NoRequeue{}
+	_ = &aws.Config{}
 )
 
 // sdkFind returns SDK-specific information about a supplied resource
@@ -74,13 +75,13 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	var resp *svcsdk.DescribeAddonOutput
-	resp, err = rm.sdkapi.DescribeAddonWithContext(ctx, input)
+	resp, err = rm.sdkapi.DescribeAddon(ctx, input)
 	rm.metrics.RecordAPICall("READ_ONE", "DescribeAddon", err)
 	if err != nil {
 		if reqErr, ok := ackerr.AWSRequestFailure(err); ok && reqErr.StatusCode() == 404 {
 			return nil, ackerr.NotFound
 		}
-		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "ResourceNotFoundException" {
+		if strings.Contains(err.Error(), "ResourceNotFoundException") {
 			return nil, ackerr.NotFound
 		}
 		return nil, err
@@ -128,20 +129,14 @@ func (rm *resourceManager) sdkFind(
 			f6f0 := []*svcapitypes.AddonIssue{}
 			for _, f6f0iter := range resp.Addon.Health.Issues {
 				f6f0elem := &svcapitypes.AddonIssue{}
-				if f6f0iter.Code != nil {
-					f6f0elem.Code = f6f0iter.Code
+				if f6f0iter.Code != "" {
+					f6f0elem.Code = aws.String(string(f6f0iter.Code))
 				}
 				if f6f0iter.Message != nil {
 					f6f0elem.Message = f6f0iter.Message
 				}
 				if f6f0iter.ResourceIds != nil {
-					f6f0elemf2 := []*string{}
-					for _, f6f0elemf2iter := range f6f0iter.ResourceIds {
-						var f6f0elemf2elem string
-						f6f0elemf2elem = *f6f0elemf2iter
-						f6f0elemf2 = append(f6f0elemf2, &f6f0elemf2elem)
-					}
-					f6f0elem.ResourceIDs = f6f0elemf2
+					f6f0elem.ResourceIDs = aws.StringSlice(f6f0iter.ResourceIds)
 				}
 				f6f0 = append(f6f0, f6f0elem)
 			}
@@ -183,19 +178,13 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Spec.ServiceAccountRoleARN = nil
 	}
-	if resp.Addon.Status != nil {
-		ko.Status.Status = resp.Addon.Status
+	if resp.Addon.Status != "" {
+		ko.Status.Status = aws.String(string(resp.Addon.Status))
 	} else {
 		ko.Status.Status = nil
 	}
 	if resp.Addon.Tags != nil {
-		f14 := map[string]*string{}
-		for f14key, f14valiter := range resp.Addon.Tags {
-			var f14val string
-			f14val = *f14valiter
-			f14[f14key] = &f14val
-		}
-		ko.Spec.Tags = f14
+		ko.Spec.Tags = aws.StringMap(resp.Addon.Tags)
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -220,7 +209,7 @@ func (rm *resourceManager) sdkFind(
 func (rm *resourceManager) requiredFieldsMissingFromReadOneInput(
 	r *resource,
 ) bool {
-	return r.ko.Spec.ClusterName == nil || r.ko.Spec.Name == nil
+	return r.ko.Spec.Name == nil || r.ko.Spec.ClusterName == nil
 
 }
 
@@ -232,10 +221,10 @@ func (rm *resourceManager) newDescribeRequestPayload(
 	res := &svcsdk.DescribeAddonInput{}
 
 	if r.ko.Spec.Name != nil {
-		res.SetAddonName(*r.ko.Spec.Name)
+		res.AddonName = r.ko.Spec.Name
 	}
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 
 	return res, nil
@@ -260,7 +249,7 @@ func (rm *resourceManager) sdkCreate(
 
 	var resp *svcsdk.CreateAddonOutput
 	_ = resp
-	resp, err = rm.sdkapi.CreateAddonWithContext(ctx, input)
+	resp, err = rm.sdkapi.CreateAddon(ctx, input)
 	rm.metrics.RecordAPICall("CREATE", "CreateAddon", err)
 	if err != nil {
 		return nil, err
@@ -307,20 +296,14 @@ func (rm *resourceManager) sdkCreate(
 			f6f0 := []*svcapitypes.AddonIssue{}
 			for _, f6f0iter := range resp.Addon.Health.Issues {
 				f6f0elem := &svcapitypes.AddonIssue{}
-				if f6f0iter.Code != nil {
-					f6f0elem.Code = f6f0iter.Code
+				if f6f0iter.Code != "" {
+					f6f0elem.Code = aws.String(string(f6f0iter.Code))
 				}
 				if f6f0iter.Message != nil {
 					f6f0elem.Message = f6f0iter.Message
 				}
 				if f6f0iter.ResourceIds != nil {
-					f6f0elemf2 := []*string{}
-					for _, f6f0elemf2iter := range f6f0iter.ResourceIds {
-						var f6f0elemf2elem string
-						f6f0elemf2elem = *f6f0elemf2iter
-						f6f0elemf2 = append(f6f0elemf2, &f6f0elemf2elem)
-					}
-					f6f0elem.ResourceIDs = f6f0elemf2
+					f6f0elem.ResourceIDs = aws.StringSlice(f6f0iter.ResourceIds)
 				}
 				f6f0 = append(f6f0, f6f0elem)
 			}
@@ -362,19 +345,13 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Spec.ServiceAccountRoleARN = nil
 	}
-	if resp.Addon.Status != nil {
-		ko.Status.Status = resp.Addon.Status
+	if resp.Addon.Status != "" {
+		ko.Status.Status = aws.String(string(resp.Addon.Status))
 	} else {
 		ko.Status.Status = nil
 	}
 	if resp.Addon.Tags != nil {
-		f14 := map[string]*string{}
-		for f14key, f14valiter := range resp.Addon.Tags {
-			var f14val string
-			f14val = *f14valiter
-			f14[f14key] = &f14val
-		}
-		ko.Spec.Tags = f14
+		ko.Spec.Tags = aws.StringMap(resp.Addon.Tags)
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -401,48 +378,42 @@ func (rm *resourceManager) newCreateRequestPayload(
 	res := &svcsdk.CreateAddonInput{}
 
 	if r.ko.Spec.Name != nil {
-		res.SetAddonName(*r.ko.Spec.Name)
+		res.AddonName = r.ko.Spec.Name
 	}
 	if r.ko.Spec.AddonVersion != nil {
-		res.SetAddonVersion(*r.ko.Spec.AddonVersion)
+		res.AddonVersion = r.ko.Spec.AddonVersion
 	}
 	if r.ko.Spec.ClientRequestToken != nil {
-		res.SetClientRequestToken(*r.ko.Spec.ClientRequestToken)
+		res.ClientRequestToken = r.ko.Spec.ClientRequestToken
 	}
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 	if r.ko.Spec.ConfigurationValues != nil {
-		res.SetConfigurationValues(*r.ko.Spec.ConfigurationValues)
+		res.ConfigurationValues = r.ko.Spec.ConfigurationValues
 	}
 	if r.ko.Spec.PodIdentityAssociations != nil {
-		f5 := []*svcsdk.AddonPodIdentityAssociations{}
+		f5 := []svcsdktypes.AddonPodIdentityAssociations{}
 		for _, f5iter := range r.ko.Spec.PodIdentityAssociations {
-			f5elem := &svcsdk.AddonPodIdentityAssociations{}
+			f5elem := &svcsdktypes.AddonPodIdentityAssociations{}
 			if f5iter.RoleARN != nil {
-				f5elem.SetRoleArn(*f5iter.RoleARN)
+				f5elem.RoleArn = f5iter.RoleARN
 			}
 			if f5iter.ServiceAccount != nil {
-				f5elem.SetServiceAccount(*f5iter.ServiceAccount)
+				f5elem.ServiceAccount = f5iter.ServiceAccount
 			}
-			f5 = append(f5, f5elem)
+			f5 = append(f5, *f5elem)
 		}
-		res.SetPodIdentityAssociations(f5)
+		res.PodIdentityAssociations = f5
 	}
 	if r.ko.Spec.ResolveConflicts != nil {
-		res.SetResolveConflicts(*r.ko.Spec.ResolveConflicts)
+		res.ResolveConflicts = svcsdktypes.ResolveConflicts(*r.ko.Spec.ResolveConflicts)
 	}
 	if r.ko.Spec.ServiceAccountRoleARN != nil {
-		res.SetServiceAccountRoleArn(*r.ko.Spec.ServiceAccountRoleARN)
+		res.ServiceAccountRoleArn = r.ko.Spec.ServiceAccountRoleARN
 	}
 	if r.ko.Spec.Tags != nil {
-		f8 := map[string]*string{}
-		for f8key, f8valiter := range r.ko.Spec.Tags {
-			var f8val string
-			f8val = *f8valiter
-			f8[f8key] = &f8val
-		}
-		res.SetTags(f8)
+		res.Tags = aws.ToStringMap(r.ko.Spec.Tags)
 	}
 
 	return res, nil
@@ -480,7 +451,7 @@ func (rm *resourceManager) sdkUpdate(
 		err := syncTags(
 			ctx, rm.sdkapi, rm.metrics,
 			string(*desired.ko.Status.ACKResourceMetadata.ARN),
-			desired.ko.Spec.Tags, latest.ko.Spec.Tags,
+			ToACKTags(desired.ko.Spec.Tags), ToACKTags(latest.ko.Spec.Tags),
 		)
 		if err != nil {
 			return nil, err
@@ -495,12 +466,12 @@ func (rm *resourceManager) sdkUpdate(
 	}
 	// If a user deleted all the PodIdentityAssociations we should send an empty list to the API
 	if delta.DifferentAt("Spec.PodIdentityAssociations") && len(desired.ko.Spec.PodIdentityAssociations) == 0 {
-		input.SetPodIdentityAssociations([]*svcsdk.AddonPodIdentityAssociations{})
+		input.PodIdentityAssociations = []svcsdktypes.AddonPodIdentityAssociations{}
 	}
 
 	var resp *svcsdk.UpdateAddonOutput
 	_ = resp
-	resp, err = rm.sdkapi.UpdateAddonWithContext(ctx, input)
+	resp, err = rm.sdkapi.UpdateAddon(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateAddon", err)
 	if err != nil {
 		return nil, err
@@ -514,8 +485,8 @@ func (rm *resourceManager) sdkUpdate(
 	} else {
 		ko.Status.CreatedAt = nil
 	}
-	if resp.Update.Status != nil {
-		ko.Status.Status = resp.Update.Status
+	if resp.Update.Status != "" {
+		ko.Status.Status = aws.String(string(resp.Update.Status))
 	} else {
 		ko.Status.Status = nil
 	}
@@ -537,39 +508,39 @@ func (rm *resourceManager) newUpdateRequestPayload(
 	res := &svcsdk.UpdateAddonInput{}
 
 	if r.ko.Spec.Name != nil {
-		res.SetAddonName(*r.ko.Spec.Name)
+		res.AddonName = r.ko.Spec.Name
 	}
 	if r.ko.Spec.AddonVersion != nil {
-		res.SetAddonVersion(*r.ko.Spec.AddonVersion)
+		res.AddonVersion = r.ko.Spec.AddonVersion
 	}
 	if r.ko.Spec.ClientRequestToken != nil {
-		res.SetClientRequestToken(*r.ko.Spec.ClientRequestToken)
+		res.ClientRequestToken = r.ko.Spec.ClientRequestToken
 	}
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 	if r.ko.Spec.ConfigurationValues != nil {
-		res.SetConfigurationValues(*r.ko.Spec.ConfigurationValues)
+		res.ConfigurationValues = r.ko.Spec.ConfigurationValues
 	}
 	if r.ko.Spec.PodIdentityAssociations != nil {
-		f5 := []*svcsdk.AddonPodIdentityAssociations{}
+		f5 := []svcsdktypes.AddonPodIdentityAssociations{}
 		for _, f5iter := range r.ko.Spec.PodIdentityAssociations {
-			f5elem := &svcsdk.AddonPodIdentityAssociations{}
+			f5elem := &svcsdktypes.AddonPodIdentityAssociations{}
 			if f5iter.RoleARN != nil {
-				f5elem.SetRoleArn(*f5iter.RoleARN)
+				f5elem.RoleArn = f5iter.RoleARN
 			}
 			if f5iter.ServiceAccount != nil {
-				f5elem.SetServiceAccount(*f5iter.ServiceAccount)
+				f5elem.ServiceAccount = f5iter.ServiceAccount
 			}
-			f5 = append(f5, f5elem)
+			f5 = append(f5, *f5elem)
 		}
-		res.SetPodIdentityAssociations(f5)
+		res.PodIdentityAssociations = f5
 	}
 	if r.ko.Spec.ResolveConflicts != nil {
-		res.SetResolveConflicts(*r.ko.Spec.ResolveConflicts)
+		res.ResolveConflicts = svcsdktypes.ResolveConflicts(*r.ko.Spec.ResolveConflicts)
 	}
 	if r.ko.Spec.ServiceAccountRoleARN != nil {
-		res.SetServiceAccountRoleArn(*r.ko.Spec.ServiceAccountRoleARN)
+		res.ServiceAccountRoleArn = r.ko.Spec.ServiceAccountRoleARN
 	}
 
 	return res, nil
@@ -591,7 +562,7 @@ func (rm *resourceManager) sdkDelete(
 	}
 	var resp *svcsdk.DeleteAddonOutput
 	_ = resp
-	resp, err = rm.sdkapi.DeleteAddonWithContext(ctx, input)
+	resp, err = rm.sdkapi.DeleteAddon(ctx, input)
 	rm.metrics.RecordAPICall("DELETE", "DeleteAddon", err)
 	return nil, err
 }
@@ -604,10 +575,10 @@ func (rm *resourceManager) newDeleteRequestPayload(
 	res := &svcsdk.DeleteAddonInput{}
 
 	if r.ko.Spec.Name != nil {
-		res.SetAddonName(*r.ko.Spec.Name)
+		res.AddonName = r.ko.Spec.Name
 	}
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 
 	return res, nil

@@ -24,8 +24,9 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/eks"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/eks"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
@@ -207,7 +208,7 @@ func (rm *resourceManager) customUpdate(
 		if err := tags.SyncTags(
 			ctx, rm.sdkapi, rm.metrics,
 			string(*latest.ko.Status.ACKResourceMetadata.ARN),
-			desired.ko.Spec.Tags, latest.ko.Spec.Tags,
+			ToACKTags(desired.ko.Spec.Tags), ToACKTags(latest.ko.Spec.Tags),
 		); err != nil {
 			return nil, err
 		}
@@ -324,7 +325,7 @@ func (rm *resourceManager) customUpdate(
 		}
 		// This doesn't reflect the actual status of the cluster, so we have to explicitly
 		// requeue and set the status to updating.
-		updatedRes.ko.Status.Status = aws.String(string(svcsdk.ClusterStatusUpdating))
+		updatedRes.ko.Status.Status = aws.String(string(svcsdktypes.ClusterStatusUpdating))
 		return returnClusterUpdating(updatedRes)
 	}
 
@@ -388,7 +389,7 @@ func (rm *resourceManager) updateVersion(
 		Version: &nextVersion,
 	}
 
-	_, err = rm.sdkapi.UpdateClusterVersionWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateClusterVersion(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterVersion", err)
 	if err != nil {
 		return err
@@ -409,7 +410,7 @@ func (rm *resourceManager) updateConfigLogging(
 		Logging: rm.newLogging(r),
 	}
 
-	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
 	if err != nil {
 		return err
@@ -418,10 +419,10 @@ func (rm *resourceManager) updateConfigLogging(
 	return nil
 }
 
-func newAccessConfig(r *resource) *svcsdk.UpdateAccessConfigRequest {
-	cfg := &svcsdk.UpdateAccessConfigRequest{}
+func newAccessConfig(r *resource) *svcsdktypes.UpdateAccessConfigRequest {
+	cfg := &svcsdktypes.UpdateAccessConfigRequest{}
 	if r.ko.Spec.AccessConfig != nil {
-		cfg.AuthenticationMode = r.ko.Spec.AccessConfig.AuthenticationMode
+		cfg.AuthenticationMode = svcsdktypes.AuthenticationMode(*r.ko.Spec.AccessConfig.AuthenticationMode)
 	}
 	return cfg
 }
@@ -437,7 +438,7 @@ func (rm *resourceManager) updateAccessConfig(
 		Name:         r.ko.Spec.Name,
 		AccessConfig: newAccessConfig(r),
 	}
-	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
 	if err != nil {
 		return err
@@ -455,11 +456,11 @@ func (rm *resourceManager) updateClusterUpgradePolicy(
 	defer func() { exit(err) }()
 	input := &svcsdk.UpdateClusterConfigInput{
 		Name: r.ko.Spec.Name,
-		UpgradePolicy: &svcsdk.UpgradePolicyRequest{
-			SupportType: r.ko.Spec.UpgradePolicy.SupportType,
+		UpgradePolicy: &svcsdktypes.UpgradePolicyRequest{
+			SupportType: svcsdktypes.SupportType(*r.ko.Spec.UpgradePolicy.SupportType),
 		},
 	}
-	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
 	if err != nil {
 		return err
@@ -482,10 +483,10 @@ func (rm *resourceManager) updateConfigResourcesVPCConfigPublicAndPrivateAccess(
 
 	// We only want to update endpointPrivateAccess, endpointPublicAccess and
 	// publicAccessCidrs
-	input.ResourcesVpcConfig.SetSubnetIds(nil)
-	input.ResourcesVpcConfig.SetSecurityGroupIds(nil)
+	input.ResourcesVpcConfig.SubnetIds = nil
+	input.ResourcesVpcConfig.SecurityGroupIds = nil
 
-	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
 	if err != nil {
 		return err
@@ -509,9 +510,9 @@ func (rm *resourceManager) updateConfigResourcesVPCConfigSubnetsAndSecurityGroup
 	// We only want to update securityGroupIds and subnetIds
 	input.ResourcesVpcConfig.EndpointPublicAccess = nil
 	input.ResourcesVpcConfig.EndpointPrivateAccess = nil
-	input.ResourcesVpcConfig.SetPublicAccessCidrs(nil)
+	input.ResourcesVpcConfig.PublicAccessCidrs = nil
 
-	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
 	if err != nil {
 		return err
@@ -531,7 +532,7 @@ func (rm *resourceManager) listNodegroups(
 		ClusterName: r.ko.Spec.Name,
 	}
 
-	nodes, err = rm.sdkapi.ListNodegroupsWithContext(ctx, input)
+	nodes, err = rm.sdkapi.ListNodegroups(ctx, input)
 	rm.metrics.RecordAPICall("READ_MANY", "ListNodegroups", err)
 	if err != nil {
 		return nil, err
@@ -552,24 +553,32 @@ func (rm *resourceManager) associateEncryptionConfig(
 
 	input := &svcsdk.AssociateEncryptionConfigInput{
 		ClusterName: r.ko.Spec.Name,
-		EncryptionConfig: []*svcsdk.EncryptionConfig{
+		EncryptionConfig: []svcsdktypes.EncryptionConfig{
 			{
 				// Being it means that we already have a single encryption config
 				// in the spec. So we can safely assume that the first element is
 				// the only one.
-				Resources: r.ko.Spec.EncryptionConfig[0].Resources,
-				Provider: &svcsdk.Provider{
+				Resources: PointerStringListToStringList(r.ko.Spec.EncryptionConfig[0].Resources),
+				Provider: &svcsdktypes.Provider{
 					KeyArn: r.ko.Spec.EncryptionConfig[0].Provider.KeyARN,
 				},
 			},
 		},
 	}
 
-	_, err = rm.sdkapi.AssociateEncryptionConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.AssociateEncryptionConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "AssociateEncryptionConfig", err)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func PointerStringListToStringList(list []*string) []string {
+	var result []string
+	for _, s := range list {
+		result = append(result, *s)
+	}
+	return result
 }

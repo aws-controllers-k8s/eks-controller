@@ -28,8 +28,8 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/eks"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/eks"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -40,8 +40,7 @@ import (
 var (
 	_ = &metav1.Time{}
 	_ = strings.ToLower("")
-	_ = &aws.JSONValue{}
-	_ = &svcsdk.EKS{}
+	_ = &svcsdk.Client{}
 	_ = &svcapitypes.AccessEntry{}
 	_ = ackv1alpha1.AWSAccountID("")
 	_ = &ackerr.NotFound
@@ -49,6 +48,7 @@ var (
 	_ = &reflect.Value{}
 	_ = fmt.Sprintf("")
 	_ = &ackrequeue.NoRequeue{}
+	_ = &aws.Config{}
 )
 
 // sdkFind returns SDK-specific information about a supplied resource
@@ -74,13 +74,13 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	var resp *svcsdk.DescribeAccessEntryOutput
-	resp, err = rm.sdkapi.DescribeAccessEntryWithContext(ctx, input)
+	resp, err = rm.sdkapi.DescribeAccessEntry(ctx, input)
 	rm.metrics.RecordAPICall("READ_ONE", "DescribeAccessEntry", err)
 	if err != nil {
 		if reqErr, ok := ackerr.AWSRequestFailure(err); ok && reqErr.StatusCode() == 404 {
 			return nil, ackerr.NotFound
 		}
-		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "ResourceNotFoundException" {
+		if strings.Contains(err.Error(), "ResourceNotFoundException") {
 			return nil, ackerr.NotFound
 		}
 		return nil, err
@@ -108,13 +108,7 @@ func (rm *resourceManager) sdkFind(
 		ko.Status.CreatedAt = nil
 	}
 	if resp.AccessEntry.KubernetesGroups != nil {
-		f3 := []*string{}
-		for _, f3iter := range resp.AccessEntry.KubernetesGroups {
-			var f3elem string
-			f3elem = *f3iter
-			f3 = append(f3, &f3elem)
-		}
-		ko.Spec.KubernetesGroups = f3
+		ko.Spec.KubernetesGroups = aws.StringSlice(resp.AccessEntry.KubernetesGroups)
 	} else {
 		ko.Spec.KubernetesGroups = nil
 	}
@@ -129,13 +123,7 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.PrincipalARN = nil
 	}
 	if resp.AccessEntry.Tags != nil {
-		f6 := map[string]*string{}
-		for f6key, f6valiter := range resp.AccessEntry.Tags {
-			var f6val string
-			f6val = *f6valiter
-			f6[f6key] = &f6val
-		}
-		ko.Spec.Tags = f6
+		ko.Spec.Tags = aws.StringMap(resp.AccessEntry.Tags)
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -175,10 +163,10 @@ func (rm *resourceManager) newDescribeRequestPayload(
 	res := &svcsdk.DescribeAccessEntryInput{}
 
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 	if r.ko.Spec.PrincipalARN != nil {
-		res.SetPrincipalArn(*r.ko.Spec.PrincipalARN)
+		res.PrincipalArn = r.ko.Spec.PrincipalARN
 	}
 
 	return res, nil
@@ -203,7 +191,7 @@ func (rm *resourceManager) sdkCreate(
 
 	var resp *svcsdk.CreateAccessEntryOutput
 	_ = resp
-	resp, err = rm.sdkapi.CreateAccessEntryWithContext(ctx, input)
+	resp, err = rm.sdkapi.CreateAccessEntry(ctx, input)
 	rm.metrics.RecordAPICall("CREATE", "CreateAccessEntry", err)
 	if err != nil {
 		return nil, err
@@ -230,13 +218,7 @@ func (rm *resourceManager) sdkCreate(
 		ko.Status.CreatedAt = nil
 	}
 	if resp.AccessEntry.KubernetesGroups != nil {
-		f3 := []*string{}
-		for _, f3iter := range resp.AccessEntry.KubernetesGroups {
-			var f3elem string
-			f3elem = *f3iter
-			f3 = append(f3, &f3elem)
-		}
-		ko.Spec.KubernetesGroups = f3
+		ko.Spec.KubernetesGroups = aws.StringSlice(resp.AccessEntry.KubernetesGroups)
 	} else {
 		ko.Spec.KubernetesGroups = nil
 	}
@@ -251,13 +233,7 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.PrincipalARN = nil
 	}
 	if resp.AccessEntry.Tags != nil {
-		f6 := map[string]*string{}
-		for f6key, f6valiter := range resp.AccessEntry.Tags {
-			var f6val string
-			f6val = *f6valiter
-			f6[f6key] = &f6val
-		}
-		ko.Spec.Tags = f6
+		ko.Spec.Tags = aws.StringMap(resp.AccessEntry.Tags)
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -285,34 +261,22 @@ func (rm *resourceManager) newCreateRequestPayload(
 	res := &svcsdk.CreateAccessEntryInput{}
 
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 	if r.ko.Spec.KubernetesGroups != nil {
-		f1 := []*string{}
-		for _, f1iter := range r.ko.Spec.KubernetesGroups {
-			var f1elem string
-			f1elem = *f1iter
-			f1 = append(f1, &f1elem)
-		}
-		res.SetKubernetesGroups(f1)
+		res.KubernetesGroups = aws.ToStringSlice(r.ko.Spec.KubernetesGroups)
 	}
 	if r.ko.Spec.PrincipalARN != nil {
-		res.SetPrincipalArn(*r.ko.Spec.PrincipalARN)
+		res.PrincipalArn = r.ko.Spec.PrincipalARN
 	}
 	if r.ko.Spec.Tags != nil {
-		f3 := map[string]*string{}
-		for f3key, f3valiter := range r.ko.Spec.Tags {
-			var f3val string
-			f3val = *f3valiter
-			f3[f3key] = &f3val
-		}
-		res.SetTags(f3)
+		res.Tags = aws.ToStringMap(r.ko.Spec.Tags)
 	}
 	if r.ko.Spec.Type != nil {
-		res.SetType(*r.ko.Spec.Type)
+		res.Type = r.ko.Spec.Type
 	}
 	if r.ko.Spec.Username != nil {
-		res.SetUsername(*r.ko.Spec.Username)
+		res.Username = r.ko.Spec.Username
 	}
 
 	return res, nil
@@ -341,7 +305,7 @@ func (rm *resourceManager) sdkUpdate(
 		err := syncTags(
 			ctx, rm.sdkapi, rm.metrics,
 			string(*latest.ko.Status.ACKResourceMetadata.ARN),
-			desired.ko.Spec.Tags, latest.ko.Spec.Tags,
+			ToACKTags(desired.ko.Spec.Tags), ToACKTags(latest.ko.Spec.Tags),
 		)
 		if err != nil {
 			return nil, err
@@ -357,7 +321,7 @@ func (rm *resourceManager) sdkUpdate(
 
 	var resp *svcsdk.UpdateAccessEntryOutput
 	_ = resp
-	resp, err = rm.sdkapi.UpdateAccessEntryWithContext(ctx, input)
+	resp, err = rm.sdkapi.UpdateAccessEntry(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateAccessEntry", err)
 	if err != nil {
 		return nil, err
@@ -384,13 +348,7 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Status.CreatedAt = nil
 	}
 	if resp.AccessEntry.KubernetesGroups != nil {
-		f3 := []*string{}
-		for _, f3iter := range resp.AccessEntry.KubernetesGroups {
-			var f3elem string
-			f3elem = *f3iter
-			f3 = append(f3, &f3elem)
-		}
-		ko.Spec.KubernetesGroups = f3
+		ko.Spec.KubernetesGroups = aws.StringSlice(resp.AccessEntry.KubernetesGroups)
 	} else {
 		ko.Spec.KubernetesGroups = nil
 	}
@@ -405,13 +363,7 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Spec.PrincipalARN = nil
 	}
 	if resp.AccessEntry.Tags != nil {
-		f6 := map[string]*string{}
-		for f6key, f6valiter := range resp.AccessEntry.Tags {
-			var f6val string
-			f6val = *f6valiter
-			f6[f6key] = &f6val
-		}
-		ko.Spec.Tags = f6
+		ko.Spec.Tags = aws.StringMap(resp.AccessEntry.Tags)
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -440,22 +392,16 @@ func (rm *resourceManager) newUpdateRequestPayload(
 	res := &svcsdk.UpdateAccessEntryInput{}
 
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 	if r.ko.Spec.KubernetesGroups != nil {
-		f2 := []*string{}
-		for _, f2iter := range r.ko.Spec.KubernetesGroups {
-			var f2elem string
-			f2elem = *f2iter
-			f2 = append(f2, &f2elem)
-		}
-		res.SetKubernetesGroups(f2)
+		res.KubernetesGroups = aws.ToStringSlice(r.ko.Spec.KubernetesGroups)
 	}
 	if r.ko.Spec.PrincipalARN != nil {
-		res.SetPrincipalArn(*r.ko.Spec.PrincipalARN)
+		res.PrincipalArn = r.ko.Spec.PrincipalARN
 	}
 	if r.ko.Spec.Username != nil {
-		res.SetUsername(*r.ko.Spec.Username)
+		res.Username = r.ko.Spec.Username
 	}
 
 	return res, nil
@@ -477,7 +423,7 @@ func (rm *resourceManager) sdkDelete(
 	}
 	var resp *svcsdk.DeleteAccessEntryOutput
 	_ = resp
-	resp, err = rm.sdkapi.DeleteAccessEntryWithContext(ctx, input)
+	resp, err = rm.sdkapi.DeleteAccessEntry(ctx, input)
 	rm.metrics.RecordAPICall("DELETE", "DeleteAccessEntry", err)
 	return nil, err
 }
@@ -490,10 +436,10 @@ func (rm *resourceManager) newDeleteRequestPayload(
 	res := &svcsdk.DeleteAccessEntryInput{}
 
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 	if r.ko.Spec.PrincipalARN != nil {
-		res.SetPrincipalArn(*r.ko.Spec.PrincipalARN)
+		res.PrincipalArn = r.ko.Spec.PrincipalARN
 	}
 
 	return res, nil

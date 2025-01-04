@@ -62,6 +62,31 @@ func newResourceDelta(
 			delta.Add("Spec.ClientRequestToken", a.ko.Spec.ClientRequestToken, b.ko.Spec.ClientRequestToken)
 		}
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.ComputeConfig, b.ko.Spec.ComputeConfig) {
+		delta.Add("Spec.ComputeConfig", a.ko.Spec.ComputeConfig, b.ko.Spec.ComputeConfig)
+	} else if a.ko.Spec.ComputeConfig != nil && b.ko.Spec.ComputeConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.ComputeConfig.Enabled, b.ko.Spec.ComputeConfig.Enabled) {
+			delta.Add("Spec.ComputeConfig.Enabled", a.ko.Spec.ComputeConfig.Enabled, b.ko.Spec.ComputeConfig.Enabled)
+		} else if a.ko.Spec.ComputeConfig.Enabled != nil && b.ko.Spec.ComputeConfig.Enabled != nil {
+			if *a.ko.Spec.ComputeConfig.Enabled != *b.ko.Spec.ComputeConfig.Enabled {
+				delta.Add("Spec.ComputeConfig.Enabled", a.ko.Spec.ComputeConfig.Enabled, b.ko.Spec.ComputeConfig.Enabled)
+			}
+		}
+		if len(a.ko.Spec.ComputeConfig.NodePools) != len(b.ko.Spec.ComputeConfig.NodePools) {
+			delta.Add("Spec.ComputeConfig.NodePools", a.ko.Spec.ComputeConfig.NodePools, b.ko.Spec.ComputeConfig.NodePools)
+		} else if len(a.ko.Spec.ComputeConfig.NodePools) > 0 {
+			if !ackcompare.SliceStringPEqual(a.ko.Spec.ComputeConfig.NodePools, b.ko.Spec.ComputeConfig.NodePools) {
+				delta.Add("Spec.ComputeConfig.NodePools", a.ko.Spec.ComputeConfig.NodePools, b.ko.Spec.ComputeConfig.NodePools)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.ComputeConfig.NodeRoleARN, b.ko.Spec.ComputeConfig.NodeRoleARN) {
+			delta.Add("Spec.ComputeConfig.NodeRoleARN", a.ko.Spec.ComputeConfig.NodeRoleARN, b.ko.Spec.ComputeConfig.NodeRoleARN)
+		} else if a.ko.Spec.ComputeConfig.NodeRoleARN != nil && b.ko.Spec.ComputeConfig.NodeRoleARN != nil {
+			if *a.ko.Spec.ComputeConfig.NodeRoleARN != *b.ko.Spec.ComputeConfig.NodeRoleARN {
+				delta.Add("Spec.ComputeConfig.NodeRoleARN", a.ko.Spec.ComputeConfig.NodeRoleARN, b.ko.Spec.ComputeConfig.NodeRoleARN)
+			}
+		}
+	}
 	if len(a.ko.Spec.EncryptionConfig) != len(b.ko.Spec.EncryptionConfig) {
 		delta.Add("Spec.EncryptionConfig", a.ko.Spec.EncryptionConfig, b.ko.Spec.EncryptionConfig)
 	} else if len(a.ko.Spec.EncryptionConfig) > 0 {
@@ -72,6 +97,17 @@ func newResourceDelta(
 	if ackcompare.HasNilDifference(a.ko.Spec.KubernetesNetworkConfig, b.ko.Spec.KubernetesNetworkConfig) {
 		delta.Add("Spec.KubernetesNetworkConfig", a.ko.Spec.KubernetesNetworkConfig, b.ko.Spec.KubernetesNetworkConfig)
 	} else if a.ko.Spec.KubernetesNetworkConfig != nil && b.ko.Spec.KubernetesNetworkConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing, b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing) {
+			delta.Add("Spec.KubernetesNetworkConfig.ElasticLoadBalancing", a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing, b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing)
+		} else if a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing != nil && b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing != nil {
+			if ackcompare.HasNilDifference(a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled, b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled) {
+				delta.Add("Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled", a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled, b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled)
+			} else if a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled != nil && b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled != nil {
+				if *a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled != *b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled {
+					delta.Add("Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled", a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled, b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled)
+				}
+			}
+		}
 		if ackcompare.HasNilDifference(a.ko.Spec.KubernetesNetworkConfig.IPFamily, b.ko.Spec.KubernetesNetworkConfig.IPFamily) {
 			delta.Add("Spec.KubernetesNetworkConfig.IPFamily", a.ko.Spec.KubernetesNetworkConfig.IPFamily, b.ko.Spec.KubernetesNetworkConfig.IPFamily)
 		} else if a.ko.Spec.KubernetesNetworkConfig.IPFamily != nil && b.ko.Spec.KubernetesNetworkConfig.IPFamily != nil {
@@ -134,6 +170,24 @@ func newResourceDelta(
 			}
 		}
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.RemoteNetworkConfig, b.ko.Spec.RemoteNetworkConfig) {
+		delta.Add("Spec.RemoteNetworkConfig", a.ko.Spec.RemoteNetworkConfig, b.ko.Spec.RemoteNetworkConfig)
+	} else if a.ko.Spec.RemoteNetworkConfig != nil && b.ko.Spec.RemoteNetworkConfig != nil {
+		if len(a.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks) != len(b.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks) {
+			delta.Add("Spec.RemoteNetworkConfig.RemoteNodeNetworks", a.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks, b.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks)
+		} else if len(a.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks) > 0 {
+			if !reflect.DeepEqual(a.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks, b.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks) {
+				delta.Add("Spec.RemoteNetworkConfig.RemoteNodeNetworks", a.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks, b.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks)
+			}
+		}
+		if len(a.ko.Spec.RemoteNetworkConfig.RemotePodNetworks) != len(b.ko.Spec.RemoteNetworkConfig.RemotePodNetworks) {
+			delta.Add("Spec.RemoteNetworkConfig.RemotePodNetworks", a.ko.Spec.RemoteNetworkConfig.RemotePodNetworks, b.ko.Spec.RemoteNetworkConfig.RemotePodNetworks)
+		} else if len(a.ko.Spec.RemoteNetworkConfig.RemotePodNetworks) > 0 {
+			if !reflect.DeepEqual(a.ko.Spec.RemoteNetworkConfig.RemotePodNetworks, b.ko.Spec.RemoteNetworkConfig.RemotePodNetworks) {
+				delta.Add("Spec.RemoteNetworkConfig.RemotePodNetworks", a.ko.Spec.RemoteNetworkConfig.RemotePodNetworks, b.ko.Spec.RemoteNetworkConfig.RemotePodNetworks)
+			}
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.ResourcesVPCConfig, b.ko.Spec.ResourcesVPCConfig) {
 		delta.Add("Spec.ResourcesVPCConfig", a.ko.Spec.ResourcesVPCConfig, b.ko.Spec.ResourcesVPCConfig)
 	} else if a.ko.Spec.ResourcesVPCConfig != nil && b.ko.Spec.ResourcesVPCConfig != nil {
@@ -183,6 +237,21 @@ func newResourceDelta(
 	if !reflect.DeepEqual(a.ko.Spec.RoleRef, b.ko.Spec.RoleRef) {
 		delta.Add("Spec.RoleRef", a.ko.Spec.RoleRef, b.ko.Spec.RoleRef)
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.StorageConfig, b.ko.Spec.StorageConfig) {
+		delta.Add("Spec.StorageConfig", a.ko.Spec.StorageConfig, b.ko.Spec.StorageConfig)
+	} else if a.ko.Spec.StorageConfig != nil && b.ko.Spec.StorageConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.StorageConfig.BlockStorage, b.ko.Spec.StorageConfig.BlockStorage) {
+			delta.Add("Spec.StorageConfig.BlockStorage", a.ko.Spec.StorageConfig.BlockStorage, b.ko.Spec.StorageConfig.BlockStorage)
+		} else if a.ko.Spec.StorageConfig.BlockStorage != nil && b.ko.Spec.StorageConfig.BlockStorage != nil {
+			if ackcompare.HasNilDifference(a.ko.Spec.StorageConfig.BlockStorage.Enabled, b.ko.Spec.StorageConfig.BlockStorage.Enabled) {
+				delta.Add("Spec.StorageConfig.BlockStorage.Enabled", a.ko.Spec.StorageConfig.BlockStorage.Enabled, b.ko.Spec.StorageConfig.BlockStorage.Enabled)
+			} else if a.ko.Spec.StorageConfig.BlockStorage.Enabled != nil && b.ko.Spec.StorageConfig.BlockStorage.Enabled != nil {
+				if *a.ko.Spec.StorageConfig.BlockStorage.Enabled != *b.ko.Spec.StorageConfig.BlockStorage.Enabled {
+					delta.Add("Spec.StorageConfig.BlockStorage.Enabled", a.ko.Spec.StorageConfig.BlockStorage.Enabled, b.ko.Spec.StorageConfig.BlockStorage.Enabled)
+				}
+			}
+		}
+	}
 	if !ackcompare.MapStringStringEqual(ToACKTags(a.ko.Spec.Tags), ToACKTags(b.ko.Spec.Tags)) {
 		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
 	}
@@ -202,6 +271,17 @@ func newResourceDelta(
 	} else if a.ko.Spec.Version != nil && b.ko.Spec.Version != nil {
 		if *a.ko.Spec.Version != *b.ko.Spec.Version {
 			delta.Add("Spec.Version", a.ko.Spec.Version, b.ko.Spec.Version)
+		}
+	}
+	if ackcompare.HasNilDifference(a.ko.Spec.ZonalShiftConfig, b.ko.Spec.ZonalShiftConfig) {
+		delta.Add("Spec.ZonalShiftConfig", a.ko.Spec.ZonalShiftConfig, b.ko.Spec.ZonalShiftConfig)
+	} else if a.ko.Spec.ZonalShiftConfig != nil && b.ko.Spec.ZonalShiftConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.ZonalShiftConfig.Enabled, b.ko.Spec.ZonalShiftConfig.Enabled) {
+			delta.Add("Spec.ZonalShiftConfig.Enabled", a.ko.Spec.ZonalShiftConfig.Enabled, b.ko.Spec.ZonalShiftConfig.Enabled)
+		} else if a.ko.Spec.ZonalShiftConfig.Enabled != nil && b.ko.Spec.ZonalShiftConfig.Enabled != nil {
+			if *a.ko.Spec.ZonalShiftConfig.Enabled != *b.ko.Spec.ZonalShiftConfig.Enabled {
+				delta.Add("Spec.ZonalShiftConfig.Enabled", a.ko.Spec.ZonalShiftConfig.Enabled, b.ko.Spec.ZonalShiftConfig.Enabled)
+			}
 		}
 	}
 

@@ -16,12 +16,12 @@ package nodegroup
 import (
 	"fmt"
 	"io"
-	"reflect"
+	"math"
 	"testing"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/eks"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -301,11 +301,11 @@ func Test_compareNodegroupScalingConfigs_ManagedByExternal(t *testing.T) {
 	}
 }
 
-func newUpdateScalingConfigPayload(desired, max, min int64) *svcsdk.NodegroupScalingConfig {
-	return &svcsdk.NodegroupScalingConfig{
-		DesiredSize: aws.Int64(desired),
-		MaxSize:     aws.Int64(max),
-		MinSize:     aws.Int64(min),
+func newUpdateScalingConfigPayload(desired, max, min int64) *svcsdktypes.NodegroupScalingConfig {
+	return &svcsdktypes.NodegroupScalingConfig{
+		DesiredSize: aws.Int32(int32(desired)),
+		MaxSize:     aws.Int32(int32(max)),
+		MinSize:     aws.Int32(int32(min)),
 	}
 }
 
@@ -315,9 +315,10 @@ func Test_resourceManager_newUpdateScalingConfigPayload_ManagedByExternalAutosca
 		desired *v1alpha1.Nodegroup
 	}
 	tests := []struct {
-		name string
-		args args
-		want *svcsdk.NodegroupScalingConfig
+		name    string
+		args    args
+		want    *svcsdktypes.NodegroupScalingConfig
+		wantErr bool
 	}{
 		{
 			name: "no changes",
@@ -327,7 +328,8 @@ func Test_resourceManager_newUpdateScalingConfigPayload_ManagedByExternalAutosca
 			},
 			// In such a situation the request will never be sent to EKS, however we still wanna test the behaviour
 			// of the function.
-			want: newUpdateScalingConfigPayload(2, 2, 2),
+			want:    newUpdateScalingConfigPayload(2, 2, 2),
+			wantErr: false,
 		},
 		{
 			name: "only desired size changed",
@@ -335,7 +337,8 @@ func Test_resourceManager_newUpdateScalingConfigPayload_ManagedByExternalAutosca
 				desired: newNodegroupScalingConfigManagedByExternalAutoscaler(10, 2, 2),
 				latest:  newNodegroupScalingConfigManagedByExternalAutoscaler(2, 2, 2),
 			},
-			want: newUpdateScalingConfigPayload(2, 2, 2),
+			want:    newUpdateScalingConfigPayload(2, 2, 2),
+			wantErr: false,
 		},
 		{
 			name: "all the fields changed",
@@ -343,7 +346,8 @@ func Test_resourceManager_newUpdateScalingConfigPayload_ManagedByExternalAutosca
 				desired: newNodegroupScalingConfigManagedByExternalAutoscaler(20, 15, 20),
 				latest:  newNodegroupScalingConfigManagedByExternalAutoscaler(10, 10, 10),
 			},
-			want: newUpdateScalingConfigPayload(10, 15, 20),
+			want:    newUpdateScalingConfigPayload(10, 15, 20),
+			wantErr: false,
 		},
 		{
 			name: "all the fields changed except desired size",
@@ -351,7 +355,17 @@ func Test_resourceManager_newUpdateScalingConfigPayload_ManagedByExternalAutosca
 				desired: newNodegroupScalingConfigManagedByExternalAutoscaler(10, 15, 20),
 				latest:  newNodegroupScalingConfigManagedByExternalAutoscaler(10, 10, 10),
 			},
-			want: newUpdateScalingConfigPayload(10, 15, 20),
+			want:    newUpdateScalingConfigPayload(10, 15, 20),
+			wantErr: false,
+		},
+		{
+			name: "all the fields changed except desired size",
+			args: args{
+				desired: newNodegroupScalingConfigManagedByExternalAutoscaler(math.MaxInt32+1, 15, 20),
+				latest:  newNodegroupScalingConfigManagedByExternalAutoscaler(10, 10, 10),
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -361,8 +375,12 @@ func Test_resourceManager_newUpdateScalingConfigPayload_ManagedByExternalAutosca
 					DestWriter: io.Discard,
 				})),
 			}
-			if got := rm.newUpdateScalingConfigPayload(&resource{tt.args.desired}, &resource{tt.args.latest}); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("resourceManager.newUpdateScalingConfigPayload() = %v, want %v", got, tt.want)
+			got, err := rm.newUpdateScalingConfigPayload(&resource{tt.args.desired}, &resource{tt.args.latest})
+			if (err != nil) != tt.wantErr || err == nil &&
+				(int32(*got.DesiredSize) != *tt.want.DesiredSize ||
+					int32(*got.MaxSize) != *tt.want.MaxSize ||
+					int32(*got.MinSize) != *tt.want.MinSize) {
+				t.Errorf("resourceManager.newUpdateScalingConfigPayload() => got=%v err=%v, want=%v wantErr=%v", got, err, tt.want, tt.wantErr)
 			}
 		})
 	}
@@ -376,7 +394,7 @@ func Test_resourceManager_newUpdateScalingConfigPayload_ManagedByDefault(t *test
 	tests := []struct {
 		name string
 		args args
-		want *svcsdk.NodegroupScalingConfig
+		want *svcsdktypes.NodegroupScalingConfig
 	}{
 		{
 			name: "no changes",
@@ -416,7 +434,9 @@ func Test_resourceManager_newUpdateScalingConfigPayload_ManagedByDefault(t *test
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rm := resourceManager{}
-			if got := rm.newUpdateScalingConfigPayload(&resource{tt.args.desired}, &resource{tt.args.latest}); !reflect.DeepEqual(got, tt.want) {
+			if got, _ := rm.newUpdateScalingConfigPayload(&resource{tt.args.desired}, &resource{tt.args.latest}); int32(*got.DesiredSize) != *tt.want.DesiredSize ||
+				int32(*got.MaxSize) != *tt.want.MaxSize ||
+				int32(*got.MinSize) != *tt.want.MinSize {
 				t.Errorf("resourceManager.newUpdateScalingConfigPayload() = %v, want %v", got, tt.want)
 			}
 		})
@@ -518,10 +538,9 @@ func Test_newUpdateNodegroupPayload(t *testing.T) {
 			got := newUpdateNodegroupVersionPayload(delta, tt.args.r)
 			assert.Equal(t, tt.wantVersion, *got.Version)
 			if tt.wantForce {
-				assert.NotNil(t, got.Force)
-				assert.True(t, *got.Force)
+				assert.True(t, got.Force)
 			} else {
-				assert.Nil(t, got.Force)
+				assert.False(t, got.Force)
 			}
 			if tt.wantLaunchTemplate {
 				assert.NotNil(t, got.LaunchTemplate)

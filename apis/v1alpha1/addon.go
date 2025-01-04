@@ -29,7 +29,7 @@ type AddonSpec struct {
 	// The version of the add-on. The version must match one of the versions returned
 	// by DescribeAddonVersions (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonVersions.html).
 	AddonVersion *string `json:"addonVersion,omitempty"`
-	// A unique, case-sensitive identifier that you provide to ensure the idempotency
+	// A unique, case-sensitive identifier that you provide to ensurethe idempotency
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The name of your cluster.

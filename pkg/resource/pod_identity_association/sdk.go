@@ -28,8 +28,8 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/eks"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/eks"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -40,8 +40,7 @@ import (
 var (
 	_ = &metav1.Time{}
 	_ = strings.ToLower("")
-	_ = &aws.JSONValue{}
-	_ = &svcsdk.EKS{}
+	_ = &svcsdk.Client{}
 	_ = &svcapitypes.PodIdentityAssociation{}
 	_ = ackv1alpha1.AWSAccountID("")
 	_ = &ackerr.NotFound
@@ -49,6 +48,7 @@ var (
 	_ = &reflect.Value{}
 	_ = fmt.Sprintf("")
 	_ = &ackrequeue.NoRequeue{}
+	_ = &aws.Config{}
 )
 
 // sdkFind returns SDK-specific information about a supplied resource
@@ -74,13 +74,13 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	var resp *svcsdk.DescribePodIdentityAssociationOutput
-	resp, err = rm.sdkapi.DescribePodIdentityAssociationWithContext(ctx, input)
+	resp, err = rm.sdkapi.DescribePodIdentityAssociation(ctx, input)
 	rm.metrics.RecordAPICall("READ_ONE", "DescribePodIdentityAssociation", err)
 	if err != nil {
 		if reqErr, ok := ackerr.AWSRequestFailure(err); ok && reqErr.StatusCode() == 404 {
 			return nil, ackerr.NotFound
 		}
-		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "ResourceNotFoundException" {
+		if strings.Contains(err.Error(), "ResourceNotFoundException") {
 			return nil, ackerr.NotFound
 		}
 		return nil, err
@@ -136,13 +136,7 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.ServiceAccount = nil
 	}
 	if resp.Association.Tags != nil {
-		f9 := map[string]*string{}
-		for f9key, f9valiter := range resp.Association.Tags {
-			var f9val string
-			f9val = *f9valiter
-			f9[f9key] = &f9val
-		}
-		ko.Spec.Tags = f9
+		ko.Spec.Tags = aws.StringMap(resp.Association.Tags)
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -160,7 +154,7 @@ func (rm *resourceManager) sdkFind(
 func (rm *resourceManager) requiredFieldsMissingFromReadOneInput(
 	r *resource,
 ) bool {
-	return r.ko.Spec.ClusterName == nil || r.ko.Status.AssociationID == nil
+	return r.ko.Status.AssociationID == nil || r.ko.Spec.ClusterName == nil
 
 }
 
@@ -172,10 +166,10 @@ func (rm *resourceManager) newDescribeRequestPayload(
 	res := &svcsdk.DescribePodIdentityAssociationInput{}
 
 	if r.ko.Status.AssociationID != nil {
-		res.SetAssociationId(*r.ko.Status.AssociationID)
+		res.AssociationId = r.ko.Status.AssociationID
 	}
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 
 	return res, nil
@@ -200,7 +194,7 @@ func (rm *resourceManager) sdkCreate(
 
 	var resp *svcsdk.CreatePodIdentityAssociationOutput
 	_ = resp
-	resp, err = rm.sdkapi.CreatePodIdentityAssociationWithContext(ctx, input)
+	resp, err = rm.sdkapi.CreatePodIdentityAssociation(ctx, input)
 	rm.metrics.RecordAPICall("CREATE", "CreatePodIdentityAssociation", err)
 	if err != nil {
 		return nil, err
@@ -255,13 +249,7 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.ServiceAccount = nil
 	}
 	if resp.Association.Tags != nil {
-		f9 := map[string]*string{}
-		for f9key, f9valiter := range resp.Association.Tags {
-			var f9val string
-			f9val = *f9valiter
-			f9[f9key] = &f9val
-		}
-		ko.Spec.Tags = f9
+		ko.Spec.Tags = aws.StringMap(resp.Association.Tags)
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -282,28 +270,22 @@ func (rm *resourceManager) newCreateRequestPayload(
 	res := &svcsdk.CreatePodIdentityAssociationInput{}
 
 	if r.ko.Spec.ClientRequestToken != nil {
-		res.SetClientRequestToken(*r.ko.Spec.ClientRequestToken)
+		res.ClientRequestToken = r.ko.Spec.ClientRequestToken
 	}
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 	if r.ko.Spec.Namespace != nil {
-		res.SetNamespace(*r.ko.Spec.Namespace)
+		res.Namespace = r.ko.Spec.Namespace
 	}
 	if r.ko.Spec.RoleARN != nil {
-		res.SetRoleArn(*r.ko.Spec.RoleARN)
+		res.RoleArn = r.ko.Spec.RoleARN
 	}
 	if r.ko.Spec.ServiceAccount != nil {
-		res.SetServiceAccount(*r.ko.Spec.ServiceAccount)
+		res.ServiceAccount = r.ko.Spec.ServiceAccount
 	}
 	if r.ko.Spec.Tags != nil {
-		f5 := map[string]*string{}
-		for f5key, f5valiter := range r.ko.Spec.Tags {
-			var f5val string
-			f5val = *f5valiter
-			f5[f5key] = &f5val
-		}
-		res.SetTags(f5)
+		res.Tags = aws.ToStringMap(r.ko.Spec.Tags)
 	}
 
 	return res, nil
@@ -334,7 +316,7 @@ func (rm *resourceManager) sdkUpdate(
 		err := syncTags(
 			ctx, rm.sdkapi, rm.metrics,
 			resourceARN,
-			desired.ko.Spec.Tags, latest.ko.Spec.Tags,
+			ToACKTags(desired.ko.Spec.Tags), ToACKTags(latest.ko.Spec.Tags),
 		)
 		if err != nil {
 			return nil, err
@@ -350,7 +332,7 @@ func (rm *resourceManager) sdkUpdate(
 
 	var resp *svcsdk.UpdatePodIdentityAssociationOutput
 	_ = resp
-	resp, err = rm.sdkapi.UpdatePodIdentityAssociationWithContext(ctx, input)
+	resp, err = rm.sdkapi.UpdatePodIdentityAssociation(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdatePodIdentityAssociation", err)
 	if err != nil {
 		return nil, err
@@ -405,13 +387,7 @@ func (rm *resourceManager) sdkUpdate(
 		ko.Spec.ServiceAccount = nil
 	}
 	if resp.Association.Tags != nil {
-		f9 := map[string]*string{}
-		for f9key, f9valiter := range resp.Association.Tags {
-			var f9val string
-			f9val = *f9valiter
-			f9[f9key] = &f9val
-		}
-		ko.Spec.Tags = f9
+		ko.Spec.Tags = aws.StringMap(resp.Association.Tags)
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -430,16 +406,16 @@ func (rm *resourceManager) newUpdateRequestPayload(
 	res := &svcsdk.UpdatePodIdentityAssociationInput{}
 
 	if r.ko.Status.AssociationID != nil {
-		res.SetAssociationId(*r.ko.Status.AssociationID)
+		res.AssociationId = r.ko.Status.AssociationID
 	}
 	if r.ko.Spec.ClientRequestToken != nil {
-		res.SetClientRequestToken(*r.ko.Spec.ClientRequestToken)
+		res.ClientRequestToken = r.ko.Spec.ClientRequestToken
 	}
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 	if r.ko.Spec.RoleARN != nil {
-		res.SetRoleArn(*r.ko.Spec.RoleARN)
+		res.RoleArn = r.ko.Spec.RoleARN
 	}
 
 	return res, nil
@@ -461,7 +437,7 @@ func (rm *resourceManager) sdkDelete(
 	}
 	var resp *svcsdk.DeletePodIdentityAssociationOutput
 	_ = resp
-	resp, err = rm.sdkapi.DeletePodIdentityAssociationWithContext(ctx, input)
+	resp, err = rm.sdkapi.DeletePodIdentityAssociation(ctx, input)
 	rm.metrics.RecordAPICall("DELETE", "DeletePodIdentityAssociation", err)
 	return nil, err
 }
@@ -474,10 +450,10 @@ func (rm *resourceManager) newDeleteRequestPayload(
 	res := &svcsdk.DeletePodIdentityAssociationInput{}
 
 	if r.ko.Status.AssociationID != nil {
-		res.SetAssociationId(*r.ko.Status.AssociationID)
+		res.AssociationId = r.ko.Status.AssociationID
 	}
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 
 	return res, nil

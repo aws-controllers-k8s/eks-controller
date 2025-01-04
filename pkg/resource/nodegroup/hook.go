@@ -26,7 +26,8 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	svcsdk "github.com/aws/aws-sdk-go/service/eks"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/eks"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -266,7 +267,7 @@ func (rm *resourceManager) customUpdate(
 		err := tags.SyncTags(
 			ctx, rm.sdkapi, rm.metrics,
 			string(*latest.ko.Status.ACKResourceMetadata.ARN),
-			desired.ko.Spec.Tags, latest.ko.Spec.Tags,
+			ToACKTags(desired.ko.Spec.Tags), ToACKTags(latest.ko.Spec.Tags),
 		)
 		if err != nil {
 			return nil, err
@@ -369,16 +370,16 @@ func (rm *resourceManager) customUpdate(
 func newUpdateLabelsPayload(
 	desired *resource,
 	latest *resource,
-) *svcsdk.UpdateLabelsPayload {
-	payload := svcsdk.UpdateLabelsPayload{
-		AddOrUpdateLabels: desired.ko.Spec.Labels,
-		RemoveLabels:      make([]*string, 0),
+) *svcsdktypes.UpdateLabelsPayload {
+	payload := svcsdktypes.UpdateLabelsPayload{
+		AddOrUpdateLabels: ToACKTags(desired.ko.Spec.Labels),
+		RemoveLabels:      make([]string, 0),
 	}
 
 	for latestKey := range latest.ko.Spec.Labels {
 		if _, isDesired := desired.ko.Spec.Labels[latestKey]; !isDesired {
 			toRemove := latestKey
-			payload.RemoveLabels = append(payload.RemoveLabels, &toRemove)
+			payload.RemoveLabels = append(payload.RemoveLabels, toRemove)
 		}
 	}
 
@@ -392,11 +393,11 @@ func newUpdateLabelsPayload(
 
 // newTaint creates a new AWS SDK Taint from a resource Taint value
 func newTaint(
-	t *svcapitypes.Taint,
-) *svcsdk.Taint {
-	r := &svcsdk.Taint{}
+	t svcapitypes.Taint,
+) svcsdktypes.Taint {
+	r := svcsdktypes.Taint{}
 	if t.Effect != nil {
-		r.Effect = t.Effect
+		r.Effect = svcsdktypes.TaintEffect(*t.Effect)
 	}
 	if t.Key != nil {
 		r.Key = t.Key
@@ -413,15 +414,15 @@ func newTaint(
 func newUpdateTaintsPayload(
 	desired *resource,
 	latest *resource,
-) *svcsdk.UpdateTaintsPayload {
-	payload := svcsdk.UpdateTaintsPayload{
-		AddOrUpdateTaints: make([]*svcsdk.Taint, len(desired.ko.Spec.Taints)),
-		RemoveTaints:      make([]*svcsdk.Taint, 0),
+) *svcsdktypes.UpdateTaintsPayload {
+	payload := svcsdktypes.UpdateTaintsPayload{
+		AddOrUpdateTaints: make([]svcsdktypes.Taint, len(desired.ko.Spec.Taints)),
+		RemoveTaints:      make([]svcsdktypes.Taint, 0),
 	}
 
 	// Add all the desired and existing taints
 	for i, t := range desired.ko.Spec.Taints {
-		payload.AddOrUpdateTaints[i] = newTaint(t)
+		payload.AddOrUpdateTaints[i] = newTaint(*t)
 	}
 
 	// Check for existing taints that are not desired
@@ -437,7 +438,7 @@ func newUpdateTaintsPayload(
 		}
 
 		if !exists {
-			payload.RemoveTaints = append(payload.RemoveTaints, newTaint(inLatest))
+			payload.RemoveTaints = append(payload.RemoveTaints, newTaint(*inLatest))
 		}
 	}
 
@@ -469,18 +470,18 @@ func newUpdateNodegroupVersionPayload(
 	if delta.DifferentAt("Spec.LaunchTemplate") {
 		// We need to be careful here to not access a nil pointer
 		if desired.ko.Spec.LaunchTemplate != nil {
-			input.SetLaunchTemplate(&svcsdk.LaunchTemplateSpecification{
+			input.LaunchTemplate = &svcsdktypes.LaunchTemplateSpecification{
 				Id:      desired.ko.Spec.LaunchTemplate.ID,
 				Name:    desired.ko.Spec.LaunchTemplate.Name,
 				Version: desired.ko.Spec.LaunchTemplate.Version,
-			})
+			}
 		}
 	}
 
 	// If the force annotation is set, we set the force flag on the input
 	// payload.
 	if getUpdateNodeGroupForceAnnotation(desired.ko.ObjectMeta) {
-		input.SetForce(true)
+		input.Force = true
 	}
 	return input
 }
@@ -496,7 +497,7 @@ func (rm *resourceManager) updateVersion(
 
 	input := newUpdateNodegroupVersionPayload(delta, r)
 
-	_, err = rm.sdkapi.UpdateNodegroupVersionWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateNodegroupVersion(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateNodegroupVersion", err)
 	if err != nil {
 		return err
@@ -530,8 +531,11 @@ func getUpdateNodeGroupForceAnnotation(
 }
 func (rm *resourceManager) newUpdateScalingConfigPayload(
 	desired, latest *resource,
-) *svcsdk.NodegroupScalingConfig {
-	sc := rm.newNodegroupScalingConfig(desired)
+) (*svcsdktypes.NodegroupScalingConfig, error) {
+	sc, err := rm.newNodegroupScalingConfig(desired)
+	if err != nil {
+		return nil, err
+	}
 	// We need to default the desiredSize to the current observed
 	// value in the case where the desiredSize is managed externally.
 	isManagedExternally := isManagedByExternalAutoscaler(desired.ko)
@@ -547,9 +551,10 @@ func (rm *resourceManager) newUpdateScalingConfigPayload(
 			"external_desired_size", latest.ko.Spec.ScalingConfig.DesiredSize,
 			"ack_desired_size", desired.ko.Spec.ScalingConfig.DesiredSize,
 		)
-		sc.DesiredSize = latest.ko.Spec.ScalingConfig.DesiredSize
+		temp := int32(*latest.ko.Spec.ScalingConfig.DesiredSize)
+		sc.DesiredSize = &temp
 	}
-	return sc
+	return sc, nil
 }
 
 func (rm *resourceManager) updateConfig(
@@ -570,14 +575,17 @@ func (rm *resourceManager) updateConfig(
 	}
 
 	if desired.ko.Spec.ScalingConfig != nil {
-		input.SetScalingConfig(rm.newUpdateScalingConfigPayload(desired, latest))
+		input.ScalingConfig, err = rm.newUpdateScalingConfigPayload(desired, latest)
 	}
 
 	if desired.ko.Spec.UpdateConfig != nil {
-		input.SetUpdateConfig(rm.newNodegroupUpdateConfig(desired))
+		input.UpdateConfig, err = rm.newNodegroupUpdateConfig(desired)
+		if err != nil {
+			return err
+		}
 	}
 
-	_, err = rm.sdkapi.UpdateNodegroupConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateNodegroupConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateNodegroupConfig", err)
 	if err != nil {
 		return err

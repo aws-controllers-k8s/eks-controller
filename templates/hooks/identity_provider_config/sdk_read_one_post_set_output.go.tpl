@@ -1,7 +1,8 @@
 	if resp.IdentityProviderConfig.Oidc != nil {
-		ko.Spec.Tags = resp.IdentityProviderConfig.Oidc.Tags
+		ko.Spec.Tags = FromACKTags(resp.IdentityProviderConfig.Oidc.Tags)
 	}
-	ko.Status.Status = resp.IdentityProviderConfig.Oidc.Status
+	temp := string(resp.IdentityProviderConfig.Oidc.Status)
+	ko.Status.Status = &temp
 	if !identityProviderActive(&resource{ko}) {
 		// Setting resource synced condition to false will trigger a requeue of
 		// the resource. No need to return a requeue error here.
