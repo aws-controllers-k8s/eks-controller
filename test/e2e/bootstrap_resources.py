@@ -27,8 +27,11 @@ class BootstrapResources(Resources):
     AdoptionCluster: Cluster
     ClusterVPC: VPC
     ClusterRole: Role
+    AutoClusterRole: Role
     FargatePodRole: Role
     NodegroupRole: Role
+    NodepoolRole: Role
+
     PodIdentityAssociationRole: Role
     AccessEntryPrincipalRole: Role
 

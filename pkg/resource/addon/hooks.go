@@ -22,7 +22,7 @@ import (
 	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	svcsdk "github.com/aws/aws-sdk-go/service/eks"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/eks"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
@@ -132,7 +132,7 @@ var syncTags = tags.SyncTags
 
 // setResourceDefaults queries the EKS API for the current state of the
 // fields that are not returned by the ReadOne or List APIs.
-func (rm *resourceManager) setResourceAdditionalFields(ctx context.Context, r *v1alpha1.Addon, associationARNs []*string) (err error) {
+func (rm *resourceManager) setResourceAdditionalFields(ctx context.Context, r *v1alpha1.Addon, associationARNs []string) (err error) {
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.setResourceAdditionalFields")
 	defer func() { exit(err) }()
@@ -151,15 +151,15 @@ func (rm *resourceManager) setResourceAdditionalFields(ctx context.Context, r *v
 func (rm *resourceManager) describeAddonPodIdentityAssociations(
 	ctx context.Context,
 	clusterName *string,
-	associationARNs []*string,
+	associationARNs []string,
 ) (podIdentityAssociations []*v1alpha1.AddonPodIdentityAssociations, err error) {
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.describeAddonPodIdentityAssociations")
 	defer func() { exit(err) }()
 
 	for _, associationARN := range associationARNs {
-		associationID := getAssociationID(*associationARN)
-		resp, err := rm.sdkapi.DescribePodIdentityAssociationWithContext(
+		associationID := getAssociationID(associationARN)
+		resp, err := rm.sdkapi.DescribePodIdentityAssociation(
 			ctx,
 			&svcsdk.DescribePodIdentityAssociationInput{
 				ClusterName:   clusterName,

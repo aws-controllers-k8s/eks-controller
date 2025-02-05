@@ -24,8 +24,10 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/eks"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/eks"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
+	"github.com/aws/smithy-go"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
@@ -179,9 +181,8 @@ func (rm *resourceManager) customUpdate(
 	exit := rlog.Trace("rm.customUpdate")
 	defer exit(err)
 
-	// For asynchronous updates, latest(from ReadOne) contains the
-	// outdate values for Spec fields. However the status(Cluster status)
-	// is correct inside latest.
+	// For asynchronous updates, latest (from ReadOne) contains outdated values
+	// for Spec fields. However, the status (Cluster status) is correct inside latest.
 	// So we construct the updatedRes object from the desired resource to
 	// obtain correct spec fields and then copy the status from latest.
 	updatedRes := rm.concreteResource(desired.DeepCopy())
@@ -201,45 +202,53 @@ func (rm *resourceManager) customUpdate(
 		return updatedRes, requeueWaitUntilCanModify(latest)
 	}
 
-	// Ensure ACKResourceMetadata and ARN are not nil before derefrencing
-	// This can occur when adopting a resource
+	// Sync tags if they have changed
 	if delta.DifferentAt("Spec.Tags") {
-		if err := tags.SyncTags(
-			ctx, rm.sdkapi, rm.metrics,
+		err := tags.SyncTags(
+			ctx,
+			rm.sdkapi,
+			rm.metrics,
 			string(*latest.ko.Status.ACKResourceMetadata.ARN),
-			desired.ko.Spec.Tags, latest.ko.Spec.Tags,
-		); err != nil {
+			ToACKTags(desired.ko.Spec.Tags),
+			ToACKTags(latest.ko.Spec.Tags),
+		)
+		if err != nil {
 			return nil, err
 		}
-		// Tag updates are not reflected in the status, so we don't need to
-		// requeue here.
 	}
+
+	// If no changes except tags, return the desired state
+	if !delta.DifferentExcept("Spec.Tags") {
+		return desired, nil
+	}
+
+	// Handle logging configuration updates
 	if delta.DifferentAt("Spec.Logging") {
 		if err := rm.updateConfigLogging(ctx, desired); err != nil {
-			awserr, ok := ackerr.AWSError(err)
+			awsErr, ok := extractAWSError(err)
 
 			// The API responds with an error if there were no changes applied
-			if !ok || awserr.Message() != LoggingNoChangesError {
+			if !ok || awsErr.Message != LoggingNoChangesError {
 				return nil, err
 			}
 
-			// Check to see if we've raced an async update call and need to
-			// requeue
-			if ok && awserr.Code() == "ResourceInUseException" {
+			// Check to see if we've raced an async update call and need to requeue
+			if ok && awsErr.Code == "ResourceInUseException" {
 				return nil, requeueAfterAsyncUpdate()
 			}
 		}
 		return returnClusterUpdating(updatedRes)
 	}
+
+	// Handle VPC configuration updates for public and private access
 	if delta.DifferentAt("Spec.ResourcesVPCConfig.EndpointPrivateAccess") ||
 		delta.DifferentAt("Spec.ResourcesVPCConfig.EndpointPublicAccess") ||
 		delta.DifferentAt("Spec.ResourcesVPCConfig.PublicAccessCIDRs") {
 		if err := rm.updateConfigResourcesVPCConfigPublicAndPrivateAccess(ctx, desired); err != nil {
-			awserr, ok := ackerr.AWSError(err)
+			awsErr, ok := extractAWSError(err)
 
-			// Check to see if we've raced an async update call and need to
-			// requeue
-			if ok && awserr.Code() == "ResourceInUseException" {
+			// Check to see if we've raced an async update call and need to requeue
+			if ok && awsErr.Code == "ResourceInUseException" {
 				return nil, requeueAfterAsyncUpdate()
 			}
 
@@ -247,16 +256,17 @@ func (rm *resourceManager) customUpdate(
 		}
 		return returnClusterUpdating(updatedRes)
 	}
+
+	// Handle VPC configuration updates for subnets and security groups
 	if delta.DifferentAt("Spec.ResourcesVPCConfig.SecurityGroupIDs") ||
 		delta.DifferentAt("Spec.ResourcesVPCConfig.SecurityGroupRefs") ||
 		delta.DifferentAt("Spec.ResourcesVPCConfig.SubnetIDs") ||
 		delta.DifferentAt("Spec.ResourcesVPCConfig.SubnetRefs") {
 		if err := rm.updateConfigResourcesVPCConfigSubnetsAndSecurityGroups(ctx, desired); err != nil {
-			awserr, ok := ackerr.AWSError(err)
+			awsErr, ok := extractAWSError(err)
 
-			// Check to see if we've raced an async update call and need to
-			// requeue
-			if ok && awserr.Code() == "ResourceInUseException" {
+			// Check to see if we've raced an async update call and need to requeue
+			if ok && awsErr.Code == "ResourceInUseException" {
 				return nil, requeueAfterAsyncUpdate()
 			}
 
@@ -264,31 +274,36 @@ func (rm *resourceManager) customUpdate(
 		}
 		return returnClusterUpdating(updatedRes)
 	}
+
+	// Handle access configuration updates
 	if delta.DifferentAt("Spec.AccessConfig") {
 		if err := rm.updateAccessConfig(ctx, desired); err != nil {
-			awserr, ok := ackerr.AWSError(err)
+			awsErr, ok := extractAWSError(err)
 
-			// Check to see if we've raced an async update call and need to
-			// requeue
-			if ok && awserr.Code() == "ResourceInUseException" {
+			// Check to see if we've raced an async update call and need to requeue
+			if ok && awsErr.Code == "ResourceInUseException" {
 				return nil, requeueAfterAsyncUpdate()
 			}
 			return nil, err
 		}
 		return returnClusterUpdating(updatedRes)
 	}
+
+	// Handle upgrade policy updates
 	if delta.DifferentAt("Spec.UpgradePolicy") {
 		if err := rm.updateClusterUpgradePolicy(ctx, desired); err != nil {
-			awserr, ok := ackerr.AWSError(err)
-			// Check to see if we've raced an async update call and need to
-			// requeue
-			if ok && awserr.Code() == "ResourceInUseException" {
+			awsErr, ok := extractAWSError(err)
+
+			// Check to see if we've raced an async update call and need to requeue
+			if ok && awsErr.Code == "ResourceInUseException" {
 				return nil, requeueAfterAsyncUpdate()
 			}
 			return nil, err
 		}
 		return returnClusterUpdating(updatedRes)
 	}
+
+	// Handle encryption configuration updates
 	if delta.DifferentAt("Spec.EncryptionConfig") {
 		// Set a terminal condition if the observed cluster has encryption
 		// config and the desired cluster does not.
@@ -313,10 +328,10 @@ func (rm *resourceManager) customUpdate(
 		}
 
 		if err := rm.associateEncryptionConfig(ctx, desired); err != nil {
-			awserr, ok := ackerr.AWSError(err)
-			// Check to see if we've raced an async update call and need to
-			// requeue
-			if ok && awserr.Code() == "ResourceInUseException" {
+			awsErr, ok := extractAWSError(err)
+
+			// Check to see if we've raced an async update call and need to requeue
+			if ok && awsErr.Code == "ResourceInUseException" {
 				return nil, requeueAfterAsyncUpdate()
 			}
 
@@ -324,17 +339,17 @@ func (rm *resourceManager) customUpdate(
 		}
 		// This doesn't reflect the actual status of the cluster, so we have to explicitly
 		// requeue and set the status to updating.
-		updatedRes.ko.Status.Status = aws.String(string(svcsdk.ClusterStatusUpdating))
+		updatedRes.ko.Status.Status = aws.String(string(svcsdktypes.ClusterStatusUpdating))
 		return returnClusterUpdating(updatedRes)
 	}
 
+	// Handle version updates
 	if delta.DifferentAt("Spec.Version") {
 		if err := rm.updateVersion(ctx, desired, latest); err != nil {
-			awserr, ok := ackerr.AWSError(err)
+			awsErr, ok := extractAWSError(err)
 
-			// Check to see if we've raced an async update call and need to
-			// requeue
-			if ok && awserr.Code() == "ResourceInUseException" {
+			// Check to see if we've raced an async update call and need to requeue
+			if ok && awsErr.Code == "ResourceInUseException" {
 				return nil, requeueAfterAsyncUpdate()
 			}
 
@@ -343,6 +358,43 @@ func (rm *resourceManager) customUpdate(
 		return returnClusterUpdating(updatedRes)
 	}
 
+	// Handle computeConfig updates
+	if delta.DifferentAt("Spec.ComputeConfig") || delta.DifferentAt("Spec.StorageConfig") || delta.DifferentAt("Spec.KubernetesNetworkConfig") {
+		if err := rm.updateComputeConfig(ctx, desired); err != nil {
+			awsErr, ok := extractAWSError(err)
+			rlog.Info("attempting to update AutoMode config",
+				"error", err,
+				"isAWSError", ok,
+				"awsErrorCode", awsErr.Code)
+
+			// Check to see if we've raced an async update call and need to requeue
+			if ok && awsErr.Code == "ResourceInUseException" {
+				rlog.Info("resource in use, requeueing after async update")
+				return nil, requeueAfterAsyncUpdate()
+			}
+
+			return nil, fmt.Errorf("failed to update AutoMode config: %w", err)
+		}
+
+		return returnClusterUpdating(updatedRes)
+	}
+
+	// Handle zonalShiftConfig updates
+	if delta.DifferentAt("Spec.ZonalShiftConfig") {
+		if err := rm.updateZonalShiftConfig(ctx, desired); err != nil {
+			awsErr, ok := extractAWSError(err)
+
+			// Check to see if we've raced an async update call and need to requeue
+			if ok && awsErr.Code == "ResourceInUseException" {
+				return nil, requeueAfterAsyncUpdate()
+			}
+
+			return nil, err
+		}
+		return returnClusterUpdating(updatedRes)
+	}
+
+	// Set default status values and return the updated resource
 	rm.setStatusDefaults(updatedRes.ko)
 	return updatedRes, nil
 }
@@ -388,7 +440,7 @@ func (rm *resourceManager) updateVersion(
 		Version: &nextVersion,
 	}
 
-	_, err = rm.sdkapi.UpdateClusterVersionWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateClusterVersion(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterVersion", err)
 	if err != nil {
 		return err
@@ -409,7 +461,7 @@ func (rm *resourceManager) updateConfigLogging(
 		Logging: rm.newLogging(r),
 	}
 
-	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
 	if err != nil {
 		return err
@@ -418,10 +470,10 @@ func (rm *resourceManager) updateConfigLogging(
 	return nil
 }
 
-func newAccessConfig(r *resource) *svcsdk.UpdateAccessConfigRequest {
-	cfg := &svcsdk.UpdateAccessConfigRequest{}
+func newAccessConfig(r *resource) *svcsdktypes.UpdateAccessConfigRequest {
+	cfg := &svcsdktypes.UpdateAccessConfigRequest{}
 	if r.ko.Spec.AccessConfig != nil {
-		cfg.AuthenticationMode = r.ko.Spec.AccessConfig.AuthenticationMode
+		cfg.AuthenticationMode = svcsdktypes.AuthenticationMode(*r.ko.Spec.AccessConfig.AuthenticationMode)
 	}
 	return cfg
 }
@@ -437,7 +489,7 @@ func (rm *resourceManager) updateAccessConfig(
 		Name:         r.ko.Spec.Name,
 		AccessConfig: newAccessConfig(r),
 	}
-	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
 	if err != nil {
 		return err
@@ -455,11 +507,11 @@ func (rm *resourceManager) updateClusterUpgradePolicy(
 	defer func() { exit(err) }()
 	input := &svcsdk.UpdateClusterConfigInput{
 		Name: r.ko.Spec.Name,
-		UpgradePolicy: &svcsdk.UpgradePolicyRequest{
-			SupportType: r.ko.Spec.UpgradePolicy.SupportType,
+		UpgradePolicy: &svcsdktypes.UpgradePolicyRequest{
+			SupportType: svcsdktypes.SupportType(*r.ko.Spec.UpgradePolicy.SupportType),
 		},
 	}
-	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
 	if err != nil {
 		return err
@@ -482,10 +534,10 @@ func (rm *resourceManager) updateConfigResourcesVPCConfigPublicAndPrivateAccess(
 
 	// We only want to update endpointPrivateAccess, endpointPublicAccess and
 	// publicAccessCidrs
-	input.ResourcesVpcConfig.SetSubnetIds(nil)
-	input.ResourcesVpcConfig.SetSecurityGroupIds(nil)
+	input.ResourcesVpcConfig.SubnetIds = nil
+	input.ResourcesVpcConfig.SecurityGroupIds = nil
 
-	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
 	if err != nil {
 		return err
@@ -509,9 +561,9 @@ func (rm *resourceManager) updateConfigResourcesVPCConfigSubnetsAndSecurityGroup
 	// We only want to update securityGroupIds and subnetIds
 	input.ResourcesVpcConfig.EndpointPublicAccess = nil
 	input.ResourcesVpcConfig.EndpointPrivateAccess = nil
-	input.ResourcesVpcConfig.SetPublicAccessCidrs(nil)
+	input.ResourcesVpcConfig.PublicAccessCidrs = nil
 
-	_, err = rm.sdkapi.UpdateClusterConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
 	if err != nil {
 		return err
@@ -531,7 +583,7 @@ func (rm *resourceManager) listNodegroups(
 		ClusterName: r.ko.Spec.Name,
 	}
 
-	nodes, err = rm.sdkapi.ListNodegroupsWithContext(ctx, input)
+	nodes, err = rm.sdkapi.ListNodegroups(ctx, input)
 	rm.metrics.RecordAPICall("READ_MANY", "ListNodegroups", err)
 	if err != nil {
 		return nil, err
@@ -550,26 +602,118 @@ func (rm *resourceManager) associateEncryptionConfig(
 	exit := rlog.Trace("rm.updateEncryptionConfiguration")
 	defer func() { exit(err) }()
 
+	// Convert []*string to []string
+	resources := make([]string, 0, len(r.ko.Spec.EncryptionConfig[0].Resources))
+	for _, res := range r.ko.Spec.EncryptionConfig[0].Resources {
+		if res != nil {
+			resources = append(resources, *res)
+		}
+	}
+
 	input := &svcsdk.AssociateEncryptionConfigInput{
 		ClusterName: r.ko.Spec.Name,
-		EncryptionConfig: []*svcsdk.EncryptionConfig{
+		EncryptionConfig: []svcsdktypes.EncryptionConfig{
 			{
 				// Being it means that we already have a single encryption config
 				// in the spec. So we can safely assume that the first element is
 				// the only one.
-				Resources: r.ko.Spec.EncryptionConfig[0].Resources,
-				Provider: &svcsdk.Provider{
+				Resources: resources,
+				Provider: &svcsdktypes.Provider{
 					KeyArn: r.ko.Spec.EncryptionConfig[0].Provider.KeyARN,
 				},
 			},
 		},
 	}
 
-	_, err = rm.sdkapi.AssociateEncryptionConfigWithContext(ctx, input)
+	_, err = rm.sdkapi.AssociateEncryptionConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "AssociateEncryptionConfig", err)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// updateComputeConfig updates the compute config of the cluster.
+func (rm *resourceManager) updateComputeConfig(
+	ctx context.Context,
+	r *resource,
+) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateComputeConfig")
+	defer exit(err)
+
+	// Convert []*string to []string for NodePools
+	nodePools := make([]string, 0, len(r.ko.Spec.ComputeConfig.NodePools))
+	for _, nodePool := range r.ko.Spec.ComputeConfig.NodePools {
+		if nodePool != nil {
+			nodePools = append(nodePools, *nodePool)
+		}
+	}
+
+	input := &svcsdk.UpdateClusterConfigInput{
+		Name: r.ko.Spec.Name,
+		ComputeConfig: &svcsdktypes.ComputeConfigRequest{
+			Enabled:     r.ko.Spec.ComputeConfig.Enabled,
+			NodePools:   nodePools, // Use the converted []string slice
+			NodeRoleArn: r.ko.Spec.ComputeConfig.NodeRoleARN,
+		},
+		StorageConfig: &svcsdktypes.StorageConfigRequest{
+			BlockStorage: &svcsdktypes.BlockStorage{
+				Enabled: r.ko.Spec.StorageConfig.BlockStorage.Enabled,
+			},
+		},
+		KubernetesNetworkConfig: &svcsdktypes.KubernetesNetworkConfigRequest{
+			ElasticLoadBalancing: &svcsdktypes.ElasticLoadBalancing{
+				Enabled: r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled,
+			},
+			IpFamily:        svcsdktypes.IpFamily(*r.ko.Spec.KubernetesNetworkConfig.IPFamily),
+			ServiceIpv4Cidr: r.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR,
+		},
+	}
+
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (rm *resourceManager) updateZonalShiftConfig(
+	ctx context.Context,
+	r *resource,
+) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateZonalShiftConfig")
+	defer exit(err)
+
+	input := &svcsdk.UpdateClusterConfigInput{
+		Name: r.ko.Spec.Name,
+		ZonalShiftConfig: &svcsdktypes.ZonalShiftConfigRequest{
+			Enabled: r.ko.Spec.ZonalShiftConfig.Enabled,
+		},
+	}
+
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// extractAWSError extracts the underlying AWS error from a smithy.GenericAPIError.
+func extractAWSError(err error) (awsErr *smithy.GenericAPIError, ok bool) {
+	var apiErr smithy.APIError
+	if errors.As(err, &apiErr) {
+		return &smithy.GenericAPIError{
+			Code:    apiErr.ErrorCode(),
+			Message: apiErr.ErrorMessage(),
+			Fault:   apiErr.ErrorFault(),
+		}, true
+	}
+	return nil, false
 }

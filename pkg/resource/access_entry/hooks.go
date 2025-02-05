@@ -18,8 +18,9 @@ import (
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/eks"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/eks"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 
 	"github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
@@ -51,7 +52,7 @@ func (rm *resourceManager) getAccessEntryAssociatedPolicies(ctx context.Context,
 	exit := rlog.Trace("rm.setAccessEntryAssociatedPolicies")
 	defer exit(err)
 
-	output, err := rm.sdkapi.ListAssociatedAccessPoliciesWithContext(
+	output, err := rm.sdkapi.ListAssociatedAccessPolicies(
 		ctx,
 		&svcsdk.ListAssociatedAccessPoliciesInput{
 			ClusterName:  r.Spec.ClusterName,
@@ -69,8 +70,12 @@ func (rm *resourceManager) getAccessEntryAssociatedPolicies(ctx context.Context,
 	for _, association := range output.AssociatedAccessPolicies {
 		accessScope := &v1alpha1.AccessScope{}
 		if association.AccessScope != nil {
-			accessScope.Type = association.AccessScope.Type
-			accessScope.Namespaces = association.AccessScope.Namespaces
+			accessScope.Type = aws.String(string(association.AccessScope.Type))
+			accessScope.Namespaces = make([]*string, len(association.AccessScope.Namespaces))
+
+			for i, ns := range association.AccessScope.Namespaces {
+				accessScope.Namespaces[i] = aws.String(ns)
+			}
 		}
 		r.Spec.AccessPolicies = append(r.Spec.AccessPolicies, &v1alpha1.AssociateAccessPolicyInput{
 			PolicyARN:   association.PolicyArn,
@@ -122,16 +127,24 @@ func (rm *resourceManager) associateAccessPolicy(
 	exit := rlog.Trace("rm.associateAccessPolicy")
 	defer func() { exit(err) }()
 
+	// Convert []*string to []string
+	namespaces := make([]string, 0, len(entry.AccessScope.Namespaces))
+	for _, ns := range entry.AccessScope.Namespaces {
+		if ns != nil {
+			namespaces = append(namespaces, *ns)
+		}
+	}
+
 	input := &svcsdk.AssociateAccessPolicyInput{
 		ClusterName:  r.ko.Spec.ClusterName,
 		PrincipalArn: r.ko.Spec.PrincipalARN,
 		PolicyArn:    entry.PolicyARN,
-		AccessScope: &svcsdk.AccessScope{
-			Type:       entry.AccessScope.Type,
-			Namespaces: entry.AccessScope.Namespaces,
+		AccessScope: &svcsdktypes.AccessScope{
+			Type:       svcsdktypes.AccessScopeType(*entry.AccessScope.Type),
+			Namespaces: namespaces,
 		},
 	}
-	_, err = rm.sdkapi.AssociateAccessPolicyWithContext(ctx, input)
+	_, err = rm.sdkapi.AssociateAccessPolicy(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "AssociateAccessPolicy", err)
 	return err
 }
@@ -152,7 +165,7 @@ func (rm *resourceManager) disassociateAccessPolicy(
 		PrincipalArn: r.ko.Spec.PrincipalARN,
 		PolicyArn:    policyARN,
 	}
-	_, err = rm.sdkapi.DisassociateAccessPolicyWithContext(ctx, input)
+	_, err = rm.sdkapi.DisassociateAccessPolicy(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "DisassociateAccessPolicy", err)
 	return err
 }

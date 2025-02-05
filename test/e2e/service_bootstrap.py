@@ -43,6 +43,16 @@ def service_bootstrap() -> Resources:
             "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
             "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
         ]),
+        AutoClusterRole=Role("cluster-role", "eks.amazonaws.com", managed_policies=["arn:aws:iam::aws:policy/AmazonEKSBlockStoragePolicy",
+                                                                                       "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
+                                                                                       "arn:aws:iam::aws:policy/AmazonEKSComputePolicy",
+                                                                                       "arn:aws:iam::aws:policy/AmazonEKSLoadBalancingPolicy",
+                                                                                       "arn:aws:iam::aws:policy/AmazonEKSNetworkingPolicy",]),
+        NodepoolRole=Role("nodepool-role", "ec2.amazonaws.com", managed_policies=[
+            "arn:aws:iam::aws:policy/AmazonEKSWorkerNodeMinimalPolicy",
+            "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+            "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        ]),
         PodIdentityAssociationRole=Role(
             "ack-pod-identity-association-role",
             "pods.eks.amazonaws.com",

@@ -71,7 +71,7 @@ spec:
             properties:
               clientRequestToken:
                 description: |-
-                  A unique, case-sensitive identifier that you provide to ensure the idempotency
+                  A unique, case-sensitive identifier that you provide to ensurethe idempotency
                   of the request.
                 type: string
               clusterName:

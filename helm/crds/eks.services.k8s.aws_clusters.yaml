@@ -83,9 +83,25 @@ spec:
                 type: boolean
               clientRequestToken:
                 description: |-
-                  A unique, case-sensitive identifier that you provide to ensure the idempotency
+                  A unique, case-sensitive identifier that you provide to ensurethe idempotency
                   of the request.
                 type: string
+              computeConfig:
+                description: |-
+                  Enable or disable the compute capability of EKS Auto Mode when creating your
+                  EKS Auto Mode cluster. If the compute capability is enabled, EKS Auto Mode
+                  will create and delete EC2 Managed Instances in your Amazon Web Services
+                  account
+                properties:
+                  enabled:
+                    type: boolean
+                  nodePools:
+                    items:
+                      type: string
+                    type: array
+                  nodeRoleARN:
+                    type: string
+                type: object
               encryptionConfig:
                 description: The encryption configuration for the cluster.
                 items:
@@ -121,6 +137,16 @@ spec:
               kubernetesNetworkConfig:
                 description: The Kubernetes network configuration for the cluster.
                 properties:
+                  elasticLoadBalancing:
+                    description: |-
+                      Indicates the current configuration of the load balancing capability on your
+                      EKS Auto Mode cluster. For example, if the capability is enabled or disabled.
+                      For more information, see EKS Auto Mode load balancing capability in the
+                      EKS User Guide.
+                    properties:
+                      enabled:
+                        type: boolean
+                    type: object
                   ipFamily:
                     type: string
                   serviceIPv4CIDR:
@@ -154,7 +180,12 @@ spec:
                     type: array
                 type: object
               name:
-                description: The unique name to give to your cluster.
+                description: |-
+                  The unique name to give to your cluster. The name can contain only alphanumeric
+                  characters (case-sensitive),hyphens, and underscores. It must start with
+                  an alphanumeric character and can't be longer than100 characters. The name
+                  must be unique within the Amazon Web Services Region and Amazon Web Services
+                  account that you're creating the cluster in.
                 type: string
               outpostConfig:
                 description: |-
@@ -180,6 +211,34 @@ spec:
                   outpostARNs:
                     items:
                       type: string
+                    type: array
+                type: object
+              remoteNetworkConfig:
+                description: |-
+                  The configuration in the cluster for EKS Hybrid Nodes. You can't change or
+                  update this configuration after the cluster is created.
+                properties:
+                  remoteNodeNetworks:
+                    items:
+                      description: A network CIDR that can contain hybrid nodes.
+                      properties:
+                        cidrs:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                  remotePodNetworks:
+                    items:
+                      description: |-
+                        A network CIDR that can contain pods that run Kubernetes webhooks on hybrid
+                        nodes.
+                      properties:
+                        cidrs:
+                          items:
+                            type: string
+                          type: array
+                      type: object
                     type: array
                 type: object
               resourcesVPCConfig:
@@ -274,6 +333,25 @@ spec:
                         type: string
                     type: object
                 type: object
+              storageConfig:
+                description: |-
+                  Enable or disable the block storage capability of EKS Auto Mode when creating
+                  your EKS Auto Mode cluster. If the block storage capability is enabled, EKS
+                  Auto Mode will create and delete EBS volumes in your Amazon Web Services
+                  account.
+                properties:
+                  blockStorage:
+                    description: |-
+                      Indicates the current configuration of the block storage capability on your
+                      EKS Auto Mode cluster. For example, if the capability is enabled or disabled.
+                      If the block storage capability is enabled, EKS Auto Mode will create and
+                      delete EBS volumes in your Amazon Web Services account. For more information,
+                      see EKS Auto Mode block storage capability in the EKS User Guide.
+                    properties:
+                      enabled:
+                        type: boolean
+                    type: object
+                type: object
               tags:
                 additionalProperties:
                   type: string
@@ -297,6 +375,29 @@ spec:
 
                   The default version might not be the latest version available.
                 type: string
+              zonalShiftConfig:
+                description: |-
+                  Enable or disable ARC zonal shift for the cluster. If zonal shift is enabled,
+                  Amazon Web Services configures zonal autoshift for the cluster.
+
+                  Zonal shift is a feature of Amazon Application Recovery Controller (ARC).
+                  ARC zonal shift is designed to be a temporary measure that allows you to
+                  move traffic for a resource away from an impaired AZ until the zonal shift
+                  expires or you cancel it. You can extend the zonal shift if necessary.
+
+                  You can start a zonal shift for an EKS cluster, or you can allow Amazon Web
+                  Services to do it for you by enabling zonal autoshift. This shift updates
+                  the flow of east-to-west network traffic in your cluster to only consider
+                  network endpoints for Pods running on worker nodes in healthy AZs. Additionally,
+                  any ALB or NLB handling ingress traffic for applications in your EKS cluster
+                  will automatically route traffic to targets in the healthy AZs. For more
+                  information about zonal shift in EKS, see Learn about Amazon Application
+                  Recovery Controller (ARC) Zonal Shift in Amazon EKS (https://docs.aws.amazon.com/eks/latest/userguide/zone-shift.html)
+                  in the Amazon EKS User Guide .
+                properties:
+                  enabled:
+                    type: boolean
+                type: object
             required:
             - name
             - resourcesVPCConfig

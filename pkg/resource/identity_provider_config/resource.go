@@ -120,7 +120,6 @@ func (r *resource) PopulateResourceFromAnnotation(fields map[string]string) erro
 	} else {
 		return ackerrors.MissingNameIdentifier
 	}
-
 	return nil
 }
 

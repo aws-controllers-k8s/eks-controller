@@ -35,7 +35,7 @@ type NodegroupSpec struct {
 	AMIType *string `json:"amiType,omitempty"`
 	// The capacity type for your node group.
 	CapacityType *string `json:"capacityType,omitempty"`
-	// A unique, case-sensitive identifier that you provide to ensure the idempotency
+	// A unique, case-sensitive identifier that you provide to ensurethe idempotency
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The name of your cluster.

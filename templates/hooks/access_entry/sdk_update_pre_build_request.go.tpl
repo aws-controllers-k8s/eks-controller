@@ -8,7 +8,7 @@
 		err := syncTags(
 			ctx, rm.sdkapi, rm.metrics, 
 			string(*latest.ko.Status.ACKResourceMetadata.ARN), 
-			desired.ko.Spec.Tags, latest.ko.Spec.Tags,
+			ToACKTags(desired.ko.Spec.Tags), ToACKTags(latest.ko.Spec.Tags),
 		)
 		if err != nil {
 			return nil, err
