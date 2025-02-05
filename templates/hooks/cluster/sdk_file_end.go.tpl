@@ -11,8 +11,8 @@
 // with each the field set by the resource's corresponding spec field.
 func (rm *resourceManager) new{{ $shapeName }}(
     r *resource,
-) *svcsdk.{{ $shapeName }} {
-    res := &svcsdk.{{ $shapeName }}{}
+) *svcsdktypes.{{ $shapeName }} {
+    res := &svcsdktypes.{{ $shapeName }}{}
 
 {{ GoCodeSetSDKForStruct $CRD "" "res" $field.ShapeRef "" (printf "r.ko.Spec.%s" $field.Names.Camel) 1 }}
 

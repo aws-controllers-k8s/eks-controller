@@ -28,8 +28,10 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/eks"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/eks"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
+	smithy "github.com/aws/smithy-go"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -40,8 +42,7 @@ import (
 var (
 	_ = &metav1.Time{}
 	_ = strings.ToLower("")
-	_ = &aws.JSONValue{}
-	_ = &svcsdk.EKS{}
+	_ = &svcsdk.Client{}
 	_ = &svcapitypes.FargateProfile{}
 	_ = ackv1alpha1.AWSAccountID("")
 	_ = &ackerr.NotFound
@@ -49,6 +50,7 @@ var (
 	_ = &reflect.Value{}
 	_ = fmt.Sprintf("")
 	_ = &ackrequeue.NoRequeue{}
+	_ = &aws.Config{}
 )
 
 // sdkFind returns SDK-specific information about a supplied resource
@@ -74,13 +76,11 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	var resp *svcsdk.DescribeFargateProfileOutput
-	resp, err = rm.sdkapi.DescribeFargateProfileWithContext(ctx, input)
+	resp, err = rm.sdkapi.DescribeFargateProfile(ctx, input)
 	rm.metrics.RecordAPICall("READ_ONE", "DescribeFargateProfile", err)
 	if err != nil {
-		if reqErr, ok := ackerr.AWSRequestFailure(err); ok && reqErr.StatusCode() == 404 {
-			return nil, ackerr.NotFound
-		}
-		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "ResourceNotFoundException" {
+		var awsErr smithy.APIError
+		if errors.As(err, &awsErr) && awsErr.ErrorCode() == "ResourceNotFoundException" {
 			return nil, ackerr.NotFound
 		}
 		return nil, err
@@ -118,20 +118,14 @@ func (rm *resourceManager) sdkFind(
 			f4f0 := []*svcapitypes.FargateProfileIssue{}
 			for _, f4f0iter := range resp.FargateProfile.Health.Issues {
 				f4f0elem := &svcapitypes.FargateProfileIssue{}
-				if f4f0iter.Code != nil {
-					f4f0elem.Code = f4f0iter.Code
+				if f4f0iter.Code != "" {
+					f4f0elem.Code = aws.String(string(f4f0iter.Code))
 				}
 				if f4f0iter.Message != nil {
 					f4f0elem.Message = f4f0iter.Message
 				}
 				if f4f0iter.ResourceIds != nil {
-					f4f0elemf2 := []*string{}
-					for _, f4f0elemf2iter := range f4f0iter.ResourceIds {
-						var f4f0elemf2elem string
-						f4f0elemf2elem = *f4f0elemf2iter
-						f4f0elemf2 = append(f4f0elemf2, &f4f0elemf2elem)
-					}
-					f4f0elem.ResourceIDs = f4f0elemf2
+					f4f0elem.ResourceIDs = aws.StringSlice(f4f0iter.ResourceIds)
 				}
 				f4f0 = append(f4f0, f4f0elem)
 			}
@@ -151,13 +145,7 @@ func (rm *resourceManager) sdkFind(
 		for _, f6iter := range resp.FargateProfile.Selectors {
 			f6elem := &svcapitypes.FargateProfileSelector{}
 			if f6iter.Labels != nil {
-				f6elemf0 := map[string]*string{}
-				for f6elemf0key, f6elemf0valiter := range f6iter.Labels {
-					var f6elemf0val string
-					f6elemf0val = *f6elemf0valiter
-					f6elemf0[f6elemf0key] = &f6elemf0val
-				}
-				f6elem.Labels = f6elemf0
+				f6elem.Labels = aws.StringMap(f6iter.Labels)
 			}
 			if f6iter.Namespace != nil {
 				f6elem.Namespace = f6iter.Namespace
@@ -168,30 +156,18 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Spec.Selectors = nil
 	}
-	if resp.FargateProfile.Status != nil {
-		ko.Status.Status = resp.FargateProfile.Status
+	if resp.FargateProfile.Status != "" {
+		ko.Status.Status = aws.String(string(resp.FargateProfile.Status))
 	} else {
 		ko.Status.Status = nil
 	}
 	if resp.FargateProfile.Subnets != nil {
-		f8 := []*string{}
-		for _, f8iter := range resp.FargateProfile.Subnets {
-			var f8elem string
-			f8elem = *f8iter
-			f8 = append(f8, &f8elem)
-		}
-		ko.Spec.Subnets = f8
+		ko.Spec.Subnets = aws.StringSlice(resp.FargateProfile.Subnets)
 	} else {
 		ko.Spec.Subnets = nil
 	}
 	if resp.FargateProfile.Tags != nil {
-		f9 := map[string]*string{}
-		for f9key, f9valiter := range resp.FargateProfile.Tags {
-			var f9val string
-			f9val = *f9valiter
-			f9[f9key] = &f9val
-		}
-		ko.Spec.Tags = f9
+		ko.Spec.Tags = aws.StringMap(resp.FargateProfile.Tags)
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -218,10 +194,10 @@ func (rm *resourceManager) newDescribeRequestPayload(
 	res := &svcsdk.DescribeFargateProfileInput{}
 
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 	if r.ko.Spec.Name != nil {
-		res.SetFargateProfileName(*r.ko.Spec.Name)
+		res.FargateProfileName = r.ko.Spec.Name
 	}
 
 	return res, nil
@@ -246,7 +222,7 @@ func (rm *resourceManager) sdkCreate(
 
 	var resp *svcsdk.CreateFargateProfileOutput
 	_ = resp
-	resp, err = rm.sdkapi.CreateFargateProfileWithContext(ctx, input)
+	resp, err = rm.sdkapi.CreateFargateProfile(ctx, input)
 	rm.metrics.RecordAPICall("CREATE", "CreateFargateProfile", err)
 	if err != nil {
 		return nil, err
@@ -283,20 +259,14 @@ func (rm *resourceManager) sdkCreate(
 			f4f0 := []*svcapitypes.FargateProfileIssue{}
 			for _, f4f0iter := range resp.FargateProfile.Health.Issues {
 				f4f0elem := &svcapitypes.FargateProfileIssue{}
-				if f4f0iter.Code != nil {
-					f4f0elem.Code = f4f0iter.Code
+				if f4f0iter.Code != "" {
+					f4f0elem.Code = aws.String(string(f4f0iter.Code))
 				}
 				if f4f0iter.Message != nil {
 					f4f0elem.Message = f4f0iter.Message
 				}
 				if f4f0iter.ResourceIds != nil {
-					f4f0elemf2 := []*string{}
-					for _, f4f0elemf2iter := range f4f0iter.ResourceIds {
-						var f4f0elemf2elem string
-						f4f0elemf2elem = *f4f0elemf2iter
-						f4f0elemf2 = append(f4f0elemf2, &f4f0elemf2elem)
-					}
-					f4f0elem.ResourceIDs = f4f0elemf2
+					f4f0elem.ResourceIDs = aws.StringSlice(f4f0iter.ResourceIds)
 				}
 				f4f0 = append(f4f0, f4f0elem)
 			}
@@ -316,13 +286,7 @@ func (rm *resourceManager) sdkCreate(
 		for _, f6iter := range resp.FargateProfile.Selectors {
 			f6elem := &svcapitypes.FargateProfileSelector{}
 			if f6iter.Labels != nil {
-				f6elemf0 := map[string]*string{}
-				for f6elemf0key, f6elemf0valiter := range f6iter.Labels {
-					var f6elemf0val string
-					f6elemf0val = *f6elemf0valiter
-					f6elemf0[f6elemf0key] = &f6elemf0val
-				}
-				f6elem.Labels = f6elemf0
+				f6elem.Labels = aws.StringMap(f6iter.Labels)
 			}
 			if f6iter.Namespace != nil {
 				f6elem.Namespace = f6iter.Namespace
@@ -333,30 +297,18 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Spec.Selectors = nil
 	}
-	if resp.FargateProfile.Status != nil {
-		ko.Status.Status = resp.FargateProfile.Status
+	if resp.FargateProfile.Status != "" {
+		ko.Status.Status = aws.String(string(resp.FargateProfile.Status))
 	} else {
 		ko.Status.Status = nil
 	}
 	if resp.FargateProfile.Subnets != nil {
-		f8 := []*string{}
-		for _, f8iter := range resp.FargateProfile.Subnets {
-			var f8elem string
-			f8elem = *f8iter
-			f8 = append(f8, &f8elem)
-		}
-		ko.Spec.Subnets = f8
+		ko.Spec.Subnets = aws.StringSlice(resp.FargateProfile.Subnets)
 	} else {
 		ko.Spec.Subnets = nil
 	}
 	if resp.FargateProfile.Tags != nil {
-		f9 := map[string]*string{}
-		for f9key, f9valiter := range resp.FargateProfile.Tags {
-			var f9val string
-			f9val = *f9valiter
-			f9[f9key] = &f9val
-		}
-		ko.Spec.Tags = f9
+		ko.Spec.Tags = aws.StringMap(resp.FargateProfile.Tags)
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -374,54 +326,36 @@ func (rm *resourceManager) newCreateRequestPayload(
 	res := &svcsdk.CreateFargateProfileInput{}
 
 	if r.ko.Spec.ClientRequestToken != nil {
-		res.SetClientRequestToken(*r.ko.Spec.ClientRequestToken)
+		res.ClientRequestToken = r.ko.Spec.ClientRequestToken
 	}
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 	if r.ko.Spec.Name != nil {
-		res.SetFargateProfileName(*r.ko.Spec.Name)
+		res.FargateProfileName = r.ko.Spec.Name
 	}
 	if r.ko.Spec.PodExecutionRoleARN != nil {
-		res.SetPodExecutionRoleArn(*r.ko.Spec.PodExecutionRoleARN)
+		res.PodExecutionRoleArn = r.ko.Spec.PodExecutionRoleARN
 	}
 	if r.ko.Spec.Selectors != nil {
-		f4 := []*svcsdk.FargateProfileSelector{}
+		f4 := []svcsdktypes.FargateProfileSelector{}
 		for _, f4iter := range r.ko.Spec.Selectors {
-			f4elem := &svcsdk.FargateProfileSelector{}
+			f4elem := &svcsdktypes.FargateProfileSelector{}
 			if f4iter.Labels != nil {
-				f4elemf0 := map[string]*string{}
-				for f4elemf0key, f4elemf0valiter := range f4iter.Labels {
-					var f4elemf0val string
-					f4elemf0val = *f4elemf0valiter
-					f4elemf0[f4elemf0key] = &f4elemf0val
-				}
-				f4elem.SetLabels(f4elemf0)
+				f4elem.Labels = aws.ToStringMap(f4iter.Labels)
 			}
 			if f4iter.Namespace != nil {
-				f4elem.SetNamespace(*f4iter.Namespace)
+				f4elem.Namespace = f4iter.Namespace
 			}
-			f4 = append(f4, f4elem)
+			f4 = append(f4, *f4elem)
 		}
-		res.SetSelectors(f4)
+		res.Selectors = f4
 	}
 	if r.ko.Spec.Subnets != nil {
-		f5 := []*string{}
-		for _, f5iter := range r.ko.Spec.Subnets {
-			var f5elem string
-			f5elem = *f5iter
-			f5 = append(f5, &f5elem)
-		}
-		res.SetSubnets(f5)
+		res.Subnets = aws.ToStringSlice(r.ko.Spec.Subnets)
 	}
 	if r.ko.Spec.Tags != nil {
-		f6 := map[string]*string{}
-		for f6key, f6valiter := range r.ko.Spec.Tags {
-			var f6val string
-			f6val = *f6valiter
-			f6[f6key] = &f6val
-		}
-		res.SetTags(f6)
+		res.Tags = aws.ToStringMap(r.ko.Spec.Tags)
 	}
 
 	return res, nil
@@ -458,7 +392,7 @@ func (rm *resourceManager) sdkDelete(
 	}
 	var resp *svcsdk.DeleteFargateProfileOutput
 	_ = resp
-	resp, err = rm.sdkapi.DeleteFargateProfileWithContext(ctx, input)
+	resp, err = rm.sdkapi.DeleteFargateProfile(ctx, input)
 	rm.metrics.RecordAPICall("DELETE", "DeleteFargateProfile", err)
 	return nil, err
 }
@@ -471,10 +405,10 @@ func (rm *resourceManager) newDeleteRequestPayload(
 	res := &svcsdk.DeleteFargateProfileInput{}
 
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 	if r.ko.Spec.Name != nil {
-		res.SetFargateProfileName(*r.ko.Spec.Name)
+		res.FargateProfileName = r.ko.Spec.Name
 	}
 
 	return res, nil
@@ -582,11 +516,12 @@ func (rm *resourceManager) terminalAWSError(err error) bool {
 	if err == nil {
 		return false
 	}
-	awsErr, ok := ackerr.AWSError(err)
-	if !ok {
+
+	var terminalErr smithy.APIError
+	if !errors.As(err, &terminalErr) {
 		return false
 	}
-	switch awsErr.Code() {
+	switch terminalErr.ErrorCode() {
 	case "ResourceLimitExceeded",
 		"ResourceNotFound",
 		"ResourceInUse",

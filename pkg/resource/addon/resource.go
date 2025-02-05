@@ -19,6 +19,7 @@ import (
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
 	ackerrors "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	acktypes "github.com/aws-controllers-k8s/runtime/pkg/types"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	rtclient "sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -92,7 +93,7 @@ func (r *resource) SetIdentifiers(identifier *ackv1alpha1.AWSIdentifiers) error 
 
 	f1, f1ok := identifier.AdditionalKeys["clusterName"]
 	if f1ok {
-		r.ko.Spec.ClusterName = &f1
+		r.ko.Spec.ClusterName = aws.String(f1)
 	}
 
 	return nil
@@ -108,7 +109,7 @@ func (r *resource) PopulateResourceFromAnnotation(fields map[string]string) erro
 
 	f1, f1ok := fields["clusterName"]
 	if f1ok {
-		r.ko.Spec.ClusterName = &f1
+		r.ko.Spec.ClusterName = aws.String(f1)
 	}
 
 	return nil

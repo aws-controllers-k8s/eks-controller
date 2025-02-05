@@ -1,0 +1,30 @@
+apiVersion: eks.services.k8s.aws/v1alpha1
+kind: Cluster
+metadata:
+  name: $CLUSTER_NAME
+spec:
+  name: $CLUSTER_NAME
+  version: "1.31"
+  roleARN: $AUTO_CLUSTER_ROLE
+  resourcesVPCConfig:
+    subnetIDs:
+      - $PUBLIC_SUBNET_1
+      - $PUBLIC_SUBNET_2
+    endpointPublicAccess: true
+    endpointPrivateAccess: true
+  computeConfig:
+    enabled: true
+    nodeRoleARN: $NODEPOOL_ROLE
+    nodePools:
+      - system
+      - general-purpose
+  kubernetesNetworkConfig:
+    ipFamily: ipv4
+    elasticLoadBalancing:
+      enabled: true
+  storageConfig:
+    blockStorage:
+      enabled: true
+  accessConfig:
+    authenticationMode: "API"
+    bootstrapClusterCreatorAdminPermissions: true

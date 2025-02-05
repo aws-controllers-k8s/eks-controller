@@ -10,7 +10,7 @@
 		err := syncTags(
 			ctx, rm.sdkapi, rm.metrics,
 			resourceARN,
-			desired.ko.Spec.Tags, latest.ko.Spec.Tags,
+			ToACKTags(desired.ko.Spec.Tags), ToACKTags(latest.ko.Spec.Tags),
 		)
 		if err != nil {
 			return nil, err

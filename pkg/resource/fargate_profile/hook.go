@@ -74,10 +74,11 @@ func (rm *resourceManager) customUpdate(
 	defer exit(err)
 
 	if delta.DifferentAt("Spec.Tags") {
+
 		if err := tags.SyncTags(
 			ctx, rm.sdkapi, rm.metrics,
 			string(*latest.ko.Status.ACKResourceMetadata.ARN),
-			desired.ko.Spec.Tags, latest.ko.Spec.Tags,
+			ToACKTags(desired.ko.Spec.Tags), ToACKTags(latest.ko.Spec.Tags),
 		); err != nil {
 			return nil, err
 		}

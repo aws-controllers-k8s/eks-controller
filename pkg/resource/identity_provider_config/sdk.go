@@ -28,8 +28,10 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
-	"github.com/aws/aws-sdk-go/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/eks"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/eks"
+	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
+	smithy "github.com/aws/smithy-go"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -40,8 +42,7 @@ import (
 var (
 	_ = &metav1.Time{}
 	_ = strings.ToLower("")
-	_ = &aws.JSONValue{}
-	_ = &svcsdk.EKS{}
+	_ = &svcsdk.Client{}
 	_ = &svcapitypes.IdentityProviderConfig{}
 	_ = ackv1alpha1.AWSAccountID("")
 	_ = &ackerr.NotFound
@@ -49,6 +50,7 @@ var (
 	_ = &reflect.Value{}
 	_ = fmt.Sprintf("")
 	_ = &ackrequeue.NoRequeue{}
+	_ = &aws.Config{}
 )
 
 // sdkFind returns SDK-specific information about a supplied resource
@@ -73,19 +75,17 @@ func (rm *resourceManager) sdkFind(
 		return nil, err
 	}
 	identityProviderConfigType := IdentityProviderConfigType
-	input.IdentityProviderConfig = &svcsdk.IdentityProviderConfig{
+	input.IdentityProviderConfig = &svcsdktypes.IdentityProviderConfig{
 		Name: r.ko.Spec.OIDC.IdentityProviderConfigName,
 		Type: &identityProviderConfigType,
 	}
 
 	var resp *svcsdk.DescribeIdentityProviderConfigOutput
-	resp, err = rm.sdkapi.DescribeIdentityProviderConfigWithContext(ctx, input)
+	resp, err = rm.sdkapi.DescribeIdentityProviderConfig(ctx, input)
 	rm.metrics.RecordAPICall("READ_ONE", "DescribeIdentityProviderConfig", err)
 	if err != nil {
-		if reqErr, ok := ackerr.AWSRequestFailure(err); ok && reqErr.StatusCode() == 404 {
-			return nil, ackerr.NotFound
-		}
-		if awsErr, ok := ackerr.AWSError(err); ok && awsErr.Code() == "ResourceNotFoundException" {
+		var awsErr smithy.APIError
+		if errors.As(err, &awsErr) && awsErr.ErrorCode() == "ResourceNotFoundException" {
 			return nil, ackerr.NotFound
 		}
 		return nil, err
@@ -113,13 +113,7 @@ func (rm *resourceManager) sdkFind(
 			f0.IssuerURL = resp.IdentityProviderConfig.Oidc.IssuerUrl
 		}
 		if resp.IdentityProviderConfig.Oidc.RequiredClaims != nil {
-			f0f7 := map[string]*string{}
-			for f0f7key, f0f7valiter := range resp.IdentityProviderConfig.Oidc.RequiredClaims {
-				var f0f7val string
-				f0f7val = *f0f7valiter
-				f0f7[f0f7key] = &f0f7val
-			}
-			f0.RequiredClaims = f0f7
+			f0.RequiredClaims = aws.StringMap(resp.IdentityProviderConfig.Oidc.RequiredClaims)
 		}
 		if resp.IdentityProviderConfig.Oidc.UsernameClaim != nil {
 			f0.UsernameClaim = resp.IdentityProviderConfig.Oidc.UsernameClaim
@@ -134,9 +128,10 @@ func (rm *resourceManager) sdkFind(
 
 	rm.setStatusDefaults(ko)
 	if resp.IdentityProviderConfig.Oidc != nil {
-		ko.Spec.Tags = resp.IdentityProviderConfig.Oidc.Tags
+		ko.Spec.Tags = FromACKTags(resp.IdentityProviderConfig.Oidc.Tags)
 	}
-	ko.Status.Status = resp.IdentityProviderConfig.Oidc.Status
+	temp := string(resp.IdentityProviderConfig.Oidc.Status)
+	ko.Status.Status = &temp
 	if !identityProviderActive(&resource{ko}) {
 		// Setting resource synced condition to false will trigger a requeue of
 		// the resource. No need to return a requeue error here.
@@ -165,7 +160,7 @@ func (rm *resourceManager) newDescribeRequestPayload(
 	res := &svcsdk.DescribeIdentityProviderConfigInput{}
 
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 
 	return res, nil
@@ -190,7 +185,7 @@ func (rm *resourceManager) sdkCreate(
 
 	var resp *svcsdk.AssociateIdentityProviderConfigOutput
 	_ = resp
-	resp, err = rm.sdkapi.AssociateIdentityProviderConfigWithContext(ctx, input)
+	resp, err = rm.sdkapi.AssociateIdentityProviderConfig(ctx, input)
 	rm.metrics.RecordAPICall("CREATE", "AssociateIdentityProviderConfig", err)
 	if err != nil {
 		return nil, err
@@ -200,13 +195,7 @@ func (rm *resourceManager) sdkCreate(
 	ko := desired.ko.DeepCopy()
 
 	if resp.Tags != nil {
-		f0 := map[string]*string{}
-		for f0key, f0valiter := range resp.Tags {
-			var f0val string
-			f0val = *f0valiter
-			f0[f0key] = &f0val
-		}
-		ko.Spec.Tags = f0
+		ko.Spec.Tags = aws.StringMap(resp.Tags)
 	} else {
 		ko.Spec.Tags = nil
 	}
@@ -231,50 +220,38 @@ func (rm *resourceManager) newCreateRequestPayload(
 	res := &svcsdk.AssociateIdentityProviderConfigInput{}
 
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 	if r.ko.Spec.OIDC != nil {
-		f1 := &svcsdk.OidcIdentityProviderConfigRequest{}
+		f1 := &svcsdktypes.OidcIdentityProviderConfigRequest{}
 		if r.ko.Spec.OIDC.ClientID != nil {
-			f1.SetClientId(*r.ko.Spec.OIDC.ClientID)
+			f1.ClientId = r.ko.Spec.OIDC.ClientID
 		}
 		if r.ko.Spec.OIDC.GroupsClaim != nil {
-			f1.SetGroupsClaim(*r.ko.Spec.OIDC.GroupsClaim)
+			f1.GroupsClaim = r.ko.Spec.OIDC.GroupsClaim
 		}
 		if r.ko.Spec.OIDC.GroupsPrefix != nil {
-			f1.SetGroupsPrefix(*r.ko.Spec.OIDC.GroupsPrefix)
+			f1.GroupsPrefix = r.ko.Spec.OIDC.GroupsPrefix
 		}
 		if r.ko.Spec.OIDC.IdentityProviderConfigName != nil {
-			f1.SetIdentityProviderConfigName(*r.ko.Spec.OIDC.IdentityProviderConfigName)
+			f1.IdentityProviderConfigName = r.ko.Spec.OIDC.IdentityProviderConfigName
 		}
 		if r.ko.Spec.OIDC.IssuerURL != nil {
-			f1.SetIssuerUrl(*r.ko.Spec.OIDC.IssuerURL)
+			f1.IssuerUrl = r.ko.Spec.OIDC.IssuerURL
 		}
 		if r.ko.Spec.OIDC.RequiredClaims != nil {
-			f1f5 := map[string]*string{}
-			for f1f5key, f1f5valiter := range r.ko.Spec.OIDC.RequiredClaims {
-				var f1f5val string
-				f1f5val = *f1f5valiter
-				f1f5[f1f5key] = &f1f5val
-			}
-			f1.SetRequiredClaims(f1f5)
+			f1.RequiredClaims = aws.ToStringMap(r.ko.Spec.OIDC.RequiredClaims)
 		}
 		if r.ko.Spec.OIDC.UsernameClaim != nil {
-			f1.SetUsernameClaim(*r.ko.Spec.OIDC.UsernameClaim)
+			f1.UsernameClaim = r.ko.Spec.OIDC.UsernameClaim
 		}
 		if r.ko.Spec.OIDC.UsernamePrefix != nil {
-			f1.SetUsernamePrefix(*r.ko.Spec.OIDC.UsernamePrefix)
+			f1.UsernamePrefix = r.ko.Spec.OIDC.UsernamePrefix
 		}
-		res.SetOidc(f1)
+		res.Oidc = f1
 	}
 	if r.ko.Spec.Tags != nil {
-		f2 := map[string]*string{}
-		for f2key, f2valiter := range r.ko.Spec.Tags {
-			var f2val string
-			f2val = *f2valiter
-			f2[f2key] = &f2val
-		}
-		res.SetTags(f2)
+		res.Tags = aws.ToStringMap(r.ko.Spec.Tags)
 	}
 
 	return res, nil
@@ -306,14 +283,14 @@ func (rm *resourceManager) sdkDelete(
 		return nil, err
 	}
 	identityProviderConfigType := IdentityProviderConfigType
-	input.IdentityProviderConfig = &svcsdk.IdentityProviderConfig{
+	input.IdentityProviderConfig = &svcsdktypes.IdentityProviderConfig{
 		Name: r.ko.Spec.OIDC.IdentityProviderConfigName,
 		Type: &identityProviderConfigType,
 	}
 
 	var resp *svcsdk.DisassociateIdentityProviderConfigOutput
 	_ = resp
-	resp, err = rm.sdkapi.DisassociateIdentityProviderConfigWithContext(ctx, input)
+	resp, err = rm.sdkapi.DisassociateIdentityProviderConfig(ctx, input)
 	rm.metrics.RecordAPICall("DELETE", "DisassociateIdentityProviderConfig", err)
 	return nil, err
 }
@@ -326,7 +303,7 @@ func (rm *resourceManager) newDeleteRequestPayload(
 	res := &svcsdk.DisassociateIdentityProviderConfigInput{}
 
 	if r.ko.Spec.ClusterName != nil {
-		res.SetClusterName(*r.ko.Spec.ClusterName)
+		res.ClusterName = r.ko.Spec.ClusterName
 	}
 
 	return res, nil
