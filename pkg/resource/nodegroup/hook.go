@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
@@ -257,11 +256,6 @@ func (rm *resourceManager) customUpdate(
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.customUpdate")
 	defer exit(err)
-
-	if immutableFieldChanges := rm.getImmutableFieldChanges(delta); len(immutableFieldChanges) > 0 {
-		msg := fmt.Sprintf("Immutable Spec fields have been modified: %s", strings.Join(immutableFieldChanges, ","))
-		return nil, ackerr.NewTerminalError(fmt.Errorf(msg))
-	}
 
 	if delta.DifferentAt("Spec.Tags") {
 		err := tags.SyncTags(
