@@ -29,23 +29,32 @@ type PodIdentityAssociationSpec struct {
 
 	// A unique, case-sensitive identifier that you provide to ensurethe idempotency
 	// of the request.
+
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The name of the cluster to create the association in.
-	ClusterName *string                                  `json:"clusterName,omitempty"`
-	ClusterRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
+
+	ClusterName *string `json:"clusterName,omitempty"`
+
+	ClusterRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
 	// The name of the Kubernetes namespace inside the cluster to create the association
 	// in. The service account and the pods that use the service account must be
 	// in this namespace.
+
 	// +kubebuilder:validation:Required
+
 	Namespace *string `json:"namespace"`
 	// The Amazon Resource Name (ARN) of the IAM role to associate with the service
 	// account. The EKS Pod Identity agent manages credentials to assume this role
 	// for applications in the containers in the pods that use this service account.
-	RoleARN *string                                  `json:"roleARN,omitempty"`
+
+	RoleARN *string `json:"roleARN,omitempty"`
+
 	RoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"roleRef,omitempty"`
 	// The name of the Kubernetes service account inside the cluster to associate
 	// the IAM credentials with.
+
 	// +kubebuilder:validation:Required
+
 	ServiceAccount *string `json:"serviceAccount"`
 	// Metadata that assists with categorization and organization. Each tag consists
 	// of a key and an optional value. You define both. Tags don't propagate to
@@ -53,26 +62,27 @@ type PodIdentityAssociationSpec struct {
 	//
 	// The following basic restrictions apply to tags:
 	//
-	//   - Maximum number of tags per resource – 50
+	//    * Maximum number of tags per resource – 50
 	//
-	//   - For each resource, each tag key must be unique, and each tag key can
-	//     have only one value.
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
 	//
-	//   - Maximum key length – 128 Unicode characters in UTF-8
+	//    * Maximum key length – 128 Unicode characters in UTF-8
 	//
-	//   - Maximum value length – 256 Unicode characters in UTF-8
+	//    * Maximum value length – 256 Unicode characters in UTF-8
 	//
-	//   - If your tagging schema is used across multiple services and resources,
-	//     remember that other services may have restrictions on allowed characters.
-	//     Generally allowed characters are: letters, numbers, and spaces representable
-	//     in UTF-8, and the following characters: + - = . _ : / @.
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
 	//
-	//   - Tag keys and values are case-sensitive.
+	//    * Tag keys and values are case-sensitive.
 	//
-	//   - Do not use aws:, AWS:, or any upper or lowercase combination of such
-	//     as a prefix for either keys or values as it is reserved for Amazon Web
-	//     Services use. You cannot edit or delete tag keys or values with this prefix.
-	//     Tags with this prefix do not count against your tags per resource limit.
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for Amazon Web
+	//    Services use. You cannot edit or delete tag keys or values with this prefix.
+	//    Tags with this prefix do not count against your tags per resource limit.
+
 	Tags map[string]*string `json:"tags,omitempty"`
 }
 
@@ -83,7 +93,7 @@ type PodIdentityAssociationStatus struct {
 	// constructed ARN for the resource
 	// +kubebuilder:validation:Optional
 	ACKResourceMetadata *ackv1alpha1.ResourceMetadata `json:"ackResourceMetadata"`
-	// All CRS managed by ACK have a common `Status.Conditions` member that
+	// All CRs managed by ACK have a common `Status.Conditions` member that
 	// contains a collection of `ackv1alpha1.Condition` objects that describe
 	// the various terminal states of the CR and its backend AWS service API
 	// resource

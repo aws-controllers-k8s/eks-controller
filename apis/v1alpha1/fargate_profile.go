@@ -27,12 +27,17 @@ type FargateProfileSpec struct {
 
 	// A unique, case-sensitive identifier that you provide to ensurethe idempotency
 	// of the request.
+
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The name of your cluster.
-	ClusterName *string                                  `json:"clusterName,omitempty"`
-	ClusterRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
+
+	ClusterName *string `json:"clusterName,omitempty"`
+
+	ClusterRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
 	// The name of the Fargate profile.
+
 	// +kubebuilder:validation:Required
+
 	Name *string `json:"name"`
 	// The Amazon Resource Name (ARN) of the Pod execution role to use for a Pod
 	// that matches the selectors in the Fargate profile. The Pod execution role
@@ -40,21 +45,27 @@ type FargateProfileSpec struct {
 	// it provides read access to Amazon ECR image repositories. For more information,
 	// see Pod execution role (https://docs.aws.amazon.com/eks/latest/userguide/pod-execution-role.html)
 	// in the Amazon EKS User Guide.
-	PodExecutionRoleARN *string                                  `json:"podExecutionRoleARN,omitempty"`
+
+	PodExecutionRoleARN *string `json:"podExecutionRoleARN,omitempty"`
+
 	PodExecutionRoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"podExecutionRoleRef,omitempty"`
 	// The selectors to match for a Pod to use this Fargate profile. Each selector
 	// must have an associated Kubernetes namespace. Optionally, you can also specify
 	// labels for a namespace. You may specify up to five selectors in a Fargate
 	// profile.
-	Selectors  []*FargateProfileSelector                  `json:"selectors,omitempty"`
+
+	Selectors []*FargateProfileSelector `json:"selectors,omitempty"`
+
 	SubnetRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"subnetRefs,omitempty"`
 	// The IDs of subnets to launch a Pod into. A Pod running on Fargate isn't assigned
 	// a public IP address, so only private subnets (with no direct route to an
 	// Internet Gateway) are accepted for this parameter.
+
 	Subnets []*string `json:"subnets,omitempty"`
 	// Metadata that assists with categorization and organization. Each tag consists
 	// of a key and an optional value. You define both. Tags don't propagate to
 	// any other cluster or Amazon Web Services resources.
+
 	Tags map[string]*string `json:"tags,omitempty"`
 }
 
@@ -65,7 +76,7 @@ type FargateProfileStatus struct {
 	// constructed ARN for the resource
 	// +kubebuilder:validation:Optional
 	ACKResourceMetadata *ackv1alpha1.ResourceMetadata `json:"ackResourceMetadata"`
-	// All CRS managed by ACK have a common `Status.Conditions` member that
+	// All CRs managed by ACK have a common `Status.Conditions` member that
 	// contains a collection of `ackv1alpha1.Condition` objects that describe
 	// the various terminal states of the CR and its backend AWS service API
 	// resource

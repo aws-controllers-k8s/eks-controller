@@ -32,15 +32,20 @@ type NodegroupSpec struct {
 	// aws-auth ConfigMap. For more information about using launch templates with
 	// Amazon EKS, see Customizing managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
+
 	AMIType *string `json:"amiType,omitempty"`
 	// The capacity type for your node group.
+
 	CapacityType *string `json:"capacityType,omitempty"`
 	// A unique, case-sensitive identifier that you provide to ensurethe idempotency
 	// of the request.
+
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The name of your cluster.
-	ClusterName *string                                  `json:"clusterName,omitempty"`
-	ClusterRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
+
+	ClusterName *string `json:"clusterName,omitempty"`
+
+	ClusterRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
 	// The root device disk size (in GiB) for your node group instances. The default
 	// disk size is 20 GiB for Linux and Bottlerocket. The default disk size is
 	// 50 GiB for Windows. If you specify launchTemplate, then don't specify diskSize,
@@ -48,6 +53,9 @@ type NodegroupSpec struct {
 	// launch templates with Amazon EKS, see Customizing managed nodes with launch
 	// templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
+
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable once set"
+
 	DiskSize *int64 `json:"diskSize,omitempty"`
 	// Specify the instance types for a node group. If you specify a GPU instance
 	// type, make sure to also specify an applicable GPU AMI type with the amiType
@@ -61,18 +69,23 @@ type NodegroupSpec struct {
 	// information, see Managed node group capacity types (https://docs.aws.amazon.com/eks/latest/userguide/managed-node-groups.html#managed-node-group-capacity-types)
 	// and Customizing managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
+
 	InstanceTypes []*string `json:"instanceTypes,omitempty"`
 	// The Kubernetes labels to apply to the nodes in the node group when they are
 	// created.
+
 	Labels map[string]*string `json:"labels,omitempty"`
 	// An object representing a node group's launch template specification. When
 	// using this object, don't directly specify instanceTypes, diskSize, or remoteAccess.
 	// Make sure that the launch template meets the requirements in launchTemplateSpecification.
 	// Also refer to Customizing managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
+
 	LaunchTemplate *LaunchTemplateSpecification `json:"launchTemplate,omitempty"`
 	// The unique name to give your node group.
+
 	// +kubebuilder:validation:Required
+
 	Name *string `json:"name"`
 	// The Amazon Resource Name (ARN) of the IAM role to associate with your node
 	// group. The Amazon EKS worker node kubelet daemon makes calls to Amazon Web
@@ -87,7 +100,11 @@ type NodegroupSpec struct {
 	// information about using launch templates with Amazon EKS, see Customizing
 	// managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
-	NodeRole    *string                                  `json:"nodeRole,omitempty"`
+
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable once set"
+
+	NodeRole *string `json:"nodeRole,omitempty"`
+
 	NodeRoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"nodeRoleRef,omitempty"`
 	// The AMI version of the Amazon EKS optimized AMI to use with your node group.
 	// By default, the latest available AMI version for the node group's current
@@ -103,6 +120,7 @@ type NodegroupSpec struct {
 	// For more information about using launch templates with Amazon EKS, see Customizing
 	// managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
+
 	ReleaseVersion *string `json:"releaseVersion,omitempty"`
 	// The remote access configuration to use with your node group. For Linux, the
 	// protocol is SSH. For Windows, the protocol is RDP. If you specify launchTemplate,
@@ -110,26 +128,37 @@ type NodegroupSpec struct {
 	// For more information about using launch templates with Amazon EKS, see Customizing
 	// managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
+
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable once set"
+
 	RemoteAccess *RemoteAccessConfig `json:"remoteAccess,omitempty"`
 	// The scaling configuration details for the Auto Scaling group that is created
 	// for your node group.
-	ScalingConfig *NodegroupScalingConfig                    `json:"scalingConfig,omitempty"`
-	SubnetRefs    []*ackv1alpha1.AWSResourceReferenceWrapper `json:"subnetRefs,omitempty"`
+
+	ScalingConfig *NodegroupScalingConfig `json:"scalingConfig,omitempty"`
+
+	SubnetRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"subnetRefs,omitempty"`
 	// The subnets to use for the Auto Scaling group that is created for your node
 	// group. If you specify launchTemplate, then don't specify SubnetId (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateNetworkInterface.html)
 	// in your launch template, or the node group deployment will fail. For more
 	// information about using launch templates with Amazon EKS, see Customizing
 	// managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
+
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable once set"
+
 	Subnets []*string `json:"subnets,omitempty"`
 	// Metadata that assists with categorization and organization. Each tag consists
 	// of a key and an optional value. You define both. Tags don't propagate to
 	// any other cluster or Amazon Web Services resources.
+
 	Tags map[string]*string `json:"tags,omitempty"`
 	// The Kubernetes taints to be applied to the nodes in the node group. For more
 	// information, see Node taints on managed node groups (https://docs.aws.amazon.com/eks/latest/userguide/node-taints-managed-node-groups.html).
+
 	Taints []*Taint `json:"taints,omitempty"`
 	// The node group update configuration.
+
 	UpdateConfig *NodegroupUpdateConfig `json:"updateConfig,omitempty"`
 	// The Kubernetes version to use for your managed nodes. By default, the Kubernetes
 	// version of the cluster is used, and this is the only accepted specified value.
@@ -138,6 +167,7 @@ type NodegroupSpec struct {
 	// information about using launch templates with Amazon EKS, see Customizing
 	// managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
+
 	Version *string `json:"version,omitempty"`
 }
 
@@ -148,7 +178,7 @@ type NodegroupStatus struct {
 	// constructed ARN for the resource
 	// +kubebuilder:validation:Optional
 	ACKResourceMetadata *ackv1alpha1.ResourceMetadata `json:"ackResourceMetadata"`
-	// All CRS managed by ACK have a common `Status.Conditions` member that
+	// All CRs managed by ACK have a common `Status.Conditions` member that
 	// contains a collection of `ackv1alpha1.Condition` objects that describe
 	// the various terminal states of the CR and its backend AWS service API
 	// resource

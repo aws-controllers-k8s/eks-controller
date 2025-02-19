@@ -44,8 +44,10 @@ spec:
               An object representing an identity provider configuration.
             properties:
               clusterName:
-                description: The name of your cluster.
                 type: string
+                x-kubernetes-validations:
+                - message: Value is immutable once set
+                  rule: self == oldSelf
               clusterRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
                   *AWSResourceReference\ntype to provide more user friendly syntax
@@ -64,8 +66,11 @@ spec:
                     type: object
                 type: object
               oidc:
-                description: An object representing an OpenID Connect (OIDC) identity
-                  provider configuration.
+                description: |-
+                  An object representing an OpenID Connect (OIDC) configuration. Before associating
+                  an OIDC identity provider to your cluster, review the considerations in Authenticating
+                  users for your cluster from an OIDC identity provider (https://docs.aws.amazon.com/eks/latest/userguide/authenticate-oidc-identity-provider.html)
+                  in the Amazon EKS User Guide.
                 properties:
                   clientID:
                     type: string
@@ -86,14 +91,16 @@ spec:
                   usernamePrefix:
                     type: string
                 type: object
+                x-kubernetes-validations:
+                - message: Value is immutable once set
+                  rule: self == oldSelf
               tags:
                 additionalProperties:
                   type: string
-                description: |-
-                  Metadata that assists with categorization and organization. Each tag consists
-                  of a key and an optional value. You define both. Tags don't propagate to
-                  any other cluster or Amazon Web Services resources.
                 type: object
+                x-kubernetes-validations:
+                - message: Value is immutable once set
+                  rule: self == oldSelf
             required:
             - oidc
             type: object
@@ -132,7 +139,7 @@ spec:
                 type: object
               conditions:
                 description: |-
-                  All CRS managed by ACK have a common `Status.Conditions` member that
+                  All CRs managed by ACK have a common `Status.Conditions` member that
                   contains a collection of `ackv1alpha1.Condition` objects that describe
                   the various terminal states of the CR and its backend AWS service API
                   resource

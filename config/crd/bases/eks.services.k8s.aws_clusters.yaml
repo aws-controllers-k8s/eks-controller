@@ -64,7 +64,7 @@ spec:
               An object representing an Amazon EKS cluster.
             properties:
               accessConfig:
-                description: The access configuration for the cluster.
+                description: The access configuration information for the cluster.
                 properties:
                   authenticationMode:
                     type: string
@@ -72,26 +72,14 @@ spec:
                     type: boolean
                 type: object
               bootstrapSelfManagedAddons:
-                description: |-
-                  If you set this value to False when creating a cluster, the default networking
-                  add-ons will not be installed.
-
-                  The default networking addons include vpc-cni, coredns, and kube-proxy.
-
-                  Use this option when you plan to install third-party alternative add-ons
-                  or self-manage the default networking add-ons.
                 type: boolean
               clientRequestToken:
-                description: |-
-                  A unique, case-sensitive identifier that you provide to ensurethe idempotency
-                  of the request.
                 type: string
               computeConfig:
                 description: |-
-                  Enable or disable the compute capability of EKS Auto Mode when creating your
-                  EKS Auto Mode cluster. If the compute capability is enabled, EKS Auto Mode
-                  will create and delete EC2 Managed Instances in your Amazon Web Services
-                  account
+                  Request to update the configuration of the compute capability of your EKS
+                  Auto Mode cluster. For example, enable the capability. For more information,
+                  see EKS Auto Mode compute capability in the EKS User Guide.
                 properties:
                   enabled:
                     type: boolean
@@ -103,7 +91,6 @@ spec:
                     type: string
                 type: object
               encryptionConfig:
-                description: The encryption configuration for the cluster.
                 items:
                   description: The encryption configuration for the cluster.
                   properties:
@@ -153,16 +140,8 @@ spec:
                     type: string
                 type: object
               logging:
-                description: |-
-                  Enable or disable exporting the Kubernetes control plane logs for your cluster
-                  to CloudWatch Logs. By default, cluster control plane logs aren't exported
-                  to CloudWatch Logs. For more information, see Amazon EKS Cluster control
-                  plane logs (https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html)
-                  in the Amazon EKS User Guide .
-
-                  CloudWatch Logs ingestion, archive storage, and data scanning rates apply
-                  to exported control plane logs. For more information, see CloudWatch Pricing
-                  (http://aws.amazon.com/cloudwatch/pricing/).
+                description: An object representing the logging configuration for
+                  resources in your cluster.
                 properties:
                   clusterLogging:
                     items:
@@ -180,21 +159,14 @@ spec:
                     type: array
                 type: object
               name:
-                description: |-
-                  The unique name to give to your cluster. The name can contain only alphanumeric
-                  characters (case-sensitive),hyphens, and underscores. It must start with
-                  an alphanumeric character and can't be longer than100 characters. The name
-                  must be unique within the Amazon Web Services Region and Amazon Web Services
-                  account that you're creating the cluster in.
                 type: string
               outpostConfig:
                 description: |-
-                  An object representing the configuration of your local Amazon EKS cluster
-                  on an Amazon Web Services Outpost. Before creating a local cluster on an
-                  Outpost, review Local clusters for Amazon EKS on Amazon Web Services Outposts
-                  (https://docs.aws.amazon.com/eks/latest/userguide/eks-outposts-local-cluster-overview.html)
-                  in the Amazon EKS User Guide. This object isn't available for creating Amazon
-                  EKS clusters on the Amazon Web Services cloud.
+                  The configuration of your local Amazon EKS cluster on an Amazon Web Services
+                  Outpost. Before creating a cluster on an Outpost, review Creating a local
+                  cluster on an Outpost (https://docs.aws.amazon.com/eks/latest/userguide/eks-outposts-local-cluster-create.html)
+                  in the Amazon EKS User Guide. This API isn't available for Amazon EKS clusters
+                  on the Amazon Web Services cloud.
                 properties:
                   controlPlaneInstanceType:
                     type: string
@@ -242,14 +214,8 @@ spec:
                     type: array
                 type: object
               resourcesVPCConfig:
-                description: |-
-                  The VPC configuration that's used by the cluster control plane. Amazon EKS
-                  VPC resources have specific requirements to work properly with Kubernetes.
-                  For more information, see Cluster VPC Considerations (https://docs.aws.amazon.com/eks/latest/userguide/network_reqs.html)
-                  and Cluster Security Group Considerations (https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html)
-                  in the Amazon EKS User Guide. You must specify at least two subnets. You
-                  can specify up to five security groups. However, we recommend that you use
-                  a dedicated security group for your cluster control plane.
+                description: An object representing the VPC configuration to use for
+                  an Amazon EKS cluster.
                 properties:
                   endpointPrivateAccess:
                     type: boolean
@@ -309,12 +275,6 @@ spec:
                     type: array
                 type: object
               roleARN:
-                description: |-
-                  The Amazon Resource Name (ARN) of the IAM role that provides permissions
-                  for the Kubernetes control plane to make calls to Amazon Web Services API
-                  operations on your behalf. For more information, see Amazon EKS Service IAM
-                  Role (https://docs.aws.amazon.com/eks/latest/userguide/service_IAM_role.html)
-                  in the Amazon EKS User Guide .
                 type: string
               roleRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
@@ -335,10 +295,9 @@ spec:
                 type: object
               storageConfig:
                 description: |-
-                  Enable or disable the block storage capability of EKS Auto Mode when creating
-                  your EKS Auto Mode cluster. If the block storage capability is enabled, EKS
-                  Auto Mode will create and delete EBS volumes in your Amazon Web Services
-                  account.
+                  Request to update the configuration of the storage capability of your EKS
+                  Auto Mode cluster. For example, enable the capability. For more information,
+                  see EKS Auto Mode block storage capability in the EKS User Guide.
                 properties:
                   blockStorage:
                     description: |-
@@ -355,45 +314,23 @@ spec:
               tags:
                 additionalProperties:
                   type: string
-                description: |-
-                  Metadata that assists with categorization and organization. Each tag consists
-                  of a key and an optional value. You define both. Tags don't propagate to
-                  any other cluster or Amazon Web Services resources.
                 type: object
               upgradePolicy:
                 description: |-
-                  New clusters, by default, have extended support enabled. You can disable
-                  extended support when creating a cluster by setting this value to STANDARD.
+                  The support policy to use for the cluster. Extended support allows you to
+                  remain on specific Kubernetes versions for longer. Clusters in extended support
+                  have higher costs. The default value is EXTENDED. Use STANDARD to disable
+                  extended support.
+
+                  Learn more about EKS Extended Support in the EKS User Guide. (https://docs.aws.amazon.com/eks/latest/userguide/extended-support-control.html)
                 properties:
                   supportType:
                     type: string
                 type: object
               version:
-                description: |-
-                  The desired Kubernetes version for your cluster. If you don't specify a value
-                  here, the default version available in Amazon EKS is used.
-
-                  The default version might not be the latest version available.
                 type: string
               zonalShiftConfig:
-                description: |-
-                  Enable or disable ARC zonal shift for the cluster. If zonal shift is enabled,
-                  Amazon Web Services configures zonal autoshift for the cluster.
-
-                  Zonal shift is a feature of Amazon Application Recovery Controller (ARC).
-                  ARC zonal shift is designed to be a temporary measure that allows you to
-                  move traffic for a resource away from an impaired AZ until the zonal shift
-                  expires or you cancel it. You can extend the zonal shift if necessary.
-
-                  You can start a zonal shift for an EKS cluster, or you can allow Amazon Web
-                  Services to do it for you by enabling zonal autoshift. This shift updates
-                  the flow of east-to-west network traffic in your cluster to only consider
-                  network endpoints for Pods running on worker nodes in healthy AZs. Additionally,
-                  any ALB or NLB handling ingress traffic for applications in your EKS cluster
-                  will automatically route traffic to targets in the healthy AZs. For more
-                  information about zonal shift in EKS, see Learn about Amazon Application
-                  Recovery Controller (ARC) Zonal Shift in Amazon EKS (https://docs.aws.amazon.com/eks/latest/userguide/zone-shift.html)
-                  in the Amazon EKS User Guide .
+                description: The configuration for zonal shift for the cluster.
                 properties:
                   enabled:
                     type: boolean
@@ -442,7 +379,7 @@ spec:
                 type: object
               conditions:
                 description: |-
-                  All CRS managed by ACK have a common `Status.Conditions` member that
+                  All CRs managed by ACK have a common `Status.Conditions` member that
                   contains a collection of `ackv1alpha1.Condition` objects that describe
                   the various terminal states of the CR and its backend AWS service API
                   resource
