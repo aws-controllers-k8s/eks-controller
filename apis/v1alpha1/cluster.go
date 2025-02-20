@@ -26,7 +26,6 @@ import (
 type ClusterSpec struct {
 
 	// The access configuration for the cluster.
-
 	AccessConfig *CreateAccessConfigRequest `json:"accessConfig,omitempty"`
 	// If you set this value to False when creating a cluster, the default networking
 	// add-ons will not be installed.
@@ -35,23 +34,18 @@ type ClusterSpec struct {
 	//
 	// Use this option when you plan to install third-party alternative add-ons
 	// or self-manage the default networking add-ons.
-
 	BootstrapSelfManagedAddons *bool `json:"bootstrapSelfManagedAddons,omitempty"`
 	// A unique, case-sensitive identifier that you provide to ensurethe idempotency
 	// of the request.
-
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// Enable or disable the compute capability of EKS Auto Mode when creating your
 	// EKS Auto Mode cluster. If the compute capability is enabled, EKS Auto Mode
 	// will create and delete EC2 Managed Instances in your Amazon Web Services
 	// account
-
 	ComputeConfig *ComputeConfigRequest `json:"computeConfig,omitempty"`
 	// The encryption configuration for the cluster.
-
 	EncryptionConfig []*EncryptionConfig `json:"encryptionConfig,omitempty"`
 	// The Kubernetes network configuration for the cluster.
-
 	KubernetesNetworkConfig *KubernetesNetworkConfigRequest `json:"kubernetesNetworkConfig,omitempty"`
 	// Enable or disable exporting the Kubernetes control plane logs for your cluster
 	// to CloudWatch Logs. By default, cluster control plane logs aren't exported
@@ -62,16 +56,13 @@ type ClusterSpec struct {
 	// CloudWatch Logs ingestion, archive storage, and data scanning rates apply
 	// to exported control plane logs. For more information, see CloudWatch Pricing
 	// (http://aws.amazon.com/cloudwatch/pricing/).
-
 	Logging *Logging `json:"logging,omitempty"`
 	// The unique name to give to your cluster. The name can contain only alphanumeric
 	// characters (case-sensitive),hyphens, and underscores. It must start with
 	// an alphanumeric character and can't be longer than100 characters. The name
 	// must be unique within the Amazon Web Services Region and Amazon Web Services
 	// account that you're creating the cluster in.
-
 	// +kubebuilder:validation:Required
-
 	Name *string `json:"name"`
 	// An object representing the configuration of your local Amazon EKS cluster
 	// on an Amazon Web Services Outpost. Before creating a local cluster on an
@@ -79,11 +70,9 @@ type ClusterSpec struct {
 	// (https://docs.aws.amazon.com/eks/latest/userguide/eks-outposts-local-cluster-overview.html)
 	// in the Amazon EKS User Guide. This object isn't available for creating Amazon
 	// EKS clusters on the Amazon Web Services cloud.
-
 	OutpostConfig *OutpostConfigRequest `json:"outpostConfig,omitempty"`
 	// The configuration in the cluster for EKS Hybrid Nodes. You can't change or
 	// update this configuration after the cluster is created.
-
 	RemoteNetworkConfig *RemoteNetworkConfigRequest `json:"remoteNetworkConfig,omitempty"`
 	// The VPC configuration that's used by the cluster control plane. Amazon EKS
 	// VPC resources have specific requirements to work properly with Kubernetes.
@@ -92,39 +81,31 @@ type ClusterSpec struct {
 	// in the Amazon EKS User Guide. You must specify at least two subnets. You
 	// can specify up to five security groups. However, we recommend that you use
 	// a dedicated security group for your cluster control plane.
-
 	// +kubebuilder:validation:Required
-
 	ResourcesVPCConfig *VPCConfigRequest `json:"resourcesVPCConfig"`
 	// The Amazon Resource Name (ARN) of the IAM role that provides permissions
 	// for the Kubernetes control plane to make calls to Amazon Web Services API
 	// operations on your behalf. For more information, see Amazon EKS Service IAM
 	// Role (https://docs.aws.amazon.com/eks/latest/userguide/service_IAM_role.html)
 	// in the Amazon EKS User Guide .
-
-	RoleARN *string `json:"roleARN,omitempty"`
-
+	RoleARN *string                                  `json:"roleARN,omitempty"`
 	RoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"roleRef,omitempty"`
 	// Enable or disable the block storage capability of EKS Auto Mode when creating
 	// your EKS Auto Mode cluster. If the block storage capability is enabled, EKS
 	// Auto Mode will create and delete EBS volumes in your Amazon Web Services
 	// account.
-
 	StorageConfig *StorageConfigRequest `json:"storageConfig,omitempty"`
 	// Metadata that assists with categorization and organization. Each tag consists
 	// of a key and an optional value. You define both. Tags don't propagate to
 	// any other cluster or Amazon Web Services resources.
-
 	Tags map[string]*string `json:"tags,omitempty"`
 	// New clusters, by default, have extended support enabled. You can disable
 	// extended support when creating a cluster by setting this value to STANDARD.
-
 	UpgradePolicy *UpgradePolicyRequest `json:"upgradePolicy,omitempty"`
 	// The desired Kubernetes version for your cluster. If you don't specify a value
 	// here, the default version available in Amazon EKS is used.
 	//
 	// The default version might not be the latest version available.
-
 	Version *string `json:"version,omitempty"`
 	// Enable or disable ARC zonal shift for the cluster. If zonal shift is enabled,
 	// Amazon Web Services configures zonal autoshift for the cluster.
@@ -143,7 +124,6 @@ type ClusterSpec struct {
 	// information about zonal shift in EKS, see Learn about Amazon Application
 	// Recovery Controller (ARC) Zonal Shift in Amazon EKS (https://docs.aws.amazon.com/eks/latest/userguide/zone-shift.html)
 	// in the Amazon EKS User Guide .
-
 	ZonalShiftConfig *ZonalShiftConfigRequest `json:"zonalShiftConfig,omitempty"`
 }
 

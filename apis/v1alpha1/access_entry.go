@@ -30,10 +30,8 @@ import (
 type AccessEntrySpec struct {
 	AccessPolicies []*AssociateAccessPolicyInput `json:"accessPolicies,omitempty"`
 	// The name of your cluster.
-
-	ClusterName *string `json:"clusterName,omitempty"`
-
-	ClusterRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
+	ClusterName *string                                  `json:"clusterName,omitempty"`
+	ClusterRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
 	// The value for name that you've specified for kind: Group as a subject in
 	// a Kubernetes RoleBinding or ClusterRoleBinding object. Amazon EKS doesn't
 	// confirm that the value for name exists in any bindings on your cluster. You
@@ -51,7 +49,6 @@ type AccessEntrySpec struct {
 	// any access policies, the principalARN has all permissions assigned in the
 	// associated access policies and all permissions in any Kubernetes Role or
 	// ClusterRole objects that the group names are bound to.
-
 	KubernetesGroups []*string `json:"kubernetesGroups,omitempty"`
 	// The ARN of the IAM principal for the AccessEntry. You can specify one ARN
 	// for each access entry. You can't specify the same ARN in more than one access
@@ -67,14 +64,11 @@ type AccessEntrySpec struct {
 	// IAM best practices (https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#bp-users-federation-idp)
 	// recommend using IAM roles with temporary credentials, rather than IAM users
 	// with long-term credentials.
-
 	// +kubebuilder:validation:Required
-
 	PrincipalARN *string `json:"principalARN"`
 	// Metadata that assists with categorization and organization. Each tag consists
 	// of a key and an optional value. You define both. Tags don't propagate to
 	// any other cluster or Amazon Web Services resources.
-
 	Tags map[string]*string `json:"tags,omitempty"`
 	// The type of the new access entry. Valid values are Standard, FARGATE_LINUX,
 	// EC2_LINUX, and EC2_WINDOWS.
@@ -90,14 +84,12 @@ type AccessEntrySpec struct {
 	//
 	// If you set the value to EC2_LINUX or EC2_WINDOWS, you can't specify values
 	// for kubernetesGroups, or associate an AccessPolicy to the access entry.
-
 	Type *string `json:"type,omitempty"`
 	// The username to authenticate to Kubernetes with. We recommend not specifying
 	// a username and letting Amazon EKS specify it for you. For more information
 	// about the value Amazon EKS specifies for you, or constraints before specifying
 	// your own username, see Creating access entries (https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html#creating-access-entries)
 	// in the Amazon EKS User Guide.
-
 	Username *string `json:"username,omitempty"`
 }
 

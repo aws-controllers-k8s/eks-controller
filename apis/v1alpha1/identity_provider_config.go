@@ -26,24 +26,17 @@ import (
 type IdentityProviderConfigSpec struct {
 
 	// The name of your cluster.
-
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable once set"
-
-	ClusterName *string `json:"clusterName,omitempty"`
-
-	ClusterRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
+	ClusterName *string                                  `json:"clusterName,omitempty"`
+	ClusterRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
 	// An object representing an OpenID Connect (OIDC) identity provider configuration.
-
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable once set"
 	// +kubebuilder:validation:Required
-
 	OIDC *OIDCIdentityProviderConfigRequest `json:"oidc"`
 	// Metadata that assists with categorization and organization. Each tag consists
 	// of a key and an optional value. You define both. Tags don't propagate to
 	// any other cluster or Amazon Web Services resources.
-
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable once set"
-
 	Tags map[string]*string `json:"tags,omitempty"`
 }
 
