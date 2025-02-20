@@ -70,12 +70,8 @@ spec:
               provide credentials to Amazon EC2 instances.
             properties:
               clientRequestToken:
-                description: |-
-                  A unique, case-sensitive identifier that you provide to ensurethe idempotency
-                  of the request.
                 type: string
               clusterName:
-                description: The name of the cluster to create the association in.
                 type: string
               clusterRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
@@ -95,16 +91,8 @@ spec:
                     type: object
                 type: object
               namespace:
-                description: |-
-                  The name of the Kubernetes namespace inside the cluster to create the association
-                  in. The service account and the pods that use the service account must be
-                  in this namespace.
                 type: string
               roleARN:
-                description: |-
-                  The Amazon Resource Name (ARN) of the IAM role to associate with the service
-                  account. The EKS Pod Identity agent manages credentials to assume this role
-                  for applications in the containers in the pods that use this service account.
                 type: string
               roleRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
@@ -124,40 +112,10 @@ spec:
                     type: object
                 type: object
               serviceAccount:
-                description: |-
-                  The name of the Kubernetes service account inside the cluster to associate
-                  the IAM credentials with.
                 type: string
               tags:
                 additionalProperties:
                   type: string
-                description: |-
-                  Metadata that assists with categorization and organization. Each tag consists
-                  of a key and an optional value. You define both. Tags don't propagate to
-                  any other cluster or Amazon Web Services resources.
-
-                  The following basic restrictions apply to tags:
-
-                    - Maximum number of tags per resource – 50
-
-                    - For each resource, each tag key must be unique, and each tag key can
-                      have only one value.
-
-                    - Maximum key length – 128 Unicode characters in UTF-8
-
-                    - Maximum value length – 256 Unicode characters in UTF-8
-
-                    - If your tagging schema is used across multiple services and resources,
-                      remember that other services may have restrictions on allowed characters.
-                      Generally allowed characters are: letters, numbers, and spaces representable
-                      in UTF-8, and the following characters: + - = . _ : / @.
-
-                    - Tag keys and values are case-sensitive.
-
-                    - Do not use aws:, AWS:, or any upper or lowercase combination of such
-                      as a prefix for either keys or values as it is reserved for Amazon Web
-                      Services use. You cannot edit or delete tag keys or values with this prefix.
-                      Tags with this prefix do not count against your tags per resource limit.
                 type: object
             required:
             - namespace
@@ -204,7 +162,7 @@ spec:
                 type: string
               conditions:
                 description: |-
-                  All CRS managed by ACK have a common `Status.Conditions` member that
+                  All CRs managed by ACK have a common `Status.Conditions` member that
                   contains a collection of `ackv1alpha1.Condition` objects that describe
                   the various terminal states of the CR and its backend AWS service API
                   resource

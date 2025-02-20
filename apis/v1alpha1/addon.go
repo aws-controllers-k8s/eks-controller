@@ -28,19 +28,26 @@ type AddonSpec struct {
 
 	// The version of the add-on. The version must match one of the versions returned
 	// by DescribeAddonVersions (https://docs.aws.amazon.com/eks/latest/APIReference/API_DescribeAddonVersions.html).
+
 	AddonVersion *string `json:"addonVersion,omitempty"`
 	// A unique, case-sensitive identifier that you provide to ensurethe idempotency
 	// of the request.
+
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The name of your cluster.
-	ClusterName *string                                  `json:"clusterName,omitempty"`
-	ClusterRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
+
+	ClusterName *string `json:"clusterName,omitempty"`
+
+	ClusterRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
 	// The set of configuration values for the add-on that's created. The values
 	// that you provide are validated against the schema returned by DescribeAddonConfiguration.
+
 	ConfigurationValues *string `json:"configurationValues,omitempty"`
 	// The name of the add-on. The name must match one of the names returned by
 	// DescribeAddonVersions.
+
 	// +kubebuilder:validation:Required
+
 	Name *string `json:"name"`
 	// An array of Pod Identity Assocations to be created. Each EKS Pod Identity
 	// association maps a Kubernetes service account to an IAM Role.
@@ -48,28 +55,30 @@ type AddonSpec struct {
 	// For more information, see Attach an IAM Role to an Amazon EKS add-on using
 	// Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
 	// in the EKS User Guide.
+
 	PodIdentityAssociations []*AddonPodIdentityAssociations `json:"podIdentityAssociations,omitempty"`
 	// How to resolve field value conflicts for an Amazon EKS add-on. Conflicts
 	// are handled based on the value you choose:
 	//
-	//   - None – If the self-managed version of the add-on is installed on your
-	//     cluster, Amazon EKS doesn't change the value. Creation of the add-on might
-	//     fail.
+	//    * None – If the self-managed version of the add-on is installed on your
+	//    cluster, Amazon EKS doesn't change the value. Creation of the add-on might
+	//    fail.
 	//
-	//   - Overwrite – If the self-managed version of the add-on is installed
-	//     on your cluster and the Amazon EKS default value is different than the
-	//     existing value, Amazon EKS changes the value to the Amazon EKS default
-	//     value.
+	//    * Overwrite – If the self-managed version of the add-on is installed
+	//    on your cluster and the Amazon EKS default value is different than the
+	//    existing value, Amazon EKS changes the value to the Amazon EKS default
+	//    value.
 	//
-	//   - Preserve – This is similar to the NONE option. If the self-managed
-	//     version of the add-on is installed on your cluster Amazon EKS doesn't
-	//     change the add-on resource properties. Creation of the add-on might fail
-	//     if conflicts are detected. This option works differently during the update
-	//     operation. For more information, see UpdateAddon (https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html).
+	//    * Preserve – This is similar to the NONE option. If the self-managed
+	//    version of the add-on is installed on your cluster Amazon EKS doesn't
+	//    change the add-on resource properties. Creation of the add-on might fail
+	//    if conflicts are detected. This option works differently during the update
+	//    operation. For more information, see UpdateAddon (https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html).
 	//
 	// If you don't currently have the self-managed version of the add-on installed
 	// on your cluster, the Amazon EKS add-on is installed. Amazon EKS sets all
 	// values to default values, regardless of the option that you specify.
+
 	ResolveConflicts *string `json:"resolveConflicts,omitempty"`
 	// The Amazon Resource Name (ARN) of an existing IAM role to bind to the add-on's
 	// service account. The role must be assigned the IAM permissions required by
@@ -82,11 +91,14 @@ type AddonSpec struct {
 	// provider created for your cluster. For more information, see Enabling IAM
 	// roles for service accounts on your cluster (https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html)
 	// in the Amazon EKS User Guide.
-	ServiceAccountRoleARN *string                                  `json:"serviceAccountRoleARN,omitempty"`
+
+	ServiceAccountRoleARN *string `json:"serviceAccountRoleARN,omitempty"`
+
 	ServiceAccountRoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"serviceAccountRoleRef,omitempty"`
 	// Metadata that assists with categorization and organization. Each tag consists
 	// of a key and an optional value. You define both. Tags don't propagate to
 	// any other cluster or Amazon Web Services resources.
+
 	Tags map[string]*string `json:"tags,omitempty"`
 }
 
@@ -97,7 +109,7 @@ type AddonStatus struct {
 	// constructed ARN for the resource
 	// +kubebuilder:validation:Optional
 	ACKResourceMetadata *ackv1alpha1.ResourceMetadata `json:"ackResourceMetadata"`
-	// All CRS managed by ACK have a common `Status.Conditions` member that
+	// All CRs managed by ACK have a common `Status.Conditions` member that
 	// contains a collection of `ackv1alpha1.Condition` objects that describe
 	// the various terminal states of the CR and its backend AWS service API
 	// resource
