@@ -25,6 +25,7 @@ import (
 	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	svcsdk "github.com/aws/aws-sdk-go-v2/service/eks"
 	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	corev1 "k8s.io/api/core/v1"
@@ -261,7 +262,7 @@ func (rm *resourceManager) customUpdate(
 		err := tags.SyncTags(
 			ctx, rm.sdkapi, rm.metrics,
 			string(*latest.ko.Status.ACKResourceMetadata.ARN),
-			ToACKTags(desired.ko.Spec.Tags), ToACKTags(latest.ko.Spec.Tags),
+			aws.ToStringMap(desired.ko.Spec.Tags), aws.ToStringMap(latest.ko.Spec.Tags),
 		)
 		if err != nil {
 			return nil, err
@@ -366,7 +367,7 @@ func newUpdateLabelsPayload(
 	latest *resource,
 ) *svcsdktypes.UpdateLabelsPayload {
 	payload := svcsdktypes.UpdateLabelsPayload{
-		AddOrUpdateLabels: ToACKTags(desired.ko.Spec.Labels),
+		AddOrUpdateLabels: aws.ToStringMap(desired.ko.Spec.Labels),
 		RemoveLabels:      make([]string, 0),
 	}
 

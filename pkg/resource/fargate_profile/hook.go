@@ -24,6 +24,7 @@ import (
 	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	svcsdk "github.com/aws/aws-sdk-go/service/eks"
 )
 
@@ -78,7 +79,7 @@ func (rm *resourceManager) customUpdate(
 		if err := tags.SyncTags(
 			ctx, rm.sdkapi, rm.metrics,
 			string(*latest.ko.Status.ACKResourceMetadata.ARN),
-			ToACKTags(desired.ko.Spec.Tags), ToACKTags(latest.ko.Spec.Tags),
+			aws.ToStringMap(desired.ko.Spec.Tags), aws.ToStringMap(latest.ko.Spec.Tags),
 		); err != nil {
 			return nil, err
 		}

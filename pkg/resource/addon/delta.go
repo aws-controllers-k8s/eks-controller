@@ -99,7 +99,9 @@ func newResourceDelta(
 	if !reflect.DeepEqual(a.ko.Spec.ServiceAccountRoleRef, b.ko.Spec.ServiceAccountRoleRef) {
 		delta.Add("Spec.ServiceAccountRoleRef", a.ko.Spec.ServiceAccountRoleRef, b.ko.Spec.ServiceAccountRoleRef)
 	}
-	if !ackcompare.MapStringStringEqual(ToACKTags(a.ko.Spec.Tags), ToACKTags(b.ko.Spec.Tags)) {
+	desiredACKTags, _ := convertToOrderedACKTags(a.ko.Spec.Tags)
+	latestACKTags, _ := convertToOrderedACKTags(b.ko.Spec.Tags)
+	if !ackcompare.MapStringStringEqual(desiredACKTags, latestACKTags) {
 		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
 	}
 
