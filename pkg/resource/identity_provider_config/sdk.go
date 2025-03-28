@@ -128,7 +128,7 @@ func (rm *resourceManager) sdkFind(
 
 	rm.setStatusDefaults(ko)
 	if resp.IdentityProviderConfig.Oidc != nil {
-		ko.Spec.Tags = FromACKTags(resp.IdentityProviderConfig.Oidc.Tags)
+		ko.Spec.Tags = aws.StringMap(resp.IdentityProviderConfig.Oidc.Tags)
 	}
 	temp := string(resp.IdentityProviderConfig.Oidc.Status)
 	ko.Status.Status = &temp

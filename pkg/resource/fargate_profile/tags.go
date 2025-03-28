@@ -30,15 +30,17 @@ var (
 	ACKSystemTags = []string{"services.k8s.aws/namespace", "services.k8s.aws/controller-version"}
 )
 
-// ToACKTags converts the tags parameter into 'acktags.Tags' shape.
+// convertToOrderedACKTags converts the tags parameter into 'acktags.Tags' shape.
 // This method helps in creating the hub(acktags.Tags) for merging
-// default controller tags with existing resource tags.
-func ToACKTags(tags map[string]*string) acktags.Tags {
+// default controller tags with existing resource tags. It also returns a slice
+// of keys maintaining the original key Order when the tags are a list
+func convertToOrderedACKTags(tags map[string]*string) (acktags.Tags, []string) {
 	result := acktags.NewTags()
-	if tags == nil || len(tags) == 0 {
-		return result
-	}
+	keyOrder := []string{}
 
+	if len(tags) == 0 {
+		return result, keyOrder
+	}
 	for k, v := range tags {
 		if v == nil {
 			result[k] = ""
@@ -47,18 +49,21 @@ func ToACKTags(tags map[string]*string) acktags.Tags {
 		}
 	}
 
-	return result
+	return result, keyOrder
 }
 
-// FromACKTags converts the tags parameter into map[string]*string shape.
+// fromACKTags converts the tags parameter into map[string]*string shape.
 // This method helps in setting the tags back inside AWSResource after merging
-// default controller tags with existing resource tags.
-func FromACKTags(tags acktags.Tags) map[string]*string {
+// default controller tags with existing resource tags. When a list,
+// it maintains the order from original
+func fromACKTags(tags acktags.Tags, keyOrder []string) map[string]*string {
 	result := map[string]*string{}
+
+	_ = keyOrder
 	for k, v := range tags {
-		vCopy := v
-		result[k] = &vCopy
+		result[k] = &v
 	}
+
 	return result
 }
 
