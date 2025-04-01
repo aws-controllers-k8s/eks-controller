@@ -4,7 +4,7 @@ metadata:
   name: $CLUSTER_NAME
 spec:
   name: $CLUSTER_NAME
-  version: "1.31"
+  version: "$CLUSTER_VERSION"
   roleARN: $AUTO_CLUSTER_ROLE
   resourcesVPCConfig:
     subnetIDs:
