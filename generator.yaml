@@ -312,6 +312,9 @@ resources:
         references:
           resource: Cluster
           path: Spec.Name
+        is_immutable: true
+      Name:
+        is_immutable: true
       NodeRole:
         references:
           service_name: iam
@@ -332,6 +335,10 @@ resources:
           service_name: ec2
           resource: Subnet
           path: Status.SubnetID
+        is_immutable: true
+      AmiType:
+        is_immutable: true
+      InstanceTypes:
         is_immutable: true
       Taints:
         compare:
