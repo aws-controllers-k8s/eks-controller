@@ -17,6 +17,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
@@ -29,6 +30,7 @@ import (
 	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/aws/smithy-go"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
 	"github.com/aws-controllers-k8s/eks-controller/pkg/util"
@@ -48,6 +50,36 @@ const (
 	StatusUpdating = "UPDATING"
 	StatusPending  = "PENDING"
 )
+
+const (
+	// AnnotationPrefix is the prefix for all annotations specifically for
+	// the EKS service.
+	AnnotationPrefix = "eks.services.k8s.aws/"
+	// AnnotationForceUpgrade is an annotation whose value indicates whether
+	// the cluster version upgrade should be forced even if there are cluster insight findings.
+	AnnotationForceUpgrade = AnnotationPrefix + "force-upgrade"
+
+	DefaultForceUpgrade = false
+)
+
+// GetForceUpgrade returns whether the cluster version upgrade should be forced
+// as determined by the annotation on the object, or the default value otherwise.
+func GetForceUpgrade(
+	m *metav1.ObjectMeta,
+) bool {
+	resAnnotations := m.GetAnnotations()
+	forceUpgrade, ok := resAnnotations[AnnotationForceUpgrade]
+	if !ok {
+		return DefaultForceUpgrade
+	}
+
+	forceUpgradeBool, err := strconv.ParseBool(forceUpgrade)
+	if err != nil {
+		return DefaultForceUpgrade
+	}
+
+	return forceUpgradeBool
+}
 
 var (
 	// TerminalStatuses are the status strings that are terminal states for a
@@ -438,6 +470,7 @@ func (rm *resourceManager) updateVersion(
 	input := &svcsdk.UpdateClusterVersionInput{
 		Name:    desired.ko.Spec.Name,
 		Version: &nextVersion,
+		Force:   GetForceUpgrade(&desired.ko.ObjectMeta),
 	}
 
 	_, err = rm.sdkapi.UpdateClusterVersion(ctx, input)
