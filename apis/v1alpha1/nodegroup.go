@@ -32,6 +32,7 @@ type NodegroupSpec struct {
 	// aws-auth ConfigMap. For more information about using launch templates with
 	// Amazon EKS, see Customizing managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable once set"
 	AMIType *string `json:"amiType,omitempty"`
 	// The capacity type for your node group.
 	CapacityType *string `json:"capacityType,omitempty"`
@@ -39,6 +40,7 @@ type NodegroupSpec struct {
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The name of your cluster.
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable once set"
 	ClusterName *string                                  `json:"clusterName,omitempty"`
 	ClusterRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
 	// The root device disk size (in GiB) for your node group instances. The default
@@ -62,6 +64,7 @@ type NodegroupSpec struct {
 	// information, see Managed node group capacity types (https://docs.aws.amazon.com/eks/latest/userguide/managed-node-groups.html#managed-node-group-capacity-types)
 	// and Customizing managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable once set"
 	InstanceTypes []*string `json:"instanceTypes,omitempty"`
 	// The Kubernetes labels to apply to the nodes in the node group when they are
 	// created.
@@ -73,6 +76,7 @@ type NodegroupSpec struct {
 	// in the Amazon EKS User Guide.
 	LaunchTemplate *LaunchTemplateSpecification `json:"launchTemplate,omitempty"`
 	// The unique name to give your node group.
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable once set"
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
 	// The Amazon Resource Name (ARN) of the IAM role to associate with your node
