@@ -30,8 +30,9 @@ from e2e.common.waiter import wait_until_deleted
 from e2e.replacement_values import REPLACEMENT_VALUES
 from e2e.fixtures import assert_tagging_functionality
 from e2e.common import (
-    TESTS_DEFAULT_KUBERNETES_VERSION_1_27,
-    TESTS_DEFAULT_KUBERNETES_VERSION_1_29,
+    TESTS_DEFAULT_KUBERNETES_VERSION_1_30,
+    TESTS_DEFAULT_KUBERNETES_VERSION_1_31,
+    TESTS_DEFAULT_KUBERNETES_VERSION_1_32,
 )
 
 # Time to wait after modifying the CR for the status to change
@@ -75,7 +76,7 @@ def simple_cluster(eks_client):
 
     replacements = REPLACEMENT_VALUES.copy()
     replacements["CLUSTER_NAME"] = cluster_name
-    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_29
+    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_32
 
     resource_data = load_eks_resource(
         "cluster_simple",
@@ -110,7 +111,7 @@ def simple_cluster_version_minus_2(eks_client):
 
     replacements = REPLACEMENT_VALUES.copy()
     replacements["CLUSTER_NAME"] = cluster_name
-    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_27
+    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_30
 
     resource_data = load_eks_resource(
         "cluster_simple",
@@ -298,10 +299,10 @@ class TestCluster:
 
         wait_for_cluster_active(eks_client, cluster_name)
 
-        # Bump two minor versions 1.27 -> 1.29
+        # Bump two minor versions 1.30 -> 1.32
         updates = {
             "spec": {
-                "version": "1.29"
+                "version": TESTS_DEFAULT_KUBERNETES_VERSION_1_32
             }
         }
         k8s.patch_custom_resource(ref, updates)
@@ -313,9 +314,9 @@ class TestCluster:
         # Wait for the updating to become active again
         wait_for_cluster_active(eks_client, cluster_name)
 
-        # At this point, the cluster should be active again at version 1.28
+        # At this point, the cluster should be active again at version 1.31
         aws_res = eks_client.describe_cluster(name=cluster_name)
-        assert aws_res["cluster"]["version"] == "1.28"
+        assert aws_res["cluster"]["version"] == TESTS_DEFAULT_KUBERNETES_VERSION_1_31
 
         # So we need to wait again for the CR to be updated.
         time.sleep(CHECK_STATUS_WAIT_SECONDS*1.5)
@@ -329,9 +330,9 @@ class TestCluster:
         # So we need to wait again for the CR to be updated.
         time.sleep(CHECK_STATUS_WAIT_SECONDS*1.5)
         
-        # the cluster should be active again at version 1.29
+        # the cluster should be active again at version 1.32
         aws_res = eks_client.describe_cluster(name=cluster_name)
-        assert aws_res["cluster"]["version"] == "1.29"
+        assert aws_res["cluster"]["version"] == TESTS_DEFAULT_KUBERNETES_VERSION_1_32
 
         # So we need to wait again for the CR to be updated.
         time.sleep(CHECK_STATUS_WAIT_SECONDS*1.5)
@@ -375,7 +376,7 @@ class TestCluster:
         # Wait for the updating to become active again
         wait_for_cluster_active(eks_client, cluster_name)
 
-        # At this point, the cluster should be active again at version 1.28
+        # At this point, the cluster should be active again at version 1.31
         aws_res = eks_client.describe_cluster(name=cluster_name)
         assert len(aws_res["cluster"]["encryptionConfig"]) == 1
         assert aws_res["cluster"]["encryptionConfig"][0]["resources"] == ["secrets"]
@@ -408,7 +409,7 @@ class TestCluster:
         # Wait for the updating to become active again
         wait_for_cluster_active(eks_client, cluster_name)
 
-        # At this point, the cluster should be active again at version 1.28
+        # At this point, the cluster should be active again at version 1.32
         aws_res = eks_client.describe_cluster(name=cluster_name)
         assert aws_res["cluster"]["upgradePolicy"]["supportType"] == "STANDARD"
     
@@ -444,7 +445,7 @@ class TestCluster:
         # Wait for the updating to become active again
         wait_for_cluster_active(eks_client, cluster_name)
 
-        # At this point, the cluster should be active again at version 1.28
+        # At this point, the cluster should be active again at version 1.31
         aws_res = eks_client.describe_cluster(name=cluster_name)
         assert aws_res
         assert aws_res["cluster"]["upgradePolicy"]["supportType"] == support_type

@@ -104,7 +104,7 @@ class TestAddon:
     @pytest.mark.resource_data({'addons': [
         {
             "name": "coredns",
-            "version": "v1.11.1-eksbuild.9",
+            "version": "v1.11.4-eksbuild.2",
             "configurationValues": json.dumps({"resources": {"limits": {"memory": "64Mi"}, "requests": {"cpu": "10m", "memory": "64Mi"}}}),
             "resolveConflicts": "OVERWRITE", 
         },
