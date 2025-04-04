@@ -449,4 +449,3 @@ class TestCluster:
         aws_res = eks_client.describe_cluster(name=cluster_name)
         assert aws_res
         assert aws_res["cluster"]["upgradePolicy"]["supportType"] == support_type
-

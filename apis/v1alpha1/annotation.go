@@ -41,6 +41,10 @@ var (
 	// of the `spec` object. If the value is "false", the controller will not force an update of the
 	// nodegroup version.
 	ForceNodeGroupUpdateVersionAnnotation = fmt.Sprintf("%s/force-update-version", GroupVersion.Group)
+	// ForceClusterUpgradeAnnotation is an annotation whose value indicates whether
+	// the cluster version upgrade should be forced even if there are cluster insight findings.
+	// The value of this annotation must be a boolean value.
+	ForceClusterUpgradeAnnotation = fmt.Sprintf("%s/force-upgrade", GroupVersion.Group)
 )
 
 const (
@@ -52,4 +56,7 @@ const (
 	// annotation that indicates that the desired size of a nodegroup is managed by the ACK
 	// controller.
 	DesiredSizeManagedByACKController = "ack-eks-controller"
+	// DefaultForceClusterUpgrade is the default value for ForceClusterUpgradeAnnotation if the annotation
+	// is not set or has an invalid value.
+	DefaultForceClusterUpgrade = false
 )
