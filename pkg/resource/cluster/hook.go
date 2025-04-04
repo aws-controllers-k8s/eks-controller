@@ -32,6 +32,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
 	"github.com/aws-controllers-k8s/eks-controller/pkg/util"
 )
@@ -51,31 +52,20 @@ const (
 	StatusPending  = "PENDING"
 )
 
-const (
-	// AnnotationPrefix is the prefix for all annotations specifically for
-	// the EKS service.
-	AnnotationPrefix = "eks.services.k8s.aws/"
-	// AnnotationForceUpgrade is an annotation whose value indicates whether
-	// the cluster version upgrade should be forced even if there are cluster insight findings.
-	AnnotationForceUpgrade = AnnotationPrefix + "force-upgrade"
-
-	DefaultForceUpgrade = false
-)
-
 // GetForceUpgrade returns whether the cluster version upgrade should be forced
 // as determined by the annotation on the object, or the default value otherwise.
 func GetForceUpgrade(
 	m *metav1.ObjectMeta,
 ) bool {
 	resAnnotations := m.GetAnnotations()
-	forceUpgrade, ok := resAnnotations[AnnotationForceUpgrade]
+	forceUpgrade, ok := resAnnotations[v1alpha1.ForceClusterUpgradeAnnotation]
 	if !ok {
-		return DefaultForceUpgrade
+		return v1alpha1.DefaultForceClusterUpgrade
 	}
 
 	forceUpgradeBool, err := strconv.ParseBool(forceUpgrade)
 	if err != nil {
-		return DefaultForceUpgrade
+		return v1alpha1.DefaultForceClusterUpgrade
 	}
 
 	return forceUpgradeBool

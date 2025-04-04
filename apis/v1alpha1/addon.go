@@ -47,7 +47,7 @@ type AddonSpec struct {
 	//
 	// For more information, see Attach an IAM Role to an Amazon EKS add-on using
 	// Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
-	// in the EKS User Guide.
+	// in the Amazon EKS User Guide.
 	PodIdentityAssociations []*AddonPodIdentityAssociations `json:"podIdentityAssociations,omitempty"`
 	// How to resolve field value conflicts for an Amazon EKS add-on. Conflicts
 	// are handled based on the value you choose:

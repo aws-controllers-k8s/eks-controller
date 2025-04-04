@@ -128,6 +128,14 @@ const (
 	ClusterStatus_SDK_UPDATING ClusterStatus_SDK = "UPDATING"
 )
 
+type ClusterVersionStatus string
+
+const (
+	ClusterVersionStatus_extended_support ClusterVersionStatus = "extended-support"
+	ClusterVersionStatus_standard_support ClusterVersionStatus = "standard-support"
+	ClusterVersionStatus_unsupported      ClusterVersionStatus = "unsupported"
+)
+
 type ConfigStatus string
 
 const (
@@ -293,6 +301,13 @@ const (
 	NodegroupStatus_SDK_UPDATING      NodegroupStatus_SDK = "UPDATING"
 )
 
+type NodegroupUpdateStrategies string
+
+const (
+	NodegroupUpdateStrategies_DEFAULT NodegroupUpdateStrategies = "DEFAULT"
+	NodegroupUpdateStrategies_MINIMAL NodegroupUpdateStrategies = "MINIMAL"
+)
+
 type ResolveConflicts string
 
 const (
@@ -338,6 +353,7 @@ const (
 	UpdateParamType_MaxUnavailable           UpdateParamType = "MaxUnavailable"
 	UpdateParamType_MaxUnavailablePercentage UpdateParamType = "MaxUnavailablePercentage"
 	UpdateParamType_MinSize                  UpdateParamType = "MinSize"
+	UpdateParamType_NodeRepairEnabled        UpdateParamType = "NodeRepairEnabled"
 	UpdateParamType_PlatformVersion          UpdateParamType = "PlatformVersion"
 	UpdateParamType_PodIdentityAssociations  UpdateParamType = "PodIdentityAssociations"
 	UpdateParamType_PublicAccessCidrs        UpdateParamType = "PublicAccessCidrs"
@@ -349,6 +365,7 @@ const (
 	UpdateParamType_Subnets                  UpdateParamType = "Subnets"
 	UpdateParamType_TaintsToAdd              UpdateParamType = "TaintsToAdd"
 	UpdateParamType_TaintsToRemove           UpdateParamType = "TaintsToRemove"
+	UpdateParamType_UpdateStrategy           UpdateParamType = "UpdateStrategy"
 	UpdateParamType_UpgradePolicy            UpdateParamType = "UpgradePolicy"
 	UpdateParamType_Version                  UpdateParamType = "Version"
 	UpdateParamType_ZonalShiftConfig         UpdateParamType = "ZonalShiftConfig"
@@ -379,4 +396,12 @@ const (
 	UpdateType_VersionUpdate                      UpdateType = "VersionUpdate"
 	UpdateType_VpcConfigUpdate                    UpdateType = "VpcConfigUpdate"
 	UpdateType_ZonalShiftConfigUpdate             UpdateType = "ZonalShiftConfigUpdate"
+)
+
+type VersionStatus string
+
+const (
+	VersionStatus_EXTENDED_SUPPORT VersionStatus = "EXTENDED_SUPPORT"
+	VersionStatus_STANDARD_SUPPORT VersionStatus = "STANDARD_SUPPORT"
+	VersionStatus_UNSUPPORTED      VersionStatus = "UNSUPPORTED"
 )

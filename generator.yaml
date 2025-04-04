@@ -524,3 +524,6 @@ ignore:
   - AssociateIdentityProviderConfigOutput.Update
   - AssociateAccessPolicyInput.PrincipalArn
   - AssociateAccessPolicyInput.ClusterName
+  - DescribeNodegroupOutput.Nodegroup.UpdateConfig.UpdateStrategy
+  - DescribeNodegroupOutput.Nodegroup.NodeRepairConfig
+  - CreateNodegroupInput.NodeRepairConfig
