@@ -85,6 +85,9 @@ spec:
                   Amazon EKS, see Customizing managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
                   in the Amazon EKS User Guide.
                 type: string
+                x-kubernetes-validations:
+                - message: Value is immutable once set
+                  rule: self == oldSelf
               capacityType:
                 description: The capacity type for your node group.
                 type: string
@@ -96,6 +99,9 @@ spec:
               clusterName:
                 description: The name of your cluster.
                 type: string
+                x-kubernetes-validations:
+                - message: Value is immutable once set
+                  rule: self == oldSelf
               clusterRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around
                   *AWSResourceReference\ntype to provide more user friendly syntax
@@ -144,6 +150,9 @@ spec:
                 items:
                   type: string
                 type: array
+                x-kubernetes-validations:
+                - message: Value is immutable once set
+                  rule: self == oldSelf
               labels:
                 additionalProperties:
                   type: string
@@ -169,6 +178,9 @@ spec:
               name:
                 description: The unique name to give your node group.
                 type: string
+                x-kubernetes-validations:
+                - message: Value is immutable once set
+                  rule: self == oldSelf
               nodeRole:
                 description: |-
                   The Amazon Resource Name (ARN) of the IAM role to associate with your node
