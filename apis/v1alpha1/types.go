@@ -97,6 +97,13 @@ type AccessScope struct {
 	Type       *string   `json:"type,omitempty"`
 }
 
+// The summary information about the Amazon EKS add-on compatibility for the
+// next Kubernetes version for an insight check in the UPGRADE_READINESS category.
+type AddonCompatibilityDetail struct {
+	CompatibleVersions []*string `json:"compatibleVersions,omitempty"`
+	Name               *string   `json:"name,omitempty"`
+}
+
 // The health of the add-on.
 type AddonHealth struct {
 	Issues []*AddonIssue `json:"issues,omitempty"`
@@ -126,7 +133,7 @@ type AddonIssue struct {
 //
 // For more information, see Attach an IAM Role to an Amazon EKS add-on using
 // Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
-// in the EKS User Guide.
+// in the Amazon EKS User Guide.
 type AddonPodIdentityAssociations struct {
 	RoleARN        *string `json:"roleARN,omitempty"`
 	ServiceAccount *string `json:"serviceAccount,omitempty"`
@@ -219,7 +226,7 @@ type AutoScalingGroup struct {
 // EKS Auto Mode cluster. For example, if the capability is enabled or disabled.
 // If the block storage capability is enabled, EKS Auto Mode will create and
 // delete EBS volumes in your Amazon Web Services account. For more information,
-// see EKS Auto Mode block storage capability in the EKS User Guide.
+// see EKS Auto Mode block storage capability in the Amazon EKS User Guide.
 type BlockStorage struct {
 	Enabled *bool `json:"enabled,omitempty"`
 }
@@ -245,6 +252,18 @@ type ClusterIssue struct {
 	Code        *string   `json:"code,omitempty"`
 	Message     *string   `json:"message,omitempty"`
 	ResourceIDs []*string `json:"resourceIDs,omitempty"`
+}
+
+// Contains details about a specific EKS cluster version.
+type ClusterVersionInformation struct {
+	ClusterType              *string      `json:"clusterType,omitempty"`
+	ClusterVersion           *string      `json:"clusterVersion,omitempty"`
+	DefaultPlatformVersion   *string      `json:"defaultPlatformVersion,omitempty"`
+	DefaultVersion           *bool        `json:"defaultVersion,omitempty"`
+	EndOfExtendedSupportDate *metav1.Time `json:"endOfExtendedSupportDate,omitempty"`
+	EndOfStandardSupportDate *metav1.Time `json:"endOfStandardSupportDate,omitempty"`
+	KubernetesPatchVersion   *string      `json:"kubernetesPatchVersion,omitempty"`
+	ReleaseDate              *metav1.Time `json:"releaseDate,omitempty"`
 }
 
 // An object representing an Amazon EKS cluster.
@@ -317,7 +336,7 @@ type Cluster_SDK struct {
 	Tags map[string]*string `json:"tags,omitempty"`
 	// This value indicates if extended support is enabled or disabled for the cluster.
 	//
-	// Learn more about EKS Extended Support in the EKS User Guide. (https://docs.aws.amazon.com/eks/latest/userguide/extended-support-control.html)
+	// Learn more about EKS Extended Support in the Amazon EKS User Guide. (https://docs.aws.amazon.com/eks/latest/userguide/extended-support-control.html)
 	UpgradePolicy *UpgradePolicyResponse `json:"upgradePolicy,omitempty"`
 	Version       *string                `json:"version,omitempty"`
 	// The status of zonal shift configuration for the cluster
@@ -333,7 +352,7 @@ type Compatibility struct {
 
 // Request to update the configuration of the compute capability of your EKS
 // Auto Mode cluster. For example, enable the capability. For more information,
-// see EKS Auto Mode compute capability in the EKS User Guide.
+// see EKS Auto Mode compute capability in the Amazon EKS User Guide.
 type ComputeConfigRequest struct {
 	Enabled     *bool     `json:"enabled,omitempty"`
 	NodePools   []*string `json:"nodePools,omitempty"`
@@ -435,7 +454,7 @@ type EKSAnywhereSubscription struct {
 // Indicates the current configuration of the load balancing capability on your
 // EKS Auto Mode cluster. For example, if the capability is enabled or disabled.
 // For more information, see EKS Auto Mode load balancing capability in the
-// EKS User Guide.
+// Amazon EKS User Guide.
 type ElasticLoadBalancing struct {
 	Enabled *bool `json:"enabled,omitempty"`
 }
@@ -584,7 +603,7 @@ type KubernetesNetworkConfigRequest struct {
 	// Indicates the current configuration of the load balancing capability on your
 	// EKS Auto Mode cluster. For example, if the capability is enabled or disabled.
 	// For more information, see EKS Auto Mode load balancing capability in the
-	// EKS User Guide.
+	// Amazon EKS User Guide.
 	ElasticLoadBalancing *ElasticLoadBalancing `json:"elasticLoadBalancing,omitempty"`
 	IPFamily             *string               `json:"ipFamily,omitempty"`
 	ServiceIPv4CIDR      *string               `json:"serviceIPv4CIDR,omitempty"`
@@ -596,7 +615,7 @@ type KubernetesNetworkConfigResponse struct {
 	// Indicates the current configuration of the load balancing capability on your
 	// EKS Auto Mode cluster. For example, if the capability is enabled or disabled.
 	// For more information, see EKS Auto Mode load balancing capability in the
-	// EKS User Guide.
+	// Amazon EKS User Guide.
 	ElasticLoadBalancing *ElasticLoadBalancing `json:"elasticLoadBalancing,omitempty"`
 	IPFamily             *string               `json:"ipFamily,omitempty"`
 	ServiceIPv4CIDR      *string               `json:"serviceIPv4CIDR,omitempty"`
@@ -642,6 +661,11 @@ type MarketplaceInformation struct {
 	ProductURL *string `json:"productURL,omitempty"`
 }
 
+// The node auto repair configuration for the node group.
+type NodeRepairConfig struct {
+	Enabled *bool `json:"enabled,omitempty"`
+}
+
 // An object representing the health status of the node group.
 type NodegroupHealth struct {
 	Issues []*Issue `json:"issues,omitempty"`
@@ -664,7 +688,9 @@ type NodegroupScalingConfig struct {
 	MinSize     *int64 `json:"minSize,omitempty"`
 }
 
-// The node group update configuration.
+// The node group update configuration. An Amazon EKS managed node group updates
+// by replacing nodes with new nodes of newer AMI versions in parallel. You
+// choose the maximum unavailable and the update strategy.
 type NodegroupUpdateConfig struct {
 	MaxUnavailable           *int64 `json:"maxUnavailable,omitempty"`
 	MaxUnavailablePercentage *int64 `json:"maxUnavailablePercentage,omitempty"`
@@ -742,7 +768,9 @@ type Nodegroup_SDK struct {
 	//    Tags with this prefix do not count against your tags per resource limit.
 	Tags   map[string]*string `json:"tags,omitempty"`
 	Taints []*Taint           `json:"taints,omitempty"`
-	// The node group update configuration.
+	// The node group update configuration. An Amazon EKS managed node group updates
+	// by replacing nodes with new nodes of newer AMI versions in parallel. You
+	// choose the maximum unavailable and the update strategy.
 	UpdateConfig *NodegroupUpdateConfig `json:"updateConfig,omitempty"`
 	Version      *string                `json:"version,omitempty"`
 }
@@ -841,7 +869,7 @@ type OutpostConfigResponse struct {
 // The summarized description of the association.
 //
 // Each summary is simplified by removing these fields compared to the full
-// PodIdentityAssociation :
+// PodIdentityAssociation (https://docs.aws.amazon.com/eks/latest/APIReference/API_PodIdentityAssociation.html):
 //
 //   - The IAM role: roleArn
 //
@@ -931,25 +959,71 @@ type RemoteNetworkConfigResponse struct {
 }
 
 // A network CIDR that can contain hybrid nodes.
+//
+// These CIDR blocks define the expected IP address range of the hybrid nodes
+// that join the cluster. These blocks are typically determined by your network
+// administrator.
+//
+// Enter one or more IPv4 CIDR blocks in decimal dotted-quad notation (for example,
+// 10.2.0.0/16).
+//
+// It must satisfy the following requirements:
+//
+//   - Each block must be within an IPv4 RFC-1918 network range. Minimum allowed
+//     size is /24, maximum allowed size is /8. Publicly-routable addresses aren't
+//     supported.
+//
+//   - Each block cannot overlap with the range of the VPC CIDR blocks for
+//     your EKS resources, or the block of the Kubernetes service IP range.
+//
+//   - Each block must have a route to the VPC that uses the VPC CIDR blocks,
+//     not public IPs or Elastic IPs. There are many options including Transit
+//     Gateway, Site-to-Site VPN, or Direct Connect.
+//
+//   - Each host must allow outbound connection to the EKS cluster control
+//     plane on TCP ports 443 and 10250.
+//
+//   - Each host must allow inbound connection from the EKS cluster control
+//     plane on TCP port 10250 for logs, exec and port-forward operations.
+//
+//   - Each host must allow TCP and UDP network connectivity to and from other
+//     hosts that are running CoreDNS on UDP port 53 for service and pod DNS
+//     names.
 type RemoteNodeNetwork struct {
 	CIDRs []*string `json:"cidrs,omitempty"`
 }
 
 // A network CIDR that can contain pods that run Kubernetes webhooks on hybrid
 // nodes.
+//
+// These CIDR blocks are determined by configuring your Container Network Interface
+// (CNI) plugin. We recommend the Calico CNI or Cilium CNI. Note that the Amazon
+// VPC CNI plugin for Kubernetes isn't available for on-premises and edge locations.
+//
+// Enter one or more IPv4 CIDR blocks in decimal dotted-quad notation (for example,
+// 10.2.0.0/16).
+//
+// It must satisfy the following requirements:
+//
+//   - Each block must be within an IPv4 RFC-1918 network range. Minimum allowed
+//     size is /24, maximum allowed size is /8. Publicly-routable addresses aren't
+//     supported.
+//
+//   - Each block cannot overlap with the range of the VPC CIDR blocks for
+//     your EKS resources, or the block of the Kubernetes service IP range.
 type RemotePodNetwork struct {
 	CIDRs []*string `json:"cidrs,omitempty"`
 }
 
 // Request to update the configuration of the storage capability of your EKS
 // Auto Mode cluster. For example, enable the capability. For more information,
-// see EKS Auto Mode block storage capability in the EKS User Guide.
+// see EKS Auto Mode block storage capability in the Amazon EKS User Guide.
 type StorageConfigRequest struct {
 	// Indicates the current configuration of the block storage capability on your
 	// EKS Auto Mode cluster. For example, if the capability is enabled or disabled.
 	// If the block storage capability is enabled, EKS Auto Mode will create and
 	// delete EBS volumes in your Amazon Web Services account. For more information,
-	// see EKS Auto Mode block storage capability in the EKS User Guide.
+	// see EKS Auto Mode block storage capability in the Amazon EKS User Guide.
 	BlockStorage *BlockStorage `json:"blockStorage,omitempty"`
 }
 
@@ -960,7 +1034,7 @@ type StorageConfigResponse struct {
 	// EKS Auto Mode cluster. For example, if the capability is enabled or disabled.
 	// If the block storage capability is enabled, EKS Auto Mode will create and
 	// delete EBS volumes in your Amazon Web Services account. For more information,
-	// see EKS Auto Mode block storage capability in the EKS User Guide.
+	// see EKS Auto Mode block storage capability in the Amazon EKS User Guide.
 	BlockStorage *BlockStorage `json:"blockStorage,omitempty"`
 }
 
@@ -1012,14 +1086,14 @@ type UpdateTaintsPayload struct {
 // have higher costs. The default value is EXTENDED. Use STANDARD to disable
 // extended support.
 //
-// Learn more about EKS Extended Support in the EKS User Guide. (https://docs.aws.amazon.com/eks/latest/userguide/extended-support-control.html)
+// Learn more about EKS Extended Support in the Amazon EKS User Guide. (https://docs.aws.amazon.com/eks/latest/userguide/extended-support-control.html)
 type UpgradePolicyRequest struct {
 	SupportType *string `json:"supportType,omitempty"`
 }
 
 // This value indicates if extended support is enabled or disabled for the cluster.
 //
-// Learn more about EKS Extended Support in the EKS User Guide. (https://docs.aws.amazon.com/eks/latest/userguide/extended-support-control.html)
+// Learn more about EKS Extended Support in the Amazon EKS User Guide. (https://docs.aws.amazon.com/eks/latest/userguide/extended-support-control.html)
 type UpgradePolicyResponse struct {
 	SupportType *string `json:"supportType,omitempty"`
 }

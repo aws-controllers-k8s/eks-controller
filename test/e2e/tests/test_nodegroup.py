@@ -26,10 +26,10 @@ from e2e import CRD_VERSION, service_marker, CRD_GROUP, load_eks_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
 from e2e.fixtures import assert_tagging_functionality
 from e2e.common import (
-    TESTS_DEFAULT_KUBERNETES_VERSION_1_28,
-    TESTS_DEFAULT_KUBERNETES_VERSION_1_29,
-    TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_28,
-    TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_29,
+    TESTS_DEFAULT_KUBERNETES_VERSION_1_31,
+    TESTS_DEFAULT_KUBERNETES_VERSION_1_32,
+    TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_31,
+    TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_32,
 )
 
 from .test_cluster import simple_cluster, wait_for_cluster_active, get_and_assert_status
@@ -65,8 +65,8 @@ def simple_nodegroup(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceRefe
     replacements = REPLACEMENT_VALUES.copy()
     replacements["CLUSTER_NAME"] = cluster_name
     replacements["NODEGROUP_NAME"] = nodegroup_name
-    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_28
-    replacements["RELEASE_VERSION"] = TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_28
+    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_31
+    replacements["RELEASE_VERSION"] = TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_31
 
     resource_data = load_eks_resource(
         "nodegroup_simple",
@@ -359,8 +359,8 @@ class TestNodegroup:
         # Update nodegroup version fields
         updates = {
             "spec": {
-                "version": TESTS_DEFAULT_KUBERNETES_VERSION_1_29,
-                "releaseVersion": TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_29,
+                "version": TESTS_DEFAULT_KUBERNETES_VERSION_1_32,
+                "releaseVersion": TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_32,
             }
         }
         k8s.patch_custom_resource(ref, updates)
@@ -378,14 +378,14 @@ class TestNodegroup:
             nodegroupName=nodegroup_name
         )
 
-        assert aws_res["nodegroup"]["version"] == TESTS_DEFAULT_KUBERNETES_VERSION_1_29
-        assert aws_res["nodegroup"]["releaseVersion"] == TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_29
+        assert aws_res["nodegroup"]["version"] == TESTS_DEFAULT_KUBERNETES_VERSION_1_32
+        assert aws_res["nodegroup"]["releaseVersion"] == TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_32
 
         # Assert terminal condition is set to True
         updates = {
             "spec": {
-                "version": TESTS_DEFAULT_KUBERNETES_VERSION_1_28,
-                "releaseVersion": TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_29,
+                "version": TESTS_DEFAULT_KUBERNETES_VERSION_1_31,
+                "releaseVersion": TESTS_DEFAULT_KUBERNETES_RELEASE_VERSION_1_32,
             }
         }
 

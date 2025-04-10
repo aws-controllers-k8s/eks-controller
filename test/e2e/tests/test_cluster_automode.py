@@ -22,6 +22,7 @@ import pytest
 from acktest.k8s import resource as k8s
 from acktest.k8s import condition
 from acktest.resources import random_suffix_name
+from e2e.common import TESTS_DEFAULT_KUBERNETES_VERSION_1_32
 from e2e import (
     service_marker,
     CRD_GROUP,
@@ -68,6 +69,7 @@ def auto_mode_cluster(eks_client):
 
     replacements = REPLACEMENT_VALUES.copy()
     replacements["CLUSTER_NAME"] = cluster_name
+    replacements["CLUSTER_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_32
 
     resource_data = load_eks_resource(
         "cluster_automode",
