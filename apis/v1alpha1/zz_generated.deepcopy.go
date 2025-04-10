@@ -3332,6 +3332,11 @@ func (in *NodegroupStatus) DeepCopyInto(out *NodegroupStatus) {
 		in, out := &in.CreatedAt, &out.CreatedAt
 		*out = (*in).DeepCopy()
 	}
+	if in.DesiredSize != nil {
+		in, out := &in.DesiredSize, &out.DesiredSize
+		*out = new(int64)
+		**out = **in
+	}
 	if in.Health != nil {
 		in, out := &in.Health, &out.Health
 		*out = new(NodegroupHealth)

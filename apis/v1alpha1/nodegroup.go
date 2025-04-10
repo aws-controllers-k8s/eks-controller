@@ -161,6 +161,8 @@ type NodegroupStatus struct {
 	// The Unix epoch timestamp at object creation.
 	// +kubebuilder:validation:Optional
 	CreatedAt *metav1.Time `json:"createdAt,omitempty"`
+	// +kubebuilder:validation:Optional
+	DesiredSize *int64 `json:"desiredSize,omitempty"`
 	// The health status of the node group. If there are issues with your node group's
 	// health, they are listed here.
 	// +kubebuilder:validation:Optional
@@ -184,7 +186,7 @@ type NodegroupStatus struct {
 // +kubebuilder:printcolumn:name="VERSION",type=string,priority=0,JSONPath=`.spec.version`
 // +kubebuilder:printcolumn:name="STATUS",type=string,priority=0,JSONPath=`.status.status`
 // +kubebuilder:printcolumn:name="RELEASEVERSION",type=string,priority=1,JSONPath=`.spec.releaseVersion`
-// +kubebuilder:printcolumn:name="DESIREDSIZE",type=integer,priority=0,JSONPath=`.spec.scalingConfig.desiredSize`
+// +kubebuilder:printcolumn:name="DESIREDSIZE",type=integer,priority=0,JSONPath=`.status.desiredSize`
 // +kubebuilder:printcolumn:name="MINSIZE",type=integer,priority=0,JSONPath=`.spec.scalingConfig.minSize`
 // +kubebuilder:printcolumn:name="MAXSIZE",type=integer,priority=0,JSONPath=`.spec.scalingConfig.maxSize`
 // +kubebuilder:printcolumn:name="DISKSIZE",type=integer,priority=1,JSONPath=`.spec.diskSize`

@@ -297,6 +297,10 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	rm.setStatusDefaults(ko)
+	if ko.Spec.ScalingConfig != nil && ko.Spec.ScalingConfig.DesiredSize != nil {
+		ko.Status.DesiredSize = ko.Spec.ScalingConfig.DesiredSize
+	}
+
 	if !nodegroupActive(&resource{ko}) {
 		// Setting resource synced condition to false will trigger a requeue of
 		// the resource. No need to return a requeue error here.
