@@ -28,7 +28,7 @@ spec:
       name: RELEASEVERSION
       priority: 1
       type: string
-    - jsonPath: .spec.scalingConfig.desiredSize
+    - jsonPath: .status.desiredSize
       name: DESIREDSIZE
       type: integer
     - jsonPath: .spec.scalingConfig.minSize
@@ -441,6 +441,9 @@ spec:
                 description: The Unix epoch timestamp at object creation.
                 format: date-time
                 type: string
+              desiredSize:
+                format: int64
+                type: integer
               health:
                 description: |-
                   The health status of the node group. If there are issues with your node group's

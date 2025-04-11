@@ -308,6 +308,12 @@ resources:
         priority: 1
   Nodegroup:
     fields:
+      DesiredSize:
+        is_read_only: true
+        type: int
+        # ideally, this should work. We do not need to create a new file
+        # dedicated to documentation.
+        documentation: "DesiredSize is the observed desired size of the node group in AWS."
       ClusterName:
         references:
           resource: Cluster
@@ -415,7 +421,7 @@ resources:
         index: 40
         priority: 1
       - name: DESIREDSIZE
-        json_path: .spec.scalingConfig.desiredSize
+        json_path: .status.desiredSize
         type: integer
         index: 50
       - name: MINSIZE
