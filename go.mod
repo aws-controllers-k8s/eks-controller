@@ -8,7 +8,7 @@ require (
 	github.com/aws-controllers-k8s/ec2-controller v1.1.0
 	github.com/aws-controllers-k8s/iam-controller v1.3.1
 	github.com/aws-controllers-k8s/kms-controller v1.0.9
-	github.com/aws-controllers-k8s/runtime v0.44.0
+	github.com/aws-controllers-k8s/runtime v0.45.0
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/eks v1.63.0
