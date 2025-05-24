@@ -33,6 +33,8 @@ type AddonSpec struct {
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
 	// The name of your cluster.
+	//
+	// Regex Pattern: `^[0-9A-Za-z][A-Za-z0-9\-_]*$`
 	ClusterName *string                                  `json:"clusterName,omitempty"`
 	ClusterRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
 	// The set of configuration values for the add-on that's created. The values
