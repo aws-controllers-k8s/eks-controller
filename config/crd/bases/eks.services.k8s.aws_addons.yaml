@@ -78,7 +78,10 @@ spec:
                   of the request.
                 type: string
               clusterName:
-                description: The name of your cluster.
+                description: |-
+                  The name of your cluster.
+
+                  Regex Pattern: `^[0-9A-Za-z][A-Za-z0-9\-_]*$`
                 type: string
               clusterRef:
                 description: "AWSResourceReferenceWrapper provides a wrapper around

@@ -62,6 +62,8 @@ type ClusterSpec struct {
 	// an alphanumeric character and can't be longer than100 characters. The name
 	// must be unique within the Amazon Web Services Region and Amazon Web Services
 	// account that you're creating the cluster in.
+	//
+	// Regex Pattern: `^[0-9A-Za-z][A-Za-z0-9\-_]*$`
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
 	// An object representing the configuration of your local Amazon EKS cluster
