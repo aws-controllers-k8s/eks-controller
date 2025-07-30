@@ -30,7 +30,7 @@ type ClusterSpec struct {
 	// If you set this value to False when creating a cluster, the default networking
 	// add-ons will not be installed.
 	//
-	// The default networking addons include vpc-cni, coredns, and kube-proxy.
+	// The default networking add-ons include vpc-cni, coredns, and kube-proxy.
 	//
 	// Use this option when you plan to install third-party alternative add-ons
 	// or self-manage the default networking add-ons.
@@ -73,8 +73,8 @@ type ClusterSpec struct {
 	// in the Amazon EKS User Guide. This object isn't available for creating Amazon
 	// EKS clusters on the Amazon Web Services cloud.
 	OutpostConfig *OutpostConfigRequest `json:"outpostConfig,omitempty"`
-	// The configuration in the cluster for EKS Hybrid Nodes. You can't change or
-	// update this configuration after the cluster is created.
+	// The configuration in the cluster for EKS Hybrid Nodes. You can add, change,
+	// or remove this configuration after the cluster is created.
 	RemoteNetworkConfig *RemoteNetworkConfigRequest `json:"remoteNetworkConfig,omitempty"`
 	// The VPC configuration that's used by the cluster control plane. Amazon EKS
 	// VPC resources have specific requirements to work properly with Kubernetes.

@@ -112,21 +112,20 @@ spec:
                 type: string
               podIdentityAssociations:
                 description: |-
-                  An array of Pod Identity Assocations to be created. Each EKS Pod Identity
-                  association maps a Kubernetes service account to an IAM Role.
+                  An array of EKS Pod Identity associations to be created. Each association
+                  maps a Kubernetes service account to an IAM role.
 
                   For more information, see Attach an IAM Role to an Amazon EKS add-on using
-                  Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
+                  EKS Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
                   in the Amazon EKS User Guide.
                 items:
                   description: |-
-                    A type of Pod Identity Association owned by an Amazon EKS Add-on.
+                    A type of EKS Pod Identity association owned by an Amazon EKS add-on.
 
-                    Each EKS Pod Identity Association maps a role to a service account in a namespace
-                    in the cluster.
+                    Each association maps a role to a service account in a namespace in the cluster.
 
                     For more information, see Attach an IAM Role to an Amazon EKS add-on using
-                    Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
+                    EKS Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
                     in the Amazon EKS User Guide.
                   properties:
                     roleARN:
