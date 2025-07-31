@@ -44,11 +44,11 @@ type AddonSpec struct {
 	// DescribeAddonVersions.
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
-	// An array of Pod Identity Assocations to be created. Each EKS Pod Identity
-	// association maps a Kubernetes service account to an IAM Role.
+	// An array of EKS Pod Identity associations to be created. Each association
+	// maps a Kubernetes service account to an IAM role.
 	//
 	// For more information, see Attach an IAM Role to an Amazon EKS add-on using
-	// Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
+	// EKS Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
 	// in the Amazon EKS User Guide.
 	PodIdentityAssociations []*AddonPodIdentityAssociations `json:"podIdentityAssociations,omitempty"`
 	// How to resolve field value conflicts for an Amazon EKS add-on. Conflicts
