@@ -60,6 +60,13 @@ func newResourceDelta(
 	if !reflect.DeepEqual(a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef) {
 		delta.Add("Spec.ClusterRef", a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef)
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.DisableSessionTags, b.ko.Spec.DisableSessionTags) {
+		delta.Add("Spec.DisableSessionTags", a.ko.Spec.DisableSessionTags, b.ko.Spec.DisableSessionTags)
+	} else if a.ko.Spec.DisableSessionTags != nil && b.ko.Spec.DisableSessionTags != nil {
+		if *a.ko.Spec.DisableSessionTags != *b.ko.Spec.DisableSessionTags {
+			delta.Add("Spec.DisableSessionTags", a.ko.Spec.DisableSessionTags, b.ko.Spec.DisableSessionTags)
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Namespace, b.ko.Spec.Namespace) {
 		delta.Add("Spec.Namespace", a.ko.Spec.Namespace, b.ko.Spec.Namespace)
 	} else if a.ko.Spec.Namespace != nil && b.ko.Spec.Namespace != nil {
@@ -88,6 +95,13 @@ func newResourceDelta(
 	latestACKTags, _ := convertToOrderedACKTags(b.ko.Spec.Tags)
 	if !ackcompare.MapStringStringEqual(desiredACKTags, latestACKTags) {
 		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
+	}
+	if ackcompare.HasNilDifference(a.ko.Spec.TargetRoleARN, b.ko.Spec.TargetRoleARN) {
+		delta.Add("Spec.TargetRoleARN", a.ko.Spec.TargetRoleARN, b.ko.Spec.TargetRoleARN)
+	} else if a.ko.Spec.TargetRoleARN != nil && b.ko.Spec.TargetRoleARN != nil {
+		if *a.ko.Spec.TargetRoleARN != *b.ko.Spec.TargetRoleARN {
+			delta.Add("Spec.TargetRoleARN", a.ko.Spec.TargetRoleARN, b.ko.Spec.TargetRoleARN)
+		}
 	}
 
 	return delta

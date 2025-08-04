@@ -71,6 +71,9 @@ type NodegroupSpec struct {
 	Labels map[string]*string `json:"labels,omitempty"`
 	// An object representing a node group's launch template specification. When
 	// using this object, don't directly specify instanceTypes, diskSize, or remoteAccess.
+	// You cannot later specify a different launch template ID or name than what
+	// was used to create the node group.
+	//
 	// Make sure that the launch template meets the requirements in launchTemplateSpecification.
 	// Also refer to Customizing managed nodes with launch templates (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.

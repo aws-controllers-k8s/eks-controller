@@ -109,6 +109,16 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Status.CreatedAt = nil
 	}
+	if resp.Association.DisableSessionTags != nil {
+		ko.Spec.DisableSessionTags = resp.Association.DisableSessionTags
+	} else {
+		ko.Spec.DisableSessionTags = nil
+	}
+	if resp.Association.ExternalId != nil {
+		ko.Status.ExternalID = resp.Association.ExternalId
+	} else {
+		ko.Status.ExternalID = nil
+	}
 	if resp.Association.ModifiedAt != nil {
 		ko.Status.ModifiedAt = &metav1.Time{*resp.Association.ModifiedAt}
 	} else {
@@ -138,6 +148,11 @@ func (rm *resourceManager) sdkFind(
 		ko.Spec.Tags = aws.StringMap(resp.Association.Tags)
 	} else {
 		ko.Spec.Tags = nil
+	}
+	if resp.Association.TargetRoleArn != nil {
+		ko.Spec.TargetRoleARN = resp.Association.TargetRoleArn
+	} else {
+		ko.Spec.TargetRoleARN = nil
 	}
 
 	rm.setStatusDefaults(ko)
@@ -222,6 +237,16 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Status.CreatedAt = nil
 	}
+	if resp.Association.DisableSessionTags != nil {
+		ko.Spec.DisableSessionTags = resp.Association.DisableSessionTags
+	} else {
+		ko.Spec.DisableSessionTags = nil
+	}
+	if resp.Association.ExternalId != nil {
+		ko.Status.ExternalID = resp.Association.ExternalId
+	} else {
+		ko.Status.ExternalID = nil
+	}
 	if resp.Association.ModifiedAt != nil {
 		ko.Status.ModifiedAt = &metav1.Time{*resp.Association.ModifiedAt}
 	} else {
@@ -252,6 +277,11 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Spec.Tags = nil
 	}
+	if resp.Association.TargetRoleArn != nil {
+		ko.Spec.TargetRoleARN = resp.Association.TargetRoleArn
+	} else {
+		ko.Spec.TargetRoleARN = nil
+	}
 
 	rm.setStatusDefaults(ko)
 	if resp.Association.AssociationArn != nil {
@@ -274,6 +304,9 @@ func (rm *resourceManager) newCreateRequestPayload(
 	if r.ko.Spec.ClusterName != nil {
 		res.ClusterName = r.ko.Spec.ClusterName
 	}
+	if r.ko.Spec.DisableSessionTags != nil {
+		res.DisableSessionTags = r.ko.Spec.DisableSessionTags
+	}
 	if r.ko.Spec.Namespace != nil {
 		res.Namespace = r.ko.Spec.Namespace
 	}
@@ -285,6 +318,9 @@ func (rm *resourceManager) newCreateRequestPayload(
 	}
 	if r.ko.Spec.Tags != nil {
 		res.Tags = aws.ToStringMap(r.ko.Spec.Tags)
+	}
+	if r.ko.Spec.TargetRoleARN != nil {
+		res.TargetRoleArn = r.ko.Spec.TargetRoleARN
 	}
 
 	return res, nil
@@ -328,6 +364,12 @@ func (rm *resourceManager) sdkUpdate(
 	if err != nil {
 		return nil, err
 	}
+	// UpdatePodIdentityAssociation does not unset TargetRoleARN if input set to nil.
+	// Need to provide empty string instead for TargetRoleARN to be unset in update operation.
+	if desired.ko.Spec.TargetRoleARN == nil {
+		temp := ""
+		input.TargetRoleArn = &temp
+	}
 
 	var resp *svcsdk.UpdatePodIdentityAssociationOutput
 	_ = resp
@@ -360,6 +402,16 @@ func (rm *resourceManager) sdkUpdate(
 	} else {
 		ko.Status.CreatedAt = nil
 	}
+	if resp.Association.DisableSessionTags != nil {
+		ko.Spec.DisableSessionTags = resp.Association.DisableSessionTags
+	} else {
+		ko.Spec.DisableSessionTags = nil
+	}
+	if resp.Association.ExternalId != nil {
+		ko.Status.ExternalID = resp.Association.ExternalId
+	} else {
+		ko.Status.ExternalID = nil
+	}
 	if resp.Association.ModifiedAt != nil {
 		ko.Status.ModifiedAt = &metav1.Time{*resp.Association.ModifiedAt}
 	} else {
@@ -390,6 +442,11 @@ func (rm *resourceManager) sdkUpdate(
 	} else {
 		ko.Spec.Tags = nil
 	}
+	if resp.Association.TargetRoleArn != nil {
+		ko.Spec.TargetRoleARN = resp.Association.TargetRoleArn
+	} else {
+		ko.Spec.TargetRoleARN = nil
+	}
 
 	rm.setStatusDefaults(ko)
 	return &resource{ko}, nil
@@ -413,8 +470,14 @@ func (rm *resourceManager) newUpdateRequestPayload(
 	if r.ko.Spec.ClusterName != nil {
 		res.ClusterName = r.ko.Spec.ClusterName
 	}
+	if r.ko.Spec.DisableSessionTags != nil {
+		res.DisableSessionTags = r.ko.Spec.DisableSessionTags
+	}
 	if r.ko.Spec.RoleARN != nil {
 		res.RoleArn = r.ko.Spec.RoleARN
+	}
+	if r.ko.Spec.TargetRoleARN != nil {
+		res.TargetRoleArn = r.ko.Spec.TargetRoleARN
 	}
 
 	return res, nil

@@ -18,6 +18,7 @@ package v1alpha1
 type AMITypes string
 
 const (
+	AMITypes_AL2023_ARM_64_NVIDIA       AMITypes = "AL2023_ARM_64_NVIDIA"
 	AMITypes_AL2023_ARM_64_STANDARD     AMITypes = "AL2023_ARM_64_STANDARD"
 	AMITypes_AL2023_x86_64_NEURON       AMITypes = "AL2023_x86_64_NEURON"
 	AMITypes_AL2023_x86_64_NVIDIA       AMITypes = "AL2023_x86_64_NVIDIA"
@@ -26,8 +27,10 @@ const (
 	AMITypes_AL2_x86_64                 AMITypes = "AL2_x86_64"
 	AMITypes_AL2_x86_64_GPU             AMITypes = "AL2_x86_64_GPU"
 	AMITypes_BOTTLEROCKET_ARM_64        AMITypes = "BOTTLEROCKET_ARM_64"
+	AMITypes_BOTTLEROCKET_ARM_64_FIPS   AMITypes = "BOTTLEROCKET_ARM_64_FIPS"
 	AMITypes_BOTTLEROCKET_ARM_64_NVIDIA AMITypes = "BOTTLEROCKET_ARM_64_NVIDIA"
 	AMITypes_BOTTLEROCKET_x86_64        AMITypes = "BOTTLEROCKET_x86_64"
+	AMITypes_BOTTLEROCKET_x86_64_FIPS   AMITypes = "BOTTLEROCKET_x86_64_FIPS"
 	AMITypes_BOTTLEROCKET_x86_64_NVIDIA AMITypes = "BOTTLEROCKET_x86_64_NVIDIA"
 	AMITypes_CUSTOM                     AMITypes = "CUSTOM"
 	AMITypes_WINDOWS_CORE_2019_x86_64   AMITypes = "WINDOWS_CORE_2019_x86_64"
@@ -90,6 +93,7 @@ const (
 type Category string
 
 const (
+	Category_MISCONFIGURATION  Category = "MISCONFIGURATION"
 	Category_UPGRADE_READINESS Category = "UPGRADE_READINESS"
 )
 
@@ -358,6 +362,7 @@ const (
 	UpdateParamType_PodIdentityAssociations  UpdateParamType = "PodIdentityAssociations"
 	UpdateParamType_PublicAccessCidrs        UpdateParamType = "PublicAccessCidrs"
 	UpdateParamType_ReleaseVersion           UpdateParamType = "ReleaseVersion"
+	UpdateParamType_RemoteNetworkConfig      UpdateParamType = "RemoteNetworkConfig"
 	UpdateParamType_ResolveConflicts         UpdateParamType = "ResolveConflicts"
 	UpdateParamType_SecurityGroups           UpdateParamType = "SecurityGroups"
 	UpdateParamType_ServiceAccountRoleArn    UpdateParamType = "ServiceAccountRoleArn"
@@ -392,6 +397,7 @@ const (
 	UpdateType_DisassociateIdentityProviderConfig UpdateType = "DisassociateIdentityProviderConfig"
 	UpdateType_EndpointAccessUpdate               UpdateType = "EndpointAccessUpdate"
 	UpdateType_LoggingUpdate                      UpdateType = "LoggingUpdate"
+	UpdateType_RemoteNetworkConfigUpdate          UpdateType = "RemoteNetworkConfigUpdate"
 	UpdateType_UpgradePolicyUpdate                UpdateType = "UpgradePolicyUpdate"
 	UpdateType_VersionUpdate                      UpdateType = "VersionUpdate"
 	UpdateType_VpcConfigUpdate                    UpdateType = "VpcConfigUpdate"

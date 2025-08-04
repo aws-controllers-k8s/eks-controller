@@ -126,20 +126,19 @@ type AddonIssue struct {
 	ResourceIDs []*string `json:"resourceIDs,omitempty"`
 }
 
-// A type of Pod Identity Association owned by an Amazon EKS Add-on.
+// A type of EKS Pod Identity association owned by an Amazon EKS add-on.
 //
-// Each EKS Pod Identity Association maps a role to a service account in a namespace
-// in the cluster.
+// Each association maps a role to a service account in a namespace in the cluster.
 //
 // For more information, see Attach an IAM Role to an Amazon EKS add-on using
-// Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
+// EKS Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
 // in the Amazon EKS User Guide.
 type AddonPodIdentityAssociations struct {
 	RoleARN        *string `json:"roleARN,omitempty"`
 	ServiceAccount *string `json:"serviceAccount,omitempty"`
 }
 
-// Information about how to configure IAM for an Addon.
+// Information about how to configure IAM for an add-on.
 type AddonPodIdentityConfiguration struct {
 	RecommendedManagedPolicies []*string `json:"recommendedManagedPolicies,omitempty"`
 	ServiceAccount             *string   `json:"serviceAccount,omitempty"`
@@ -298,8 +297,8 @@ type Cluster_SDK struct {
 	// clusters on the Amazon Web Services cloud.
 	OutpostConfig   *OutpostConfigResponse `json:"outpostConfig,omitempty"`
 	PlatformVersion *string                `json:"platformVersion,omitempty"`
-	// The configuration in the cluster for EKS Hybrid Nodes. You can't change or
-	// update this configuration after the cluster is created.
+	// The configuration in the cluster for EKS Hybrid Nodes. You can add, change,
+	// or remove this configuration after the cluster is created.
 	RemoteNetworkConfig *RemoteNetworkConfigResponse `json:"remoteNetworkConfig,omitempty"`
 	// An object representing an Amazon EKS cluster VPC configuration response.
 	ResourcesVPCConfig *VPCConfigResponse `json:"resourcesVPCConfig,omitempty"`
@@ -643,6 +642,12 @@ type LaunchTemplateSpecification struct {
 	Version *string `json:"version,omitempty"`
 }
 
+// An EKS Anywhere license associated with a subscription.
+type License struct {
+	ID    *string `json:"id,omitempty"`
+	Token *string `json:"token,omitempty"`
+}
+
 // An object representing the enabled or disabled Kubernetes control plane logs
 // for your cluster.
 type LogSetup struct {
@@ -891,15 +896,17 @@ type PodIdentityAssociationSummary struct {
 // for your applications, similar to the way that Amazon EC2 instance profiles
 // provide credentials to Amazon EC2 instances.
 type PodIdentityAssociation_SDK struct {
-	AssociationARN *string      `json:"associationARN,omitempty"`
-	AssociationID  *string      `json:"associationID,omitempty"`
-	ClusterName    *string      `json:"clusterName,omitempty"`
-	CreatedAt      *metav1.Time `json:"createdAt,omitempty"`
-	ModifiedAt     *metav1.Time `json:"modifiedAt,omitempty"`
-	Namespace      *string      `json:"namespace,omitempty"`
-	OwnerARN       *string      `json:"ownerARN,omitempty"`
-	RoleARN        *string      `json:"roleARN,omitempty"`
-	ServiceAccount *string      `json:"serviceAccount,omitempty"`
+	AssociationARN     *string      `json:"associationARN,omitempty"`
+	AssociationID      *string      `json:"associationID,omitempty"`
+	ClusterName        *string      `json:"clusterName,omitempty"`
+	CreatedAt          *metav1.Time `json:"createdAt,omitempty"`
+	DisableSessionTags *bool        `json:"disableSessionTags,omitempty"`
+	ExternalID         *string      `json:"externalID,omitempty"`
+	ModifiedAt         *metav1.Time `json:"modifiedAt,omitempty"`
+	Namespace          *string      `json:"namespace,omitempty"`
+	OwnerARN           *string      `json:"ownerARN,omitempty"`
+	RoleARN            *string      `json:"roleARN,omitempty"`
+	ServiceAccount     *string      `json:"serviceAccount,omitempty"`
 	// The metadata that you apply to a resource to help you categorize and organize
 	// them. Each tag consists of a key and an optional value. You define them.
 	//
@@ -925,7 +932,8 @@ type PodIdentityAssociation_SDK struct {
 	//    as a prefix for either keys or values as it is reserved for Amazon Web
 	//    Services use. You cannot edit or delete tag keys or values with this prefix.
 	//    Tags with this prefix do not count against your tags per resource limit.
-	Tags map[string]*string `json:"tags,omitempty"`
+	Tags          map[string]*string `json:"tags,omitempty"`
+	TargetRoleARN *string            `json:"targetRoleARN,omitempty"`
 }
 
 // Identifies the Key Management Service (KMS) key used to encrypt the secrets.
@@ -944,15 +952,15 @@ type RemoteAccessConfig struct {
 	SourceSecurityGroups    []*string                                  `json:"sourceSecurityGroups,omitempty"`
 }
 
-// The configuration in the cluster for EKS Hybrid Nodes. You can't change or
-// update this configuration after the cluster is created.
+// The configuration in the cluster for EKS Hybrid Nodes. You can add, change,
+// or remove this configuration after the cluster is created.
 type RemoteNetworkConfigRequest struct {
 	RemoteNodeNetworks []*RemoteNodeNetwork `json:"remoteNodeNetworks,omitempty"`
 	RemotePodNetworks  []*RemotePodNetwork  `json:"remotePodNetworks,omitempty"`
 }
 
-// The configuration in the cluster for EKS Hybrid Nodes. You can't change or
-// update this configuration after the cluster is created.
+// The configuration in the cluster for EKS Hybrid Nodes. You can add, change,
+// or remove this configuration after the cluster is created.
 type RemoteNetworkConfigResponse struct {
 	RemoteNodeNetworks []*RemoteNodeNetwork `json:"remoteNodeNetworks,omitempty"`
 	RemotePodNetworks  []*RemotePodNetwork  `json:"remotePodNetworks,omitempty"`
@@ -970,7 +978,7 @@ type RemoteNetworkConfigResponse struct {
 // It must satisfy the following requirements:
 //
 //   - Each block must be within an IPv4 RFC-1918 network range. Minimum allowed
-//     size is /24, maximum allowed size is /8. Publicly-routable addresses aren't
+//     size is /32, maximum allowed size is /8. Publicly-routable addresses aren't
 //     supported.
 //
 //   - Each block cannot overlap with the range of the VPC CIDR blocks for
@@ -1006,7 +1014,7 @@ type RemoteNodeNetwork struct {
 // It must satisfy the following requirements:
 //
 //   - Each block must be within an IPv4 RFC-1918 network range. Minimum allowed
-//     size is /24, maximum allowed size is /8. Publicly-routable addresses aren't
+//     size is /32, maximum allowed size is /8. Publicly-routable addresses aren't
 //     supported.
 //
 //   - Each block cannot overlap with the range of the VPC CIDR blocks for
