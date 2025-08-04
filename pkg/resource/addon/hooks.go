@@ -52,8 +52,6 @@ var (
 var (
 	// TerminalStatuses defines the list of statuses that are terminal for an addon
 	TerminalStatuses = []string{
-		StatusCreateFailed,
-		StatusUpdateFailed,
 		StatusDeleteFailed,
 		// Still not sure if we should consider DEGRADED as terminal
 		// StatusDegraded,
@@ -99,6 +97,16 @@ func addonHasTerminalStatus(r *resource) bool {
 		}
 	}
 	return false
+}
+
+// addonInFailedState returns true if the supplied addon is in a failed state
+// that requires retry (CREATE_FAILED or UPDATE_FAILED)
+func addonInFailedState(r *resource) bool {
+	if r.ko.Status.Status == nil {
+		return false
+	}
+	cs := *r.ko.Status.Status
+	return cs == StatusCreateFailed || cs == StatusUpdateFailed
 }
 
 // requeueWaitUntilCanModify returns a `ackrequeue.RequeueNeededAfter` struct

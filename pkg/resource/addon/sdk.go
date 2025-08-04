@@ -436,7 +436,11 @@ func (rm *resourceManager) sdkUpdate(
 		ackcondition.SetSynced(latest, corev1.ConditionFalse, &msg, nil)
 		return latest, requeueWaitWhileDeleting
 	}
-	if !addonActive(latest) {
+
+	// Check if addon is in a failed state that requires retry
+	inFailedState := addonInFailedState(latest)
+
+	if !addonActive(latest) && !inFailedState {
 		msg := "Addon is in '" + *latest.ko.Status.Status + "' status"
 		ackcondition.SetSynced(latest, corev1.ConditionFalse, &msg, nil)
 		if addonHasTerminalStatus(latest) {
@@ -444,6 +448,12 @@ func (rm *resourceManager) sdkUpdate(
 			return latest, nil
 		}
 		return latest, requeueWaitUntilCanModify(latest)
+	}
+
+	// If addon is in failed state, we need to force an update regardless of delta
+	if inFailedState {
+		msg := "Addon is in '" + *latest.ko.Status.Status + "' status, attempting recovery"
+		ackcondition.SetSynced(latest, corev1.ConditionFalse, &msg, nil)
 	}
 
 	if delta.DifferentAt("Spec.Tags") {
@@ -456,7 +466,9 @@ func (rm *resourceManager) sdkUpdate(
 			return nil, err
 		}
 	}
-	if !delta.DifferentExcept("Spec.Tags") {
+	// If addon is in failed state, always attempt update to recover
+	// Otherwise, check if there are differences to update
+	if !inFailedState && !delta.DifferentExcept("Spec.Tags") {
 		return desired, nil
 	}
 	input, err := rm.newUpdateRequestPayload(ctx, desired, delta)
