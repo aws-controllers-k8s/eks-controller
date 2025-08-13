@@ -48,12 +48,17 @@ var (
 		ackrequeue.DefaultRequeueAfterDuration,
 	)
 )
+var (
+	// FailedStatuses defines the list of statuses that are a failed state for an addon
+	FailedStatuses = []string{
+		StatusCreateFailed,
+		StatusUpdateFailed,
+	}
+)
 
 var (
 	// TerminalStatuses defines the list of statuses that are terminal for an addon
 	TerminalStatuses = []string{
-		StatusCreateFailed,
-		StatusUpdateFailed,
 		StatusDeleteFailed,
 		// Still not sure if we should consider DEGRADED as terminal
 		// StatusDegraded,
@@ -212,10 +217,24 @@ func equalPodIdentityAssociations(desired, latest []*v1alpha1.AddonPodIdentityAs
 	return true
 }
 
+// addonInFailedState returns true if the supplied addon is in a failed state
+// that requires retry (CREATE_FAILED or UPDATE_FAILED)
+func addonHasFailedStatus(r *resource) bool {
+	if r.ko.Status.Status == nil {
+		return false
+	}
+	cs := *r.ko.Status.Status
+	return cs == StatusCreateFailed || cs == StatusUpdateFailed
+}
+
 // customPreCompare is a custom pre-compare function that compares the PodIdentityAssociations field
 func customPreCompare(delta *ackcompare.Delta, desired, latest *resource) {
 	if !equalPodIdentityAssociations(desired.ko.Spec.PodIdentityAssociations, latest.ko.Spec.PodIdentityAssociations) {
 		delta.Add("Spec.PodIdentityAssociations", desired.ko.Spec.PodIdentityAssociations, latest.ko.Spec.PodIdentityAssociations)
+	}
+	// Force update if addon is in failed state to attempt recovery
+	if addonHasFailedStatus(latest) {
+		delta.Add("Spec.ForceRecovery", desired.ko.Status.Status, latest.ko.Status.Status)
 	}
 }
 
