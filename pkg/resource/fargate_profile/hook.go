@@ -25,7 +25,7 @@ import (
 	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	svcsdk "github.com/aws/aws-sdk-go/service/eks"
+	ekstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 )
 
 var (
@@ -35,7 +35,7 @@ var (
 
 var (
 	requeueWaitWhileDeleting = ackrequeue.NeededAfter(
-		fmt.Errorf("profile is in '%s' state, cannot be modified or deleted", svcsdk.FargateProfileStatusDeleting),
+		fmt.Errorf("profile is in '%s' state, cannot be modified or deleted", ekstypes.FargateProfileStatusDeleting),
 		ackrequeue.DefaultRequeueAfterDuration,
 	)
 )
@@ -47,7 +47,7 @@ func profileDeleting(r *resource) bool {
 		return false
 	}
 	ps := *r.ko.Status.Status
-	return ps == svcsdk.FargateProfileStatusDeleting
+	return ps == string(ekstypes.FargateProfileStatusDeleting)
 }
 
 // customPreCompare ensures that default values of nil-able types are
