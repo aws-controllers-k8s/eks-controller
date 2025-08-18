@@ -9,7 +9,6 @@ require (
 	github.com/aws-controllers-k8s/iam-controller v1.3.1
 	github.com/aws-controllers-k8s/kms-controller v1.0.9
 	github.com/aws-controllers-k8s/runtime v0.51.0
-	github.com/aws/aws-sdk-go v1.55.5
 	github.com/aws/aws-sdk-go-v2 v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/eks v1.67.0
 	github.com/aws/smithy-go v1.22.5
@@ -23,6 +22,7 @@ require (
 )
 
 require (
+	github.com/aws/aws-sdk-go v1.55.5 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.28.6 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.47 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.21 // indirect
@@ -56,7 +56,6 @@ require (
 	github.com/itchyny/gojq v0.12.6 // indirect
 	github.com/itchyny/timefmt-go v0.1.3 // indirect
 	github.com/jaypipes/envutil v1.0.0 // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
