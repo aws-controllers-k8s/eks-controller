@@ -168,6 +168,7 @@ func clusterDeleting(r *resource) bool {
 func returnClusterUpdating(r *resource) (*resource, error) {
 	msg := "Cluster is currently being updated"
 	ackcondition.SetSynced(r, corev1.ConditionFalse, &msg, nil)
+	r.ko.Status.Status = aws.String(string(svcsdktypes.ClusterStatusUpdating))
 	return r, requeueAfterAsyncUpdate()
 }
 
@@ -451,7 +452,7 @@ func (rm *resourceManager) updateVersion(
 		)
 	}
 
-	// Compure the next minor version of the desired version
+	// Compute the next minor version of the desired version
 	nextVersion, err := util.IncrementEKSMinorVersion(*latest.ko.Spec.Version)
 	if err != nil {
 		return ackerr.NewTerminalError(fmt.Errorf("failed to compute the next minor version: %v", err))
