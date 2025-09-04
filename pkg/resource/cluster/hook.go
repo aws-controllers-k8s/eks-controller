@@ -742,6 +742,20 @@ func (rm *resourceManager) updateComputeConfig(
 	exit := rlog.Trace("rm.updateComputeConfig")
 	defer exit(err)
 
+	// Safety check: ensure ComputeConfig is not nil
+	if r == nil || r.ko == nil || r.ko.Spec.ComputeConfig == nil {
+		rlog.Debug("skipping updateComputeConfig: ComputeConfig is nil")
+		return nil
+	}
+
+	// Safety check: ensure all required configurations are not nil
+	if r.ko.Spec.StorageConfig == nil || r.ko.Spec.StorageConfig.BlockStorage == nil {
+		return fmt.Errorf("invalid Auto Mode configuration: StorageConfig.BlockStorage is required")
+	}
+	if r.ko.Spec.KubernetesNetworkConfig == nil || r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing == nil {
+		return fmt.Errorf("invalid Auto Mode configuration: KubernetesNetworkConfig.ElasticLoadBalancing is required")
+	}
+
 	// Convert []*string to []string for NodePools
 	nodePools := make([]string, 0, len(r.ko.Spec.ComputeConfig.NodePools))
 	for _, nodePool := range r.ko.Spec.ComputeConfig.NodePools {
