@@ -457,13 +457,17 @@ func (rm *resourceManager) customUpdate(
 		if isAutoModeCluster(desired) {
 			if err := rm.updateComputeConfig(ctx, desired); err != nil {
 				awsErr, ok := extractAWSError(err)
+				var awsErrorCode string
+				if ok && awsErr != nil {
+					awsErrorCode = awsErr.Code
+				}
 				rlog.Info("attempting to update AutoMode config",
 					"error", err,
 					"isAWSError", ok,
-					"awsErrorCode", awsErr.Code)
+					"awsErrorCode", awsErrorCode)
 
 				// Check to see if we've raced an async update call and need to requeue
-				if ok && awsErr.Code == "ResourceInUseException" {
+				if ok && awsErr != nil && awsErr.Code == "ResourceInUseException" {
 					rlog.Info("resource in use, requeueing after async update")
 					return nil, requeueAfterAsyncUpdate()
 				}
