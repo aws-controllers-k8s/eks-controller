@@ -192,8 +192,13 @@ func isAutoModeCluster(r *resource) bool {
 		return false
 	}
 
-	// If ComputeConfig is not specified, this is not an Auto Mode cluster
-	if r.ko.Spec.ComputeConfig == nil {
+	// Check if all three Auto Mode configurations are present
+	hasComputeConfig := r.ko.Spec.ComputeConfig != nil
+	hasStorageConfig := r.ko.Spec.StorageConfig != nil && r.ko.Spec.StorageConfig.BlockStorage != nil
+	hasELBConfig := r.ko.Spec.KubernetesNetworkConfig != nil && r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing != nil
+
+	// All three must be present for this to be considered an Auto Mode cluster
+	if !hasComputeConfig || !hasStorageConfig || !hasELBConfig {
 		return false
 	}
 
@@ -201,16 +206,10 @@ func isAutoModeCluster(r *resource) bool {
 	computeEnabled := r.ko.Spec.ComputeConfig.Enabled != nil && *r.ko.Spec.ComputeConfig.Enabled
 
 	// Check storage configuration
-	storageEnabled := false
-	if r.ko.Spec.StorageConfig != nil && r.ko.Spec.StorageConfig.BlockStorage != nil {
-		storageEnabled = r.ko.Spec.StorageConfig.BlockStorage.Enabled != nil && *r.ko.Spec.StorageConfig.BlockStorage.Enabled
-	}
+	storageEnabled := r.ko.Spec.StorageConfig.BlockStorage.Enabled != nil && *r.ko.Spec.StorageConfig.BlockStorage.Enabled
 
 	// Check elastic load balancing configuration
-	elbEnabled := false
-	if r.ko.Spec.KubernetesNetworkConfig != nil && r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing != nil {
-		elbEnabled = r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled != nil && *r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled
-	}
+	elbEnabled := r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled != nil && *r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled
 
 	// Auto Mode requires all three capabilities to have the same state (all true or all false)
 	// If they are all true, Auto Mode is enabled
@@ -222,24 +221,30 @@ func isAutoModeCluster(r *resource) bool {
 // validateAutoModeConfig validates that Auto Mode configuration is consistent.
 // Returns an error if the configuration is invalid (partial enablement).
 func validateAutoModeConfig(r *resource) error {
-	if r == nil || r.ko == nil || r.ko.Spec.ComputeConfig == nil {
+	if r == nil || r.ko == nil {
 		return nil // Not an Auto Mode configuration
 	}
 
-	// Check compute configuration
+	// Check if any Auto Mode configuration is present
+	hasComputeConfig := r.ko.Spec.ComputeConfig != nil
+	hasStorageConfig := r.ko.Spec.StorageConfig != nil && r.ko.Spec.StorageConfig.BlockStorage != nil
+	hasELBConfig := r.ko.Spec.KubernetesNetworkConfig != nil && r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing != nil
+
+	// If no Auto Mode configuration is present, it's valid (not an Auto Mode cluster)
+	if !hasComputeConfig && !hasStorageConfig && !hasELBConfig {
+		return nil
+	}
+
+	// If any Auto Mode configuration is present, ALL must be present
+	if !hasComputeConfig || !hasStorageConfig || !hasELBConfig {
+		return fmt.Errorf("invalid Auto Mode configuration: when configuring Auto Mode, all three capabilities must be specified (compute=%v, storage=%v, elb=%v)",
+			hasComputeConfig, hasStorageConfig, hasELBConfig)
+	}
+
+	// Check that all configurations have the same enabled state
 	computeEnabled := r.ko.Spec.ComputeConfig.Enabled != nil && *r.ko.Spec.ComputeConfig.Enabled
-
-	// Check storage configuration
-	storageEnabled := false
-	if r.ko.Spec.StorageConfig != nil && r.ko.Spec.StorageConfig.BlockStorage != nil {
-		storageEnabled = r.ko.Spec.StorageConfig.BlockStorage.Enabled != nil && *r.ko.Spec.StorageConfig.BlockStorage.Enabled
-	}
-
-	// Check elastic load balancing configuration
-	elbEnabled := false
-	if r.ko.Spec.KubernetesNetworkConfig != nil && r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing != nil {
-		elbEnabled = r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled != nil && *r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled
-	}
+	storageEnabled := r.ko.Spec.StorageConfig.BlockStorage.Enabled != nil && *r.ko.Spec.StorageConfig.BlockStorage.Enabled
+	elbEnabled := r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled != nil && *r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled
 
 	// All three must be in the same state
 	if computeEnabled == storageEnabled && storageEnabled == elbEnabled {
