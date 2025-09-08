@@ -23,7 +23,6 @@ from acktest.k8s import condition
 from acktest.resources import random_suffix_name
 from e2e.common import TESTS_DEFAULT_KUBERNETES_VERSION_1_32
 from e2e import service_marker, CRD_GROUP, CRD_VERSION, load_eks_resource
-from e2e.bootstrap_resources import get_bootstrap_resources
 from e2e.common.types import CLUSTER_RESOURCE_PLURAL
 from e2e.common.waiter import wait_until_deleted
 from e2e.replacement_values import REPLACEMENT_VALUES
@@ -153,10 +152,6 @@ class TestAutoModeClusterUpdates:
         wait_for_cluster_active(eks_client, cluster_name)
         time.sleep(CHECK_STATUS_WAIT_SECONDS)
         get_and_assert_status(ref, "ACTIVE", True)
-
-        # Get the nodepool role ARN from bootstrap resources
-        nodepool_role = get_bootstrap_resources().NodepoolRole
-        logging.info(f"Using nodepool role ARN: {nodepool_role.arn}")
 
         # Patch to enable auto-mode
         patch_enable_auto_mode = {
