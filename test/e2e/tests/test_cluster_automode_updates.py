@@ -175,6 +175,7 @@ class TestAutoModeClusterUpdates:
 
         # Verify on AWS EKS API that auto-mode is enabled
         aws_res = eks_client.describe_cluster(name=cluster_name)
+        logging.info(f"eks:DescribeCluster response: {aws_res}")
 
         # Check compute config
         compute_config = aws_res["cluster"].get("computeConfig")
