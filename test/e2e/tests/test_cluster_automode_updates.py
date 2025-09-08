@@ -167,15 +167,21 @@ class TestAutoModeClusterUpdates:
 
         get_and_assert_status(ref, "UPDATING", False)
 
+        cr_updating = k8s.get_resource(ref)
+
         # Wait for cluster to become active after update
         wait_for_cluster_active(eks_client, cluster_name)
         time.sleep(CHECK_STATUS_WAIT_SECONDS)
 
         get_and_assert_status(ref, "ACTIVE", True)
 
+        cr_update_done = k8s.get_resource(ref)
+
         # Verify on AWS EKS API that auto-mode is enabled
         aws_res = eks_client.describe_cluster(name=cluster_name)
-        logging.info(f"eks:DescribeCluster response: {aws_res}")
+        logging.info(
+            f"custom resource while updating: {cr_updating} ###### custom resource after transitioning to EKS Auto Mode: {cr_update_done} ###### eks:DescribeCluster response: {aws_res}"
+        )
 
         # Check compute config
         compute_config = aws_res["cluster"].get("computeConfig")
