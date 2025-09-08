@@ -28,7 +28,7 @@ from e2e.common.types import CLUSTER_RESOURCE_PLURAL
 from e2e.common.waiter import wait_until_deleted
 from e2e.replacement_values import REPLACEMENT_VALUES
 
-MODIFY_WAIT_AFTER_SECONDS = 240
+MODIFY_WAIT_AFTER_SECONDS = 20
 CHECK_STATUS_WAIT_SECONDS = 240
 
 
@@ -161,7 +161,7 @@ class TestAutoModeClusterUpdates:
         # Patch to enable auto-mode
         patch_enable_auto_mode = {
             "spec": {
-                "computeConfig": {"enabled": True, "nodeRoleARN": nodepool_role.arn},
+                "computeConfig": {"enabled": True},
                 "storageConfig": {"blockStorage": {"enabled": True}},
                 "kubernetesNetworkConfig": {"elasticLoadBalancing": {"enabled": True}},
             }
