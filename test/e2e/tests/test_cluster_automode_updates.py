@@ -27,8 +27,14 @@ from e2e.common.types import CLUSTER_RESOURCE_PLURAL
 from e2e.common.waiter import wait_until_deleted
 from e2e.replacement_values import REPLACEMENT_VALUES
 
-MODIFY_WAIT_AFTER_SECONDS = 20
-CHECK_STATUS_WAIT_SECONDS = 240
+# Time (seconds) to wait after creating/patching the Cluster CR so the controller
+# can reconcile and issue any needed AWS API calls before we assert intermediate state.
+MODIFY_WAIT_AFTER_SECONDS = 5
+
+# Time (seconds) to wait after EKS DescribeCluster reports the cluster ACTIVE before
+# re-reading the CR. This gives the controller a chance to observe the external state
+# transition and update the CR status fields.
+CHECK_STATUS_WAIT_SECONDS = 30
 
 
 def wait_for_cluster_active(eks_client, cluster_name):
@@ -168,6 +174,7 @@ class TestAutoModeClusterUpdates:
         get_and_assert_status(ref, "UPDATING", False)
 
         cr_updating = k8s.get_resource(ref)
+        eks_describe_updating = eks_client.describe_cluster(name=cluster_name)
 
         # Wait for cluster to become active after update
         wait_for_cluster_active(eks_client, cluster_name)
@@ -180,7 +187,7 @@ class TestAutoModeClusterUpdates:
         # Verify on AWS EKS API that auto-mode is enabled
         aws_res = eks_client.describe_cluster(name=cluster_name)
         logging.info(
-            f"custom resource while updating: {cr_updating} ###### custom resource after transitioning to EKS Auto Mode: {cr_update_done} ###### eks:DescribeCluster response: {aws_res}"
+            f"custom resource while updating: {cr_updating} ###### eks:DescribeCluster while updating: {eks_describe_updating} ###### custom resource after transitioning to EKS Auto Mode: {cr_update_done} ###### eks:DescribeCluster response: {aws_res}"
         )
 
         # Check compute config
