@@ -178,13 +178,32 @@ class TestAutoModeClusterUpdates:
 
         get_and_assert_status(ref, "ACTIVE", True)
 
-        # Verify auto-mode is enabled
+        # Verify on AWS EKS API that auto-mode is enabled
         aws_res = eks_client.describe_cluster(name=cluster_name)
-        assert aws_res["cluster"]["compute"] is not None
-        assert aws_res["cluster"]["storage"] is not None
-        assert (
-            aws_res["cluster"]["kubernetesNetworkConfig"]["elasticLoadBalancing"]
-            is not None
+
+        # Check compute config
+        compute_config = aws_res["cluster"].get("computeConfig")
+        assert compute_config is not None, "computeConfig should be present"
+        assert compute_config.get("enabled") is True, (
+            f"computeConfig.enabled should be True, got: {compute_config.get('enabled')}"
+        )
+
+        # Check storage config
+        storage_config = aws_res["cluster"].get("storageConfig")
+        assert storage_config is not None, "storageConfig should be present"
+        block_storage = storage_config.get("blockStorage", {})
+        assert block_storage.get("enabled") is True, (
+            f"storageConfig.blockStorage.enabled should be True, got: {block_storage.get('enabled')}"
+        )
+
+        # Check elastic load balancing config
+        k8s_network_config = aws_res["cluster"].get("kubernetesNetworkConfig", {})
+        elb_config = k8s_network_config.get("elasticLoadBalancing")
+        assert elb_config is not None, (
+            "kubernetesNetworkConfig.elasticLoadBalancing should be present"
+        )
+        assert elb_config.get("enabled") is True, (
+            f"kubernetesNetworkConfig.elasticLoadBalancing.enabled should be True, got: {elb_config.get('enabled')}"
         )
 
     def test_disable_auto_mode_incorrectly(self, eks_client, auto_mode_cluster):
@@ -272,14 +291,27 @@ class TestAutoModeClusterUpdates:
 
         # Verify auto-mode is disabled
         aws_res = eks_client.describe_cluster(name=cluster_name)
-        assert (
-            "compute" not in aws_res["cluster"] or aws_res["cluster"]["compute"] is None
-        )
-        assert (
-            "storage" not in aws_res["cluster"] or aws_res["cluster"]["storage"] is None
-        )
-        assert (
-            "elasticLoadBalancing" not in aws_res["cluster"]["kubernetesNetworkConfig"]
-            or aws_res["cluster"]["kubernetesNetworkConfig"]["elasticLoadBalancing"]
-            is None
-        )
+
+        # Check compute config - should be absent or disabled
+        compute_config = aws_res["cluster"].get("computeConfig")
+        if compute_config is not None:
+            assert compute_config.get("enabled") is False, (
+                f"computeConfig.enabled should be False or absent, got: {compute_config.get('enabled')}"
+            )
+
+        # Check storage config - should be absent or disabled
+        storage_config = aws_res["cluster"].get("storageConfig")
+        if storage_config is not None:
+            block_storage = storage_config.get("blockStorage", {})
+            if block_storage:
+                assert block_storage.get("enabled") is False, (
+                    f"storageConfig.blockStorage.enabled should be False or absent, got: {block_storage.get('enabled')}"
+                )
+
+        # Check elastic load balancing config - should be absent or disabled
+        k8s_network_config = aws_res["cluster"].get("kubernetesNetworkConfig", {})
+        elb_config = k8s_network_config.get("elasticLoadBalancing")
+        if elb_config is not None:
+            assert elb_config.get("enabled") is False, (
+                f"kubernetesNetworkConfig.elasticLoadBalancing.enabled should be False or absent, got: {elb_config.get('enabled')}"
+            )
