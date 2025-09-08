@@ -220,12 +220,21 @@ class TestAutoModeClusterUpdates:
         time.sleep(MODIFY_WAIT_AFTER_SECONDS)
 
         # The controller should detect the invalid configuration and set a terminal condition.
-        condition.assert_terminal(ref, True)
+        terminal_condition = "ACK.Terminal"
+        cond = k8s.get_resource_condition(ref, terminal_condition)
+        if cond is None:
+            pytest.fail(
+                f"Failed to find {terminal_condition} condition in resource {ref}"
+            )
 
-        cr = k8s.get_resource(ref)
-        terminal_condition = condition.get_type(cr, "ACK.Terminal")
-        assert terminal_condition is not None
-        assert "invalid Auto Mode configuration" in terminal_condition["message"]
+        cond_status = cond.get("status", None)
+        if str(cond_status) != str(True):
+            pytest.fail(
+                f"Expected {terminal_condition} condition to have status True but found {cond_status}"
+            )
+
+        # Verify the error message contains information about invalid Auto Mode configuration
+        assert "invalid Auto Mode configuration" in cond.get("message", "")
 
     def test_disable_auto_mode_correctly(self, eks_client, auto_mode_cluster):
         (ref, cr) = auto_mode_cluster
