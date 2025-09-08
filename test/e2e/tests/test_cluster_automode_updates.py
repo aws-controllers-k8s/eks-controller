@@ -29,7 +29,7 @@ from e2e.replacement_values import REPLACEMENT_VALUES
 
 # Time (seconds) to wait after creating/patching the Cluster CR so the controller
 # can reconcile and issue any needed AWS API calls before we assert intermediate state.
-MODIFY_WAIT_AFTER_SECONDS = 5
+MODIFY_WAIT_AFTER_SECONDS = 30
 
 # Time (seconds) to wait after EKS DescribeCluster reports the cluster ACTIVE before
 # re-reading the CR. This gives the controller a chance to observe the external state
@@ -164,7 +164,10 @@ class TestAutoModeClusterUpdates:
             "spec": {
                 "computeConfig": {"enabled": True},
                 "storageConfig": {"blockStorage": {"enabled": True}},
-                "kubernetesNetworkConfig": {"elasticLoadBalancing": {"enabled": True}},
+                "kubernetesNetworkConfig": {
+                    "elasticLoadBalancing": {"enabled": True},
+                    "ipFamily": "ipv4",
+                },
             }
         }
         logging.info(f"Applying patch to enable auto-mode: {patch_enable_auto_mode}")
@@ -182,13 +185,35 @@ class TestAutoModeClusterUpdates:
 
         get_and_assert_status(ref, "ACTIVE", True)
 
-        cr_update_done = k8s.get_resource(ref)
-
-        # Verify on AWS EKS API that auto-mode is enabled
-        aws_res = eks_client.describe_cluster(name=cluster_name)
-        logging.info(
-            f"custom resource while updating: {cr_updating} ###### eks:DescribeCluster while updating: {eks_describe_updating} ###### custom resource after transitioning to EKS Auto Mode: {cr_update_done} ###### eks:DescribeCluster response: {aws_res}"
-        )
+        # Verify on AWS EKS API that auto-mode is enabled with polling (in case propagation lags)
+        max_poll_seconds = 180
+        poll_interval = 10
+        deadline = time.time() + max_poll_seconds
+        last_aws_res = None
+        while time.time() < deadline:
+            last_aws_res = eks_client.describe_cluster(name=cluster_name)
+            compute_config = last_aws_res["cluster"].get("computeConfig")
+            storage_config = last_aws_res["cluster"].get("storageConfig")
+            elb_config = (
+                last_aws_res["cluster"]
+                .get("kubernetesNetworkConfig", {})
+                .get("elasticLoadBalancing")
+            )
+            if (
+                compute_config
+                and storage_config
+                and storage_config.get("blockStorage", {}).get("enabled")
+                and elb_config
+            ):
+                break
+            remaining = int(deadline - time.time())
+            if remaining < 0:
+                remaining = 0
+            logging.info(
+                f"Waiting for compute/storage/ELB config to appear in DescribeCluster... (remaining ~{remaining}s)"
+            )
+            time.sleep(poll_interval)
+        aws_res = last_aws_res or eks_client.describe_cluster(name=cluster_name)
 
         # Check compute config
         compute_config = aws_res["cluster"].get("computeConfig")
