@@ -188,6 +188,21 @@ class TestAutoModeClusterUpdates:
         cr_after_update = k8s.get_resource(ref)
         eks_describe_after_update = eks_client.describe_cluster(name=cluster_name)
 
+        # Log current pending/active updates for diagnostic purposes
+        try:
+            updates_summary = eks_client.list_updates(name=cluster_name)
+            logging.info(f"EKS list_updates response: {updates_summary}")
+            for update_id in updates_summary.get("updateIds", []) or []:
+                try:
+                    upd_desc = eks_client.describe_update(
+                        name=cluster_name, updateId=update_id
+                    )
+                    logging.info(f"EKS describe_update {update_id}: {upd_desc}")
+                except Exception as e:
+                    logging.warning(f"Failed to describe update {update_id}: {e}")
+        except Exception as e:
+            logging.warning(f"Failed to list updates for cluster {cluster_name}: {e}")
+
         # Verify on AWS EKS API that auto-mode is enabled with polling (in case propagation lags)
         max_poll_seconds = 180
         poll_interval = 10
