@@ -185,6 +185,9 @@ class TestAutoModeClusterUpdates:
 
         get_and_assert_status(ref, "ACTIVE", True)
 
+        cr_after_update = k8s.get_resource(ref)
+        eks_describe_after_update = eks_client.describe_cluster(name=cluster_name)
+
         # Verify on AWS EKS API that auto-mode is enabled with polling (in case propagation lags)
         max_poll_seconds = 180
         poll_interval = 10
@@ -214,6 +217,12 @@ class TestAutoModeClusterUpdates:
             )
             time.sleep(poll_interval)
         aws_res = last_aws_res or eks_client.describe_cluster(name=cluster_name)
+
+        logging.info(f"custom resource while updating: {cr_updating}")
+        logging.info(f"eks:DescribeCluster while updating: {eks_describe_updating}")
+        logging.info(f"custom resource after update: {cr_after_update}")
+        logging.info(f"eks:DescribeCluster after update: {eks_describe_after_update}")
+        logging.info(f"eks:DescribeCluster after polling loop: {aws_res}")
 
         # Check compute config
         compute_config = aws_res["cluster"].get("computeConfig")
