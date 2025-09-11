@@ -170,14 +170,10 @@ class TestAutoModeClusterUpdates:
                 },
             }
         }
-        logging.info(f"Applying patch to enable auto-mode: {patch_enable_auto_mode}")
         k8s.patch_custom_resource(ref, patch_enable_auto_mode)
         time.sleep(MODIFY_WAIT_AFTER_SECONDS)
 
         get_and_assert_status(ref, "UPDATING", False)
-
-        cr_updating = k8s.get_resource(ref)
-        eks_describe_updating = eks_client.describe_cluster(name=cluster_name)
 
         # Wait for cluster to become active after update
         wait_for_cluster_active(eks_client, cluster_name)
@@ -185,84 +181,54 @@ class TestAutoModeClusterUpdates:
 
         get_and_assert_status(ref, "ACTIVE", True)
 
-        cr_after_update = k8s.get_resource(ref)
-        eks_describe_after_update = eks_client.describe_cluster(name=cluster_name)
+        # Verify auto-mode activation via EKS update history (since DescribeCluster may not reflect the fields immediately)
+        updates_summary = eks_client.list_updates(name=cluster_name)
 
-        # Log current pending/active updates for diagnostic purposes
-        try:
-            updates_summary = eks_client.list_updates(name=cluster_name)
-            logging.info(f"EKS list_updates response: {updates_summary}")
-            for update_id in updates_summary.get("updateIds", []) or []:
-                try:
-                    upd_desc = eks_client.describe_update(
-                        name=cluster_name, updateId=update_id
-                    )
-                    logging.info(f"EKS describe_update {update_id}: {upd_desc}")
-                except Exception as e:
-                    logging.warning(f"Failed to describe update {update_id}: {e}")
-        except Exception as e:
-            logging.warning(f"Failed to list updates for cluster {cluster_name}: {e}")
-
-        # Verify on AWS EKS API that auto-mode is enabled with polling (in case propagation lags)
-        max_poll_seconds = 180
-        poll_interval = 10
-        deadline = time.time() + max_poll_seconds
-        last_aws_res = None
-        while time.time() < deadline:
-            last_aws_res = eks_client.describe_cluster(name=cluster_name)
-            compute_config = last_aws_res["cluster"].get("computeConfig")
-            storage_config = last_aws_res["cluster"].get("storageConfig")
-            elb_config = (
-                last_aws_res["cluster"]
-                .get("kubernetesNetworkConfig", {})
-                .get("elasticLoadBalancing")
-            )
-            if (
-                compute_config
-                and storage_config
-                and storage_config.get("blockStorage", {}).get("enabled")
-                and elb_config
-            ):
-                break
-            remaining = int(deadline - time.time())
-            if remaining < 0:
-                remaining = 0
-            logging.info(
-                f"Waiting for compute/storage/ELB config to appear in DescribeCluster... (remaining ~{remaining}s)"
-            )
-            time.sleep(poll_interval)
-        aws_res = last_aws_res or eks_client.describe_cluster(name=cluster_name)
-
-        logging.info(f"custom resource while updating: {cr_updating}")
-        logging.info(f"eks:DescribeCluster while updating: {eks_describe_updating}")
-        logging.info(f"custom resource after update: {cr_after_update}")
-        logging.info(f"eks:DescribeCluster after update: {eks_describe_after_update}")
-        logging.info(f"eks:DescribeCluster after polling loop: {aws_res}")
-
-        # Check compute config
-        compute_config = aws_res["cluster"].get("computeConfig")
-        assert compute_config is not None, "computeConfig should be present"
-        assert compute_config.get("enabled") is True, (
-            f"computeConfig.enabled should be True, got: {compute_config.get('enabled')}"
+        update_ids = updates_summary.get("updateIds", [])
+        assert len(update_ids) == 1, (
+            f"Expected exactly 1 update, got {len(update_ids)}: {update_ids}"
         )
 
-        # Check storage config
-        storage_config = aws_res["cluster"].get("storageConfig")
-        assert storage_config is not None, "storageConfig should be present"
-        block_storage = storage_config.get("blockStorage", {})
-        assert block_storage.get("enabled") is True, (
-            f"storageConfig.blockStorage.enabled should be True, got: {block_storage.get('enabled')}"
+        update_id = update_ids[0]
+        upd_desc = eks_client.describe_update(name=cluster_name, updateId=update_id)
+
+        update_info = upd_desc["update"]
+
+        # Verify update type and status
+        assert update_info["type"] == "AutoModeUpdate", (
+            f"Expected AutoModeUpdate, got: {update_info['type']}"
+        )
+        assert update_info["status"] == "Successful", (
+            f"Expected Successful status, got: {update_info['status']}"
         )
 
-        # Check elastic load balancing config
-        k8s_network_config = aws_res["cluster"].get("kubernetesNetworkConfig", {})
-        elb_config = k8s_network_config.get("elasticLoadBalancing")
-        assert elb_config is not None, (
-            "kubernetesNetworkConfig.elasticLoadBalancing should be present"
+        # Verify update params contain the three Auto Mode configurations
+        params = update_info.get("params", [])
+        param_types = {param["type"] for param in params}
+        expected_types = {"ComputeConfig", "StorageConfig", "KubernetesNetworkConfig"}
+        assert param_types == expected_types, (
+            f"Expected params {expected_types}, got: {param_types}"
         )
-        assert elb_config.get("enabled") is True, (
-            f"kubernetesNetworkConfig.elasticLoadBalancing.enabled should be True, got: {elb_config.get('enabled')}"
-        )
+
+        # Verify each param has correct enabled=true values
+        for param in params:
+            import json
+
+            value = json.loads(param["value"])
+            if param["type"] == "ComputeConfig":
+                assert value.get("enabled") is True, (
+                    f"ComputeConfig should have enabled=true, got: {value}"
+                )
+            elif param["type"] == "StorageConfig":
+                block_storage = value.get("blockStorage", {})
+                assert block_storage.get("enabled") is True, (
+                    f"StorageConfig.blockStorage should have enabled=true, got: {value}"
+                )
+            elif param["type"] == "KubernetesNetworkConfig":
+                elb = value.get("elasticLoadBalancing", {})
+                assert elb.get("enabled") is True, (
+                    f"KubernetesNetworkConfig.elasticLoadBalancing should have enabled=true, got: {value}"
+                )
 
     def test_disable_auto_mode_incorrectly(self, eks_client, auto_mode_cluster):
         (ref, cr) = auto_mode_cluster
