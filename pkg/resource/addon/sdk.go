@@ -449,7 +449,7 @@ func (rm *resourceManager) sdkUpdate(
 	if delta.DifferentAt("Spec.Tags") {
 		err := syncTags(
 			ctx, rm.sdkapi, rm.metrics,
-			string(*desired.ko.Status.ACKResourceMetadata.ARN),
+			string(*latest.ko.Status.ACKResourceMetadata.ARN),
 			aws.ToStringMap(desired.ko.Spec.Tags), aws.ToStringMap(latest.ko.Spec.Tags),
 		)
 		if err != nil {
