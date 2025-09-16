@@ -109,11 +109,11 @@ func (r *resource) SetIdentifiers(identifier *ackv1alpha1.AWSIdentifiers) error 
 
 // PopulateResourceFromAnnotation populates the fields passed from adoption annotation
 func (r *resource) PopulateResourceFromAnnotation(fields map[string]string) error {
-	tmp, ok := fields["clusterName"]
+	primaryKey, ok := fields["clusterName"]
 	if !ok {
 		return ackerrors.NewTerminalError(fmt.Errorf("required field missing: clusterName"))
 	}
-	r.ko.Spec.ClusterName = &tmp
+	r.ko.Spec.ClusterName = &primaryKey
 
 	if f0, f0ok := fields["identityProviderConfigName"]; f0ok {
 		r.ko.Spec.OIDC = &svcapitypes.OIDCIdentityProviderConfigRequest{

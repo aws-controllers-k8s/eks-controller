@@ -103,16 +103,16 @@ func (r *resource) SetIdentifiers(identifier *ackv1alpha1.AWSIdentifiers) error 
 
 // PopulateResourceFromAnnotation populates the fields passed from adoption annotation
 func (r *resource) PopulateResourceFromAnnotation(fields map[string]string) error {
-	tmp, ok := fields["clusterName"]
+	primaryKey, ok := fields["clusterName"]
 	if !ok {
 		return ackerrors.NewTerminalError(fmt.Errorf("required field missing: clusterName"))
 	}
-	r.ko.Spec.ClusterName = &tmp
-
-	f0, f0ok := fields["associationID"]
-	if f0ok {
-		r.ko.Status.AssociationID = aws.String(f0)
+	r.ko.Spec.ClusterName = &primaryKey
+	f0, ok := fields["associationID"]
+	if !ok {
+		return ackerrors.NewTerminalError(fmt.Errorf("required field missing: associationID"))
 	}
+	r.ko.Status.AssociationID = &f0
 
 	return nil
 }
