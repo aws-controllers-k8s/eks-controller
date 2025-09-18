@@ -20,7 +20,7 @@ from typing import Dict, Tuple
 
 import pytest
 
-from acktest.k8s import resource as k8s
+from acktest.k8s import resource as k8s, condition
 from acktest.resources import random_suffix_name
 from e2e import CRD_VERSION, service_marker, CRD_GROUP, load_eks_resource
 from e2e.replacement_values import REPLACEMENT_VALUES
@@ -40,7 +40,7 @@ RESOURCE_PLURAL = 'nodegroups'
 CREATE_WAIT_AFTER_SECONDS = 10
 
 # Time to wait after modifying the CR for the status to change
-MODIFY_WAIT_AFTER_SECONDS = 5
+MODIFY_WAIT_AFTER_SECONDS = 10
 
 # Time to wait after the nodegroup has changed status, for the CR to update
 CHECK_STATUS_WAIT_SECONDS = 10
@@ -139,7 +139,7 @@ class TestNodegroup:
         wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
 
         # Ensure status is updated properly once it has become active
-        time.sleep(CHECK_STATUS_WAIT_SECONDS)
+        k8s.wait_on_condition(ref, condition.CONDITION_TYPE_RESOURCE_SYNCED, "True", wait_periods=5, period_length=CHECK_STATUS_WAIT_SECONDS)
         get_and_assert_status(ref, 'ACTIVE', True)
 
         aws_res = eks_client.describe_nodegroup(
@@ -370,7 +370,7 @@ class TestNodegroup:
         wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
 
         # Ensure status is updated properly once it has become active
-        time.sleep(CHECK_STATUS_WAIT_SECONDS)
+        k8s.wait_on_condition(ref, condition.CONDITION_TYPE_RESOURCE_SYNCED, "True", wait_periods=5, period_length=CHECK_STATUS_WAIT_SECONDS)
         get_and_assert_status(ref, 'ACTIVE', True)
 
         aws_res = eks_client.describe_nodegroup(
