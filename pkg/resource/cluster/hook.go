@@ -184,6 +184,77 @@ func (rm *resourceManager) clusterInUse(ctx context.Context, r *resource) (bool,
 	return (nodes != nil && len(nodes.Nodegroups) > 0), nil
 }
 
+// isAutoModeCluster returns true if the cluster is configured for EKS Auto Mode.
+// According to AWS documentation, compute, block storage, and load balancing capabilities
+// must all be enabled or disabled together. Any partial configuration is invalid.
+func isAutoModeCluster(r *resource) bool {
+	if r == nil || r.ko == nil {
+		return false
+	}
+
+	// Check if all three Auto Mode configurations are present
+	hasComputeConfig := r.ko.Spec.ComputeConfig != nil
+	hasStorageConfig := r.ko.Spec.StorageConfig != nil && r.ko.Spec.StorageConfig.BlockStorage != nil
+	hasELBConfig := r.ko.Spec.KubernetesNetworkConfig != nil && r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing != nil
+
+	// All three must be present for this to be considered an Auto Mode cluster
+	if !hasComputeConfig || !hasStorageConfig || !hasELBConfig {
+		return false
+	}
+
+	// Check compute configuration
+	computeEnabled := r.ko.Spec.ComputeConfig.Enabled != nil && *r.ko.Spec.ComputeConfig.Enabled
+
+	// Check storage configuration
+	storageEnabled := r.ko.Spec.StorageConfig.BlockStorage.Enabled != nil && *r.ko.Spec.StorageConfig.BlockStorage.Enabled
+
+	// Check elastic load balancing configuration
+	elbEnabled := r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled != nil && *r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled
+
+	// Auto Mode requires all three capabilities to have the same state (all true or all false)
+	// If they are all true, Auto Mode is enabled
+	// If they are all false, Auto Mode is being disabled
+	// Any other combination is invalid
+	return (computeEnabled && storageEnabled && elbEnabled) || (!computeEnabled && !storageEnabled && !elbEnabled)
+}
+
+// validateAutoModeConfig validates that Auto Mode configuration is consistent.
+// Returns an error if the configuration is invalid (partial enablement).
+func validateAutoModeConfig(r *resource) error {
+	if r == nil || r.ko == nil {
+		return nil // Not an Auto Mode configuration
+	}
+
+	// Check if any Auto Mode configuration is present
+	hasComputeConfig := r.ko.Spec.ComputeConfig != nil
+	hasStorageConfig := r.ko.Spec.StorageConfig != nil && r.ko.Spec.StorageConfig.BlockStorage != nil
+	hasELBConfig := r.ko.Spec.KubernetesNetworkConfig != nil && r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing != nil
+
+	// If no Auto Mode configuration is present, it's valid (not an Auto Mode cluster)
+	if !hasComputeConfig && !hasStorageConfig && !hasELBConfig {
+		return nil
+	}
+
+	// If any Auto Mode configuration is present, ALL must be present
+	if !hasComputeConfig || !hasStorageConfig || !hasELBConfig {
+		return fmt.Errorf("invalid Auto Mode configuration: when configuring Auto Mode, all three capabilities must be specified (compute=%v, storage=%v, elb=%v)",
+			hasComputeConfig, hasStorageConfig, hasELBConfig)
+	}
+
+	// Check that all configurations have the same enabled state
+	computeEnabled := r.ko.Spec.ComputeConfig.Enabled != nil && *r.ko.Spec.ComputeConfig.Enabled
+	storageEnabled := r.ko.Spec.StorageConfig.BlockStorage.Enabled != nil && *r.ko.Spec.StorageConfig.BlockStorage.Enabled
+	elbEnabled := r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled != nil && *r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled
+
+	// All three must be in the same state
+	if computeEnabled == storageEnabled && storageEnabled == elbEnabled {
+		return nil // Valid configuration
+	}
+
+	return fmt.Errorf("invalid Auto Mode configuration: compute, block storage, and load balancing capabilities must all be enabled or disabled together (compute=%v, storage=%v, elb=%v)",
+		computeEnabled, storageEnabled, elbEnabled)
+}
+
 func customPreCompare(
 	a *resource,
 	b *resource,
@@ -380,25 +451,39 @@ func (rm *resourceManager) customUpdate(
 		return returnClusterUpdating(updatedRes)
 	}
 
-	// Handle computeConfig updates
+	// Handle computeConfig updates - only for Auto Mode clusters
 	if delta.DifferentAt("Spec.ComputeConfig") || delta.DifferentAt("Spec.StorageConfig") || delta.DifferentAt("Spec.KubernetesNetworkConfig") {
-		if err := rm.updateComputeConfig(ctx, desired); err != nil {
-			awsErr, ok := extractAWSError(err)
-			rlog.Info("attempting to update AutoMode config",
-				"error", err,
-				"isAWSError", ok,
-				"awsErrorCode", awsErr.Code)
-
-			// Check to see if we've raced an async update call and need to requeue
-			if ok && awsErr.Code == "ResourceInUseException" {
-				rlog.Info("resource in use, requeueing after async update")
-				return nil, requeueAfterAsyncUpdate()
-			}
-
-			return nil, fmt.Errorf("failed to update AutoMode config: %w", err)
+		// Validate Auto Mode configuration consistency before attempting update
+		if err := validateAutoModeConfig(desired); err != nil {
+			return nil, ackerr.NewTerminalError(err)
 		}
 
-		return returnClusterUpdating(updatedRes)
+		// Only proceed with Auto Mode updates if the cluster is actually configured for Auto Mode
+		if isAutoModeCluster(desired) {
+			if err := rm.updateComputeConfig(ctx, desired); err != nil {
+				awsErr, ok := extractAWSError(err)
+				var awsErrorCode string
+				if ok && awsErr != nil {
+					awsErrorCode = awsErr.Code
+				}
+				rlog.Info("attempting to update AutoMode config",
+					"error", err,
+					"isAWSError", ok,
+					"awsErrorCode", awsErrorCode)
+
+				// Check to see if we've raced an async update call and need to requeue
+				if ok && awsErr != nil && awsErr.Code == "ResourceInUseException" {
+					rlog.Info("resource in use, requeueing after async update")
+					return nil, requeueAfterAsyncUpdate()
+				}
+
+				return nil, fmt.Errorf("failed to update AutoMode config: %w", err)
+			}
+
+			return returnClusterUpdating(updatedRes)
+		}
+		// If not Auto Mode, ignore the diff (likely elasticLoadBalancing false vs absent)
+		rlog.Debug("ignoring diff on compute/storage/network config for non-Auto Mode cluster")
 	}
 
 	// Handle zonalShiftConfig updates
@@ -665,6 +750,20 @@ func (rm *resourceManager) updateComputeConfig(
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.updateComputeConfig")
 	defer exit(err)
+
+	// Safety check: ensure ComputeConfig is not nil
+	if r == nil || r.ko == nil || r.ko.Spec.ComputeConfig == nil {
+		rlog.Debug("skipping updateComputeConfig: ComputeConfig is nil")
+		return nil
+	}
+
+	// Safety check: ensure all required configurations are not nil
+	if r.ko.Spec.StorageConfig == nil || r.ko.Spec.StorageConfig.BlockStorage == nil {
+		return fmt.Errorf("invalid Auto Mode configuration: StorageConfig.BlockStorage is required")
+	}
+	if r.ko.Spec.KubernetesNetworkConfig == nil || r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing == nil {
+		return fmt.Errorf("invalid Auto Mode configuration: KubernetesNetworkConfig.ElasticLoadBalancing is required")
+	}
 
 	// Convert []*string to []string for NodePools
 	nodePools := make([]string, 0, len(r.ko.Spec.ComputeConfig.NodePools))
