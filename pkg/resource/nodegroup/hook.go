@@ -548,6 +548,9 @@ func (rm *resourceManager) newUpdateScalingConfigPayload(
 		)
 		temp := int32(*latest.ko.Spec.ScalingConfig.DesiredSize)
 		sc.DesiredSize = &temp
+		if *sc.MinSize > *sc.DesiredSize {
+			*sc.DesiredSize = *sc.MinSize
+		}
 	}
 	return sc, nil
 }
