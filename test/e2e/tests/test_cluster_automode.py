@@ -53,9 +53,9 @@ def get_and_assert_status(ref: k8s.CustomResourceReference, expected_status: str
     assert cr['status']['status'] == expected_status
 
     if expected_synced:
-        condition.assert_synced(ref)
+        condition.assert_ready(ref)
     else:
-        condition.assert_not_synced(ref)
+        condition.assert_not_ready(ref)
 
 
 @pytest.fixture(scope="module")

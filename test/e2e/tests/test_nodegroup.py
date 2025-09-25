@@ -139,7 +139,7 @@ class TestNodegroup:
         wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
 
         # Ensure status is updated properly once it has become active
-        k8s.wait_on_condition(ref, condition.CONDITION_TYPE_RESOURCE_SYNCED, "True", wait_periods=5, period_length=CHECK_STATUS_WAIT_SECONDS)
+        k8s.wait_on_condition(ref, condition.CONDITION_TYPE_READY, "True", wait_periods=5, period_length=CHECK_STATUS_WAIT_SECONDS)
         get_and_assert_status(ref, 'ACTIVE', True)
 
         aws_res = eks_client.describe_nodegroup(
@@ -370,7 +370,7 @@ class TestNodegroup:
         wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
 
         # Ensure status is updated properly once it has become active
-        k8s.wait_on_condition(ref, condition.CONDITION_TYPE_RESOURCE_SYNCED, "True", wait_periods=5, period_length=CHECK_STATUS_WAIT_SECONDS)
+        k8s.wait_on_condition(ref, condition.CONDITION_TYPE_READY, "True", wait_periods=5, period_length=CHECK_STATUS_WAIT_SECONDS)
         get_and_assert_status(ref, 'ACTIVE', True)
 
         aws_res = eks_client.describe_nodegroup(
