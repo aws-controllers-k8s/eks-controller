@@ -139,7 +139,7 @@ class TestNodegroup:
         wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
 
         # Ensure status is updated properly once it has become active
-        k8s.wait_on_condition(ref, condition.CONDITION_TYPE_RESOURCE_SYNCED, "True", wait_periods=5, period_length=CHECK_STATUS_WAIT_SECONDS)
+        k8s.wait_on_condition(ref, condition.CONDITION_TYPE_READY, "True", wait_periods=5, period_length=CHECK_STATUS_WAIT_SECONDS)
         get_and_assert_status(ref, 'ACTIVE', True)
 
         aws_res = eks_client.describe_nodegroup(
@@ -370,7 +370,7 @@ class TestNodegroup:
         wait_for_nodegroup_active(eks_client, cluster_name, nodegroup_name)
 
         # Ensure status is updated properly once it has become active
-        k8s.wait_on_condition(ref, condition.CONDITION_TYPE_RESOURCE_SYNCED, "True", wait_periods=5, period_length=CHECK_STATUS_WAIT_SECONDS)
+        k8s.wait_on_condition(ref, condition.CONDITION_TYPE_READY, "True", wait_periods=5, period_length=CHECK_STATUS_WAIT_SECONDS)
         get_and_assert_status(ref, 'ACTIVE', True)
 
         aws_res = eks_client.describe_nodegroup(
@@ -391,16 +391,4 @@ class TestNodegroup:
 
         k8s.patch_custom_resource(ref, updates)
         time.sleep(MODIFY_WAIT_AFTER_SECONDS)
-
-        terminal_condition = "ACK.Terminal"
-        cond = k8s.get_resource_condition(ref, terminal_condition)
-        if cond is None:
-            msg = (f"Failed to find {terminal_condition} condition in "
-                f"resource {ref}")
-            pytest.fail(msg)
-
-        cond_status = cond.get('status', None)
-        if str(cond_status) != str(True):
-            msg = (f"Expected {terminal_condition} condition to "
-                f"have status {terminal_condition} but found {cond_status}")
-            pytest.fail(msg)
+        condition.assert_terminal(ref)
