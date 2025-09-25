@@ -141,6 +141,6 @@ class TestAutoModeCluster:
         time.sleep(CHECK_STATUS_WAIT_SECONDS)
 
         # Clean up
-        _, deleted = k8s.delete_custom_resource(ref, 3, 10)
+        _, deleted = k8s.delete_custom_resource(ref, 10, 10)
         assert deleted
         wait_until_deleted(cluster_name)

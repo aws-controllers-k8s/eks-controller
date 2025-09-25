@@ -391,16 +391,4 @@ class TestNodegroup:
 
         k8s.patch_custom_resource(ref, updates)
         time.sleep(MODIFY_WAIT_AFTER_SECONDS)
-
-        terminal_condition = "ACK.Terminal"
-        cond = k8s.get_resource_condition(ref, terminal_condition)
-        if cond is None:
-            msg = (f"Failed to find {terminal_condition} condition in "
-                f"resource {ref}")
-            pytest.fail(msg)
-
-        cond_status = cond.get('status', None)
-        if str(cond_status) != str(True):
-            msg = (f"Expected {terminal_condition} condition to "
-                f"have status {terminal_condition} but found {cond_status}")
-            pytest.fail(msg)
+        condition.assert_terminal(ref)
