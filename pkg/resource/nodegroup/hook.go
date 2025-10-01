@@ -330,7 +330,7 @@ func (rm *resourceManager) customUpdate(
 		if desired.ko.Spec.Version != nil && desired.ko.Spec.ReleaseVersion != nil &&
 			*desired.ko.Spec.Version != "" && *desired.ko.Spec.ReleaseVersion != "" {
 
-			if !isAMITypeBottleRocket(desired.ko.Spec.AMIType) {
+			if !isAMITypeBottlerocket(desired.ko.Spec.AMIType) {
 				// First parse the user provided release version and desired release
 				desiredReleaseVersionTrimmed, err := util.GetEKSVersionFromReleaseVersion(*desired.ko.Spec.ReleaseVersion)
 				if err != nil {
@@ -361,10 +361,10 @@ func (rm *resourceManager) customUpdate(
 	return updatedRes, nil
 }
 
-// BottleRocket AMI types do not follow the same versioning scheme as other AMI types.
+// Bottlerocket AMI types do not follow the same versioning scheme as other AMI types.
 // For more information, see https://github.com/awslabs/amazon-eks-ami/releases
 // and https://github.com/bottlerocket-os/bottlerocket/releases
-func isAMITypeBottleRocket(amiType *string) bool {
+func isAMITypeBottlerocket(amiType *string) bool {
 	if amiType == nil {
 		return false
 	}
