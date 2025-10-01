@@ -330,22 +330,24 @@ func (rm *resourceManager) customUpdate(
 		if desired.ko.Spec.Version != nil && desired.ko.Spec.ReleaseVersion != nil &&
 			*desired.ko.Spec.Version != "" && *desired.ko.Spec.ReleaseVersion != "" {
 
-			// First parse the user provided release version and desired release
-			desiredReleaseVersionTrimmed, err := util.GetEKSVersionFromReleaseVersion(*desired.ko.Spec.ReleaseVersion)
-			if err != nil {
-				return nil, ackerr.NewTerminalError(err)
-			}
+			if !isAMITypeBottleRocket(desired.ko.Spec.AMIType) {
+				// First parse the user provided release version and desired release
+				desiredReleaseVersionTrimmed, err := util.GetEKSVersionFromReleaseVersion(*desired.ko.Spec.ReleaseVersion)
+				if err != nil {
+					return nil, ackerr.NewTerminalError(err)
+				}
 
-			// Set a terminal condition if the release version and version do not match.
-			// e.g if the user provides a release version of 1.16.8-20211201 and a version of 1.17
-			// They will either need to provide one of the following:
-			// 2. A version
-			// 1. A release version
-			// 3. A version and release version that matches (e.g 1.16 and 1.16.8-20211201)
-			if desiredReleaseVersionTrimmed != *desired.ko.Spec.Version {
-				return nil, ackerr.NewTerminalError(
-					fmt.Errorf("version and release version do not match: %s and %s", *desired.ko.Spec.Version, desiredReleaseVersionTrimmed),
-				)
+				// Set a terminal condition if the release version and version do not match.
+				// e.g if the user provides a release version of 1.16.8-20211201 and a version of 1.17
+				// They will either need to provide one of the following:
+				// 2. A version
+				// 1. A release version
+				// 3. A version and release version that matches (e.g 1.16 and 1.16.8-20211201)
+				if desiredReleaseVersionTrimmed != *desired.ko.Spec.Version {
+					return nil, ackerr.NewTerminalError(
+						fmt.Errorf("version and release version do not match: %s and %s", *desired.ko.Spec.Version, desiredReleaseVersionTrimmed),
+					)
+				}
 			}
 		}
 
@@ -357,6 +359,24 @@ func (rm *resourceManager) customUpdate(
 
 	rm.setStatusDefaults(updatedRes.ko)
 	return updatedRes, nil
+}
+
+// BottleRocket AMI types do not follow the same versioning scheme as other AMI types.
+// For more information, see https://github.com/awslabs/amazon-eks-ami/releases
+// and https://github.com/bottlerocket-os/bottlerocket/releases
+func isAMITypeBottleRocket(amiType *string) bool {
+	if amiType == nil {
+		return false
+	}
+
+	switch *amiType {
+	case string(svcapitypes.AMITypes_BOTTLEROCKET_ARM_64), string(svcapitypes.AMITypes_BOTTLEROCKET_ARM_64_FIPS),
+		string(svcapitypes.AMITypes_BOTTLEROCKET_ARM_64_NVIDIA), string(svcapitypes.AMITypes_BOTTLEROCKET_x86_64),
+		string(svcapitypes.AMITypes_BOTTLEROCKET_x86_64_FIPS), string(svcapitypes.AMITypes_BOTTLEROCKET_x86_64_NVIDIA):
+		return true
+	default:
+		return false
+	}
 }
 
 // newUpdateLabelsPayload determines which of the labels should be added or
