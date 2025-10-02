@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
@@ -369,14 +370,11 @@ func isAMITypeBottlerocket(amiType *string) bool {
 		return false
 	}
 
-	switch *amiType {
-	case string(svcapitypes.AMITypes_BOTTLEROCKET_ARM_64), string(svcapitypes.AMITypes_BOTTLEROCKET_ARM_64_FIPS),
-		string(svcapitypes.AMITypes_BOTTLEROCKET_ARM_64_NVIDIA), string(svcapitypes.AMITypes_BOTTLEROCKET_x86_64),
-		string(svcapitypes.AMITypes_BOTTLEROCKET_x86_64_FIPS), string(svcapitypes.AMITypes_BOTTLEROCKET_x86_64_NVIDIA):
+	if strings.HasPrefix(*amiType, "BOTTLEROCKET_") {
 		return true
-	default:
-		return false
 	}
+
+	return false
 }
 
 // newUpdateLabelsPayload determines which of the labels should be added or
