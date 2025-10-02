@@ -550,3 +550,53 @@ func Test_newUpdateNodegroupPayload(t *testing.T) {
 		})
 	}
 }
+
+func Test_AMITypeBottlerocket(t *testing.T) {
+	tests := []struct {
+		name    string
+		amiType *string
+		want    bool
+	}{
+		{
+			name:    "nil ami type",
+			amiType: nil,
+			want:    false,
+		},
+		{
+			name:    "BOTTLEROCKET_ARM_64 AMI",
+			amiType: aws.String("BOTTLEROCKET_ARM_64"),
+			want:    true,
+		},
+		{
+			name:    "BOTTLEROCKET_ARM_64_NVIDIA AMI",
+			amiType: aws.String("BOTTLEROCKET_ARM_64_NVIDIA"),
+			want:    true,
+		},
+		{
+			name:    "BOTTLEROCKET_x86_64 AMI",
+			amiType: aws.String("BOTTLEROCKET_x86_64"),
+			want:    true,
+		},
+		{
+			name:    "BOTTLEROCKET_x86_64_FIPS AMI",
+			amiType: aws.String("BOTTLEROCKET_x86_64_FIPS"),
+			want:    true,
+		},
+		{
+			name:    "BOTTLEROCKET_x86_64_NVIDIA AMI",
+			amiType: aws.String("BOTTLEROCKET_x86_64_NVIDIA"),
+			want:    true,
+		},
+		{
+			name:    "RANDOM AMI",
+			amiType: aws.String("RANDOM"),
+			want:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, isAMITypeBottlerocket(tt.amiType))
+		})
+	}
+}
