@@ -488,6 +488,8 @@ func newUpdateNodegroupVersionPayload(
 				Name:    desired.ko.Spec.LaunchTemplate.Name,
 				Version: desired.ko.Spec.LaunchTemplate.Version,
 			}
+
+			input.LaunchTemplate.Version = desired.ko.Spec.LaunchTemplate.Version
 		}
 	}
 
