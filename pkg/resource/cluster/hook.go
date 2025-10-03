@@ -184,6 +184,45 @@ func (rm *resourceManager) clusterInUse(ctx context.Context, r *resource) (bool,
 	return (nodes != nil && len(nodes.Nodegroups) > 0), nil
 }
 
+// isAutoModeCluster returns true if the cluster is configured for EKS Auto Mode.
+// According to AWS documentation, compute, block storage, and load balancing capabilities
+// must all be enabled or disabled together. Any partial configuration is invalid.
+// Returns an error for invalid configurations.
+func isAutoModeCluster(r *resource) (bool, error) {
+	if r == nil || r.ko == nil {
+		return false, nil
+	}
+
+	hasComputeConfig := r.ko.Spec.ComputeConfig != nil
+	hasStorageConfig := r.ko.Spec.StorageConfig != nil && r.ko.Spec.StorageConfig.BlockStorage != nil
+	hasELBConfig := r.ko.Spec.KubernetesNetworkConfig != nil && r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing != nil
+
+	// If no Auto Mode configuration is present, it's valid (not an Auto Mode cluster)
+	if !hasComputeConfig && !hasStorageConfig && !hasELBConfig {
+		return false, nil
+	}
+
+	// If any Auto Mode configuration is present, ALL must be present
+	if !hasComputeConfig || !hasStorageConfig || !hasELBConfig {
+		return false, fmt.Errorf("invalid Auto Mode configuration: when configuring Auto Mode, all three capabilities must be specified (compute=%v, storage=%v, elb=%v)",
+			hasComputeConfig, hasStorageConfig, hasELBConfig)
+	}
+
+	computeEnabled := r.ko.Spec.ComputeConfig.Enabled != nil && *r.ko.Spec.ComputeConfig.Enabled
+	storageEnabled := r.ko.Spec.StorageConfig.BlockStorage.Enabled != nil && *r.ko.Spec.StorageConfig.BlockStorage.Enabled
+	elbEnabled := r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled != nil && *r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled
+
+	// All three must be in the same state
+	if computeEnabled != storageEnabled || storageEnabled != elbEnabled {
+		return false, fmt.Errorf("invalid Auto Mode configuration: compute, block storage, and load balancing capabilities must all be enabled or disabled together (compute=%v, storage=%v, elb=%v)",
+			computeEnabled, storageEnabled, elbEnabled)
+	}
+
+	isAutoMode := (computeEnabled && storageEnabled && elbEnabled) || (!computeEnabled && !storageEnabled && !elbEnabled)
+	return isAutoMode, nil
+}
+
+
 func customPreCompare(
 	a *resource,
 	b *resource,
@@ -380,25 +419,38 @@ func (rm *resourceManager) customUpdate(
 		return returnClusterUpdating(updatedRes)
 	}
 
-	// Handle computeConfig updates
+	// Handle computeConfig updates - only for Auto Mode clusters
 	if delta.DifferentAt("Spec.ComputeConfig") || delta.DifferentAt("Spec.StorageConfig") || delta.DifferentAt("Spec.KubernetesNetworkConfig") {
-		if err := rm.updateComputeConfig(ctx, desired); err != nil {
-			awsErr, ok := extractAWSError(err)
-			rlog.Info("attempting to update AutoMode config",
-				"error", err,
-				"isAWSError", ok,
-				"awsErrorCode", awsErr.Code)
+		// Validate Auto Mode configuration and proceed only if cluster is configured for Auto Mode
+		isAutoMode, err := isAutoModeCluster(desired)
+		if err != nil {
+			return nil, ackerr.NewTerminalError(err)
+		}
+		if isAutoMode {
+			if err := rm.updateComputeConfig(ctx, desired); err != nil {
+				awsErr, ok := extractAWSError(err)
+				var awsErrorCode string
+				if ok && awsErr != nil {
+					awsErrorCode = awsErr.Code
+				}
+				rlog.Info("attempting to update AutoMode config",
+					"error", err,
+					"isAWSError", ok,
+					"awsErrorCode", awsErrorCode)
 
-			// Check to see if we've raced an async update call and need to requeue
-			if ok && awsErr.Code == "ResourceInUseException" {
-				rlog.Info("resource in use, requeueing after async update")
-				return nil, requeueAfterAsyncUpdate()
+				// Check to see if we've raced an async update call and need to requeue
+				if ok && awsErr != nil && awsErr.Code == "ResourceInUseException" {
+					rlog.Info("resource in use, requeueing after async update")
+					return nil, requeueAfterAsyncUpdate()
+				}
+
+				return nil, fmt.Errorf("failed to update AutoMode config: %w", err)
 			}
 
-			return nil, fmt.Errorf("failed to update AutoMode config: %w", err)
+			return returnClusterUpdating(updatedRes)
 		}
-
-		return returnClusterUpdating(updatedRes)
+		// If not Auto Mode, ignore the diff
+		rlog.Info("ignoring diff on compute/storage/network config for non-Auto Mode cluster")
 	}
 
 	// Handle zonalShiftConfig updates
