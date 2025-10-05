@@ -5,6 +5,16 @@
 	if r.ko.Spec.ResourcesVPCConfig != nil && r.ko.Spec.ResourcesVPCConfig.SecurityGroupRefs != nil {
 		ko.Spec.ResourcesVPCConfig.SecurityGroupRefs = r.ko.Spec.ResourcesVPCConfig.SecurityGroupRefs
 	}
+
+	latestConfig := ko.Spec.KubernetesNetworkConfig
+
+	// ElasticLoadBalancing can by default be initialized as false even when ACK is providing an empty input.
+	// This condition prevents unnecessary deltas when the desired value is empty and ElasticLoadBalancing is already disabled.
+	if latestConfig != nil && latestConfig.ElasticLoadBalancing != nil && latestConfig.ElasticLoadBalancing.Enabled != nil {
+		if *latestConfig.ElasticLoadBalancing.Enabled == false && r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing == nil {
+			latestConfig.ElasticLoadBalancing = nil
+		}
+	}
 	
 	if !clusterActive(&resource{ko}) {
 		// Setting resource synced condition to false will trigger a requeue of
