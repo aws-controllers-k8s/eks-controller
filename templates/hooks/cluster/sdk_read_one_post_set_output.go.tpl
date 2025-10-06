@@ -6,12 +6,13 @@
 		ko.Spec.ResourcesVPCConfig.SecurityGroupRefs = r.ko.Spec.ResourcesVPCConfig.SecurityGroupRefs
 	}
 
+	desiredConfig := r.ko.Spec.KubernetesNetworkConfig
 	latestConfig := ko.Spec.KubernetesNetworkConfig
 
 	// ElasticLoadBalancing can by default be initialized as false even when ACK is providing an empty input.
 	// This condition prevents unnecessary deltas when the desired value is empty and ElasticLoadBalancing is already disabled.
 	if latestConfig != nil && latestConfig.ElasticLoadBalancing != nil && latestConfig.ElasticLoadBalancing.Enabled != nil {
-		if *latestConfig.ElasticLoadBalancing.Enabled == false && r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing == nil {
+		if desiredConfig != nil && desiredConfig.ElasticLoadBalancing == nil && *latestConfig.ElasticLoadBalancing.Enabled == false {
 			latestConfig.ElasticLoadBalancing = nil
 		}
 	}
