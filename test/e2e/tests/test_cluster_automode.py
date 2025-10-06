@@ -53,9 +53,9 @@ def get_and_assert_status(ref: k8s.CustomResourceReference, expected_status: str
     assert cr['status']['status'] == expected_status
 
     if expected_synced:
-        condition.assert_synced(ref)
+        condition.assert_ready(ref)
     else:
-        condition.assert_not_synced(ref)
+        condition.assert_not_ready(ref)
 
 
 @pytest.fixture(scope="module")
@@ -141,6 +141,6 @@ class TestAutoModeCluster:
         time.sleep(CHECK_STATUS_WAIT_SECONDS)
 
         # Clean up
-        _, deleted = k8s.delete_custom_resource(ref, 3, 10)
+        _, deleted = k8s.delete_custom_resource(ref, 10, 10)
         assert deleted
         wait_until_deleted(cluster_name)
