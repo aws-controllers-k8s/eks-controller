@@ -415,10 +415,8 @@ func (rm *resourceManager) sdkFind(
 
 	// ElasticLoadBalancing can by default be initialized as false even when ACK is providing an empty input.
 	// This condition prevents unnecessary deltas when the desired value is empty and ElasticLoadBalancing is already disabled.
-	if latestConfig != nil && latestConfig.ElasticLoadBalancing != nil && latestConfig.ElasticLoadBalancing.Enabled != nil {
-		if desiredConfig != nil && desiredConfig.ElasticLoadBalancing == nil && *latestConfig.ElasticLoadBalancing.Enabled == false {
-			latestConfig.ElasticLoadBalancing = nil
-		}
+	if desiredConfig != nil && desiredConfig.ElasticLoadBalancing == nil && latestConfig != nil {
+		latestConfig.ElasticLoadBalancing = nil
 	}
 
 	if !clusterActive(&resource{ko}) {
