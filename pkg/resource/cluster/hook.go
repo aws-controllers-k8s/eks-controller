@@ -666,33 +666,54 @@ func (rm *resourceManager) updateComputeConfig(
 	exit := rlog.Trace("rm.updateComputeConfig")
 	defer exit(err)
 
-	// Convert []*string to []string for NodePools
-	nodePools := make([]string, 0, len(r.ko.Spec.ComputeConfig.NodePools))
-	for _, nodePool := range r.ko.Spec.ComputeConfig.NodePools {
-		if nodePool != nil {
-			nodePools = append(nodePools, *nodePool)
-		}
-	}
-
 	input := &svcsdk.UpdateClusterConfigInput{
 		Name: r.ko.Spec.Name,
-		ComputeConfig: &svcsdktypes.ComputeConfigRequest{
+	}
+
+	if r.ko.Spec.ComputeConfig != nil {
+		// Convert []*string to []string for NodePools
+		nodePools := make([]string, 0, len(r.ko.Spec.ComputeConfig.NodePools))
+		for _, nodePool := range r.ko.Spec.ComputeConfig.NodePools {
+			if nodePool != nil {
+				nodePools = append(nodePools, *nodePool)
+			}
+		}
+
+		input.ComputeConfig = &svcsdktypes.ComputeConfigRequest{
 			Enabled:     r.ko.Spec.ComputeConfig.Enabled,
 			NodePools:   nodePools, // Use the converted []string slice
 			NodeRoleArn: r.ko.Spec.ComputeConfig.NodeRoleARN,
-		},
-		StorageConfig: &svcsdktypes.StorageConfigRequest{
+		}
+	}
+
+	// Only set StorageConfig if it's not nil
+	if r.ko.Spec.StorageConfig != nil && r.ko.Spec.StorageConfig.BlockStorage != nil {
+		input.StorageConfig = &svcsdktypes.StorageConfigRequest{
 			BlockStorage: &svcsdktypes.BlockStorage{
 				Enabled: r.ko.Spec.StorageConfig.BlockStorage.Enabled,
 			},
-		},
-		KubernetesNetworkConfig: &svcsdktypes.KubernetesNetworkConfigRequest{
-			ElasticLoadBalancing: &svcsdktypes.ElasticLoadBalancing{
+		}
+	}
+
+	// Only set KubernetesNetworkConfig if it's not nil
+	if r.ko.Spec.KubernetesNetworkConfig != nil {
+		kubernetesNetworkConfig := &svcsdktypes.KubernetesNetworkConfigRequest{}
+
+		if r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing != nil {
+			kubernetesNetworkConfig.ElasticLoadBalancing = &svcsdktypes.ElasticLoadBalancing{
 				Enabled: r.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled,
-			},
-			IpFamily:        svcsdktypes.IpFamily(*r.ko.Spec.KubernetesNetworkConfig.IPFamily),
-			ServiceIpv4Cidr: r.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR,
-		},
+			}
+		}
+
+		if r.ko.Spec.KubernetesNetworkConfig.IPFamily != nil {
+			kubernetesNetworkConfig.IpFamily = svcsdktypes.IpFamily(*r.ko.Spec.KubernetesNetworkConfig.IPFamily)
+		}
+
+		if r.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR != nil {
+			kubernetesNetworkConfig.ServiceIpv4Cidr = r.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR
+		}
+
+		input.KubernetesNetworkConfig = kubernetesNetworkConfig
 	}
 
 	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
