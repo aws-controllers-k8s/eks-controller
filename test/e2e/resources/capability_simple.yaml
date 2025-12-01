@@ -1,0 +1,10 @@
+apiVersion: eks.services.k8s.aws/v1alpha1
+kind: Capability
+metadata:
+  name: $CAPABILITY_NAME
+spec:
+  name: $CAPABILITY_NAME
+  clusterName: $CLUSTER_NAME
+  roleARN: $CAPABILITY_ROLE_ARN
+  type: ACK
+  deletePropagationPolicy: RETAIN

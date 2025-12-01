@@ -53,6 +53,7 @@ def service_bootstrap() -> Resources:
             "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
             "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
         ]),
+        CapabilityRole=Role("capability-role", "capabilities.eks.amazonaws.com", managed_policies=[]),
         PodIdentityAssociationRole=Role(
             "ack-pod-identity-association-role",
             "pods.eks.amazonaws.com",

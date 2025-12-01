@@ -44,6 +44,7 @@ import (
 
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/access_entry"
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/addon"
+	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/capability"
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/cluster"
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/fargate_profile"
 	_ "github.com/aws-controllers-k8s/eks-controller/pkg/resource/identity_provider_config"

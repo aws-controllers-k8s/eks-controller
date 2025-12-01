@@ -18,6 +18,7 @@ rules:
   resources:
   - accessentries
   - addons
+  - capabilities
   - clusters
   - fargateprofiles
   - identityproviderconfigs

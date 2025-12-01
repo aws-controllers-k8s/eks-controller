@@ -4,6 +4,7 @@ resources:
   - common
   - bases/eks.services.k8s.aws_accessentries.yaml
   - bases/eks.services.k8s.aws_addons.yaml
+  - bases/eks.services.k8s.aws_capabilities.yaml
   - bases/eks.services.k8s.aws_clusters.yaml
   - bases/eks.services.k8s.aws_fargateprofiles.yaml
   - bases/eks.services.k8s.aws_identityproviderconfigs.yaml
