@@ -21,6 +21,7 @@ import (
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
 	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -547,6 +548,99 @@ func Test_newUpdateNodegroupPayload(t *testing.T) {
 			} else {
 				assert.Nil(t, got.LaunchTemplate)
 			}
+		})
+	}
+}
+
+func Test_newUpdateNodegroupPayloadWithLaunchTemplate(t *testing.T) {
+	delta := ackcompare.NewDelta()
+	delta.Add("Spec.Version", nil, nil)
+	delta.Add("Spec.LaunchTemplate", nil, nil)
+
+	type args struct {
+		r *resource
+	}
+	tests := []struct {
+		name        string
+		args        args
+		wantPayload *eks.UpdateNodegroupVersionInput
+	}{
+		{
+			name: "only id in launch template",
+			args: args{
+				r: &resource{
+					ko: &v1alpha1.Nodegroup{
+						Spec: v1alpha1.NodegroupSpec{
+							LaunchTemplate: &v1alpha1.LaunchTemplateSpecification{
+								ID:      aws.String("lt-12345"),
+								Version: aws.String("1"),
+							},
+						},
+					},
+				},
+			},
+			wantPayload: &eks.UpdateNodegroupVersionInput{
+				ClusterName:   nil,
+				NodegroupName: nil,
+				LaunchTemplate: &svcsdktypes.LaunchTemplateSpecification{
+					Id:      aws.String("lt-12345"),
+					Version: aws.String("1"),
+				},
+			},
+		},
+		{
+			name: "only name in launch template",
+			args: args{
+				r: &resource{
+					ko: &v1alpha1.Nodegroup{
+						Spec: v1alpha1.NodegroupSpec{
+							LaunchTemplate: &v1alpha1.LaunchTemplateSpecification{
+								Name:    aws.String("my-launch-template"),
+								Version: aws.String("1"),
+							},
+						},
+					},
+				},
+			},
+			wantPayload: &eks.UpdateNodegroupVersionInput{
+				ClusterName:   nil,
+				NodegroupName: nil,
+				LaunchTemplate: &svcsdktypes.LaunchTemplateSpecification{
+					Name:    aws.String("my-launch-template"),
+					Version: aws.String("1"),
+				},
+			},
+		},
+		{
+			name: "id and name in launch template",
+			args: args{
+				r: &resource{
+					ko: &v1alpha1.Nodegroup{
+						Spec: v1alpha1.NodegroupSpec{
+							LaunchTemplate: &v1alpha1.LaunchTemplateSpecification{
+								ID:      aws.String("lt-12345"),
+								Name:    aws.String("my-launch-template"),
+								Version: aws.String("1"),
+							},
+						},
+					},
+				},
+			},
+			wantPayload: &eks.UpdateNodegroupVersionInput{
+				ClusterName:   nil,
+				NodegroupName: nil,
+				LaunchTemplate: &svcsdktypes.LaunchTemplateSpecification{
+					Id:      aws.String("lt-12345"),
+					Version: aws.String("1"),
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := newUpdateNodegroupVersionPayload(delta, tt.args.r)
+			assert.Equal(t, tt.wantPayload, got)
 		})
 	}
 }
