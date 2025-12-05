@@ -481,8 +481,8 @@ spec:
                   autoScalingGroups:
                     items:
                       description: |-
-                        An Auto Scaling group that is associated with an Amazon EKS managed node
-                        group.
+                        An Amazon EC2 Auto Scaling group that is associated with an Amazon EKS managed
+                        node group.
                       properties:
                         name:
                           type: string
