@@ -31,6 +31,7 @@ class BootstrapResources(Resources):
     FargatePodRole: Role
     NodegroupRole: Role
     NodepoolRole: Role
+    CapabilityRole: Role
 
     PodIdentityAssociationRole: Role
     AccessEntryPrincipalRole: Role

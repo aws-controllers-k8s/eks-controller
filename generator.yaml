@@ -530,6 +530,55 @@ resources:
         type: string
         index: 40
         priority: 1
+  Capability:
+    synced:
+      when:
+      - path: Status.Status
+        in:
+        - ACTIVE
+        - CREATE_FAILED
+        - DELETE_FAILED
+    hooks:
+      sdk_update_pre_build_request:
+        template_path: hooks/capability/sdk_update_pre_build_request.go.tpl
+      sdk_update_post_build_request:
+        template_path: hooks/capability/sdk_update_post_build_request.go.tpl
+    renames:
+      operations:
+        CreateCapability:
+          input_fields:
+            CapabilityName: Name
+          output_fields:
+            CapabilityName: Name
+        DescribeCapability:
+          input_fields:
+            CapabilityName: Name
+          output_fields:
+            CapabilityName: Name
+        UpdateCapability:
+          input_fields:
+            CapabilityName: Name
+          output_fields:
+            CapabilityName: Name
+        DeleteCapability:
+          input_fields:
+            CapabilityName: Name
+    fields:
+      Configuration.ArgoCD.RbacRoleMappings.Identities.Type:
+        go_tag: json:"type,omitempty"
+      Configuration:
+        # Ignoring setting this, because we need to do
+        # a custom comparison for ToADD and ToRemove
+        set:
+        - ignore: all
+          method: Update
+      Type:
+        is_immutable: true
+        go_tag: json:"type"
+      Name:
+        is_immutable: true
+      ClusterName:
+        is_immutable: true
 ignore:
   resource_names:
   - EksAnywhereSubscription
@@ -542,3 +591,10 @@ ignore:
   - DescribeNodegroupOutput.Nodegroup.UpdateConfig.UpdateStrategy
   - DescribeNodegroupOutput.Nodegroup.NodeRepairConfig
   - CreateNodegroupInput.NodeRepairConfig
+  - CreateCapabilityInput.ClientRequestToken
+  - CreateAddonInput.NamespaceConfig
+  - CreateAddonOutput.Addon.NamespaceConfig
+  - CreateClusterInput.ControlPlaneScalingConfig
+  - CreateClusterInput.DeletionProtection
+  - CreateClusterOutput.Cluster.ControlPlaneScalingConfig
+  - CreateClusterOutput.Cluster.DeletionProtection

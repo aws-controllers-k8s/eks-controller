@@ -24,6 +24,7 @@ REPLACEMENT_VALUES = {
     "NODEGROUP_ROLE": get_bootstrap_resources().NodegroupRole.arn,
     "POD_IDENTITY_ASSOCIATION_ROLE": get_bootstrap_resources().PodIdentityAssociationRole.arn,
     "NODEPOOL_ROLE": get_bootstrap_resources().NodepoolRole.arn,
+    "CAPABILITY_ROLE_ARN": get_bootstrap_resources().CapabilityRole.arn,
 
     "PUBLIC_SUBNET_1": get_bootstrap_resources().ClusterVPC.public_subnets.subnet_ids[0],
     "PUBLIC_SUBNET_2": get_bootstrap_resources().ClusterVPC.public_subnets.subnet_ids[1],

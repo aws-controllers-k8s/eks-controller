@@ -608,7 +608,7 @@ func (rm *resourceManager) newCreateRequestPayload(
 	if r.ko.Spec.DiskSize != nil {
 		diskSizeCopy0 := *r.ko.Spec.DiskSize
 		if diskSizeCopy0 > math.MaxInt32 || diskSizeCopy0 < math.MinInt32 {
-			return nil, fmt.Errorf("error: field DiskSize is of type int32")
+			return nil, fmt.Errorf("error: field diskSize is of type int32")
 		}
 		diskSizeCopy := int32(diskSizeCopy0)
 		res.DiskSize = &diskSizeCopy

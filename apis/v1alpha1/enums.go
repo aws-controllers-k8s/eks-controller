@@ -74,12 +74,53 @@ const (
 	AddonStatus_SDK_UPDATING      AddonStatus_SDK = "UPDATING"
 )
 
+type ArgoCDRole string
+
+const (
+	ArgoCDRole_ADMIN  ArgoCDRole = "ADMIN"
+	ArgoCDRole_EDITOR ArgoCDRole = "EDITOR"
+	ArgoCDRole_VIEWER ArgoCDRole = "VIEWER"
+)
+
 type AuthenticationMode string
 
 const (
 	AuthenticationMode_API                AuthenticationMode = "API"
 	AuthenticationMode_API_AND_CONFIG_MAP AuthenticationMode = "API_AND_CONFIG_MAP"
 	AuthenticationMode_CONFIG_MAP         AuthenticationMode = "CONFIG_MAP"
+)
+
+type CapabilityDeletePropagationPolicy string
+
+const (
+	CapabilityDeletePropagationPolicy_RETAIN CapabilityDeletePropagationPolicy = "RETAIN"
+)
+
+type CapabilityIssueCode string
+
+const (
+	CapabilityIssueCode_AccessDenied       CapabilityIssueCode = "AccessDenied"
+	CapabilityIssueCode_ClusterUnreachable CapabilityIssueCode = "ClusterUnreachable"
+)
+
+type CapabilityStatus_SDK string
+
+const (
+	CapabilityStatus_SDK_ACTIVE        CapabilityStatus_SDK = "ACTIVE"
+	CapabilityStatus_SDK_CREATE_FAILED CapabilityStatus_SDK = "CREATE_FAILED"
+	CapabilityStatus_SDK_CREATING      CapabilityStatus_SDK = "CREATING"
+	CapabilityStatus_SDK_DEGRADED      CapabilityStatus_SDK = "DEGRADED"
+	CapabilityStatus_SDK_DELETE_FAILED CapabilityStatus_SDK = "DELETE_FAILED"
+	CapabilityStatus_SDK_DELETING      CapabilityStatus_SDK = "DELETING"
+	CapabilityStatus_SDK_UPDATING      CapabilityStatus_SDK = "UPDATING"
+)
+
+type CapabilityType string
+
+const (
+	CapabilityType_ACK    CapabilityType = "ACK"
+	CapabilityType_ARGOCD CapabilityType = "ARGOCD"
+	CapabilityType_KRO    CapabilityType = "KRO"
 )
 
 type CapacityTypes string
@@ -242,6 +283,14 @@ const (
 	InsightStatusValue_WARNING InsightStatusValue = "WARNING"
 )
 
+type InsightsRefreshStatus string
+
+const (
+	InsightsRefreshStatus_COMPLETED   InsightsRefreshStatus = "COMPLETED"
+	InsightsRefreshStatus_FAILED      InsightsRefreshStatus = "FAILED"
+	InsightsRefreshStatus_IN_PROGRESS InsightsRefreshStatus = "IN_PROGRESS"
+)
+
 type LogType string
 
 const (
@@ -312,12 +361,36 @@ const (
 	NodegroupUpdateStrategies_MINIMAL NodegroupUpdateStrategies = "MINIMAL"
 )
 
+type ProvisionedControlPlaneTier string
+
+const (
+	ProvisionedControlPlaneTier_standard ProvisionedControlPlaneTier = "standard"
+	ProvisionedControlPlaneTier_tier_2xl ProvisionedControlPlaneTier = "tier-2xl"
+	ProvisionedControlPlaneTier_tier_4xl ProvisionedControlPlaneTier = "tier-4xl"
+	ProvisionedControlPlaneTier_tier_xl  ProvisionedControlPlaneTier = "tier-xl"
+)
+
+type RepairAction string
+
+const (
+	RepairAction_NoAction RepairAction = "NoAction"
+	RepairAction_Reboot   RepairAction = "Reboot"
+	RepairAction_Replace  RepairAction = "Replace"
+)
+
 type ResolveConflicts string
 
 const (
 	ResolveConflicts_NONE      ResolveConflicts = "NONE"
 	ResolveConflicts_OVERWRITE ResolveConflicts = "OVERWRITE"
 	ResolveConflicts_PRESERVE  ResolveConflicts = "PRESERVE"
+)
+
+type SsoIdentityType string
+
+const (
+	SsoIdentityType_SSO_GROUP SsoIdentityType = "SSO_GROUP"
+	SsoIdentityType_SSO_USER  SsoIdentityType = "SSO_USER"
 )
 
 type SupportType string
@@ -343,6 +416,7 @@ const (
 	UpdateParamType_ClusterLogging           UpdateParamType = "ClusterLogging"
 	UpdateParamType_ComputeConfig            UpdateParamType = "ComputeConfig"
 	UpdateParamType_ConfigurationValues      UpdateParamType = "ConfigurationValues"
+	UpdateParamType_DeletionProtection       UpdateParamType = "DeletionProtection"
 	UpdateParamType_DesiredSize              UpdateParamType = "DesiredSize"
 	UpdateParamType_EncryptionConfig         UpdateParamType = "EncryptionConfig"
 	UpdateParamType_EndpointPrivateAccess    UpdateParamType = "EndpointPrivateAccess"
@@ -357,9 +431,11 @@ const (
 	UpdateParamType_MaxUnavailable           UpdateParamType = "MaxUnavailable"
 	UpdateParamType_MaxUnavailablePercentage UpdateParamType = "MaxUnavailablePercentage"
 	UpdateParamType_MinSize                  UpdateParamType = "MinSize"
+	UpdateParamType_NodeRepairConfig         UpdateParamType = "NodeRepairConfig"
 	UpdateParamType_NodeRepairEnabled        UpdateParamType = "NodeRepairEnabled"
 	UpdateParamType_PlatformVersion          UpdateParamType = "PlatformVersion"
 	UpdateParamType_PodIdentityAssociations  UpdateParamType = "PodIdentityAssociations"
+	UpdateParamType_PreviousTier             UpdateParamType = "PreviousTier"
 	UpdateParamType_PublicAccessCidrs        UpdateParamType = "PublicAccessCidrs"
 	UpdateParamType_ReleaseVersion           UpdateParamType = "ReleaseVersion"
 	UpdateParamType_RemoteNetworkConfig      UpdateParamType = "RemoteNetworkConfig"
@@ -371,6 +447,7 @@ const (
 	UpdateParamType_TaintsToAdd              UpdateParamType = "TaintsToAdd"
 	UpdateParamType_TaintsToRemove           UpdateParamType = "TaintsToRemove"
 	UpdateParamType_UpdateStrategy           UpdateParamType = "UpdateStrategy"
+	UpdateParamType_UpdatedTier              UpdateParamType = "UpdatedTier"
 	UpdateParamType_UpgradePolicy            UpdateParamType = "UpgradePolicy"
 	UpdateParamType_Version                  UpdateParamType = "Version"
 	UpdateParamType_ZonalShiftConfig         UpdateParamType = "ZonalShiftConfig"
@@ -394,6 +471,8 @@ const (
 	UpdateType_AssociateIdentityProviderConfig    UpdateType = "AssociateIdentityProviderConfig"
 	UpdateType_AutoModeUpdate                     UpdateType = "AutoModeUpdate"
 	UpdateType_ConfigUpdate                       UpdateType = "ConfigUpdate"
+	UpdateType_ControlPlaneScalingConfigUpdate    UpdateType = "ControlPlaneScalingConfigUpdate"
+	UpdateType_DeletionProtectionUpdate           UpdateType = "DeletionProtectionUpdate"
 	UpdateType_DisassociateIdentityProviderConfig UpdateType = "DisassociateIdentityProviderConfig"
 	UpdateType_EndpointAccessUpdate               UpdateType = "EndpointAccessUpdate"
 	UpdateType_LoggingUpdate                      UpdateType = "LoggingUpdate"

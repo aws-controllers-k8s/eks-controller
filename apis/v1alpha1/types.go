@@ -111,7 +111,8 @@ type AddonHealth struct {
 
 // Information about an add-on.
 type AddonInfo struct {
-	AddonName *string `json:"addonName,omitempty"`
+	AddonName        *string `json:"addonName,omitempty"`
+	DefaultNamespace *string `json:"defaultNamespace,omitempty"`
 	// Information about an Amazon EKS add-on from the Amazon Web Services Marketplace.
 	MarketplaceInformation *MarketplaceInformation `json:"marketplaceInformation,omitempty"`
 	Owner                  *string                 `json:"owner,omitempty"`
@@ -200,6 +201,77 @@ type Addon_SDK struct {
 	Tags map[string]*string `json:"tags,omitempty"`
 }
 
+// Configuration for integrating Argo CD with IAM Identity CenterIAM; Identity
+// Center. This allows you to use your organization's identity provider for
+// authentication to Argo CD.
+type ArgoCDAWSIDCConfigRequest struct {
+	IDCInstanceARN *string `json:"idcInstanceARN,omitempty"`
+	IDCRegion      *string `json:"idcRegion,omitempty"`
+}
+
+// The response object containing IAM Identity CenterIAM; Identity Center configuration
+// details for an Argo CD capability.
+type ArgoCDAWSIDCConfigResponse struct {
+	IDCInstanceARN           *string `json:"idcInstanceARN,omitempty"`
+	IDCManagedApplicationARN *string `json:"idcManagedApplicationARN,omitempty"`
+	IDCRegion                *string `json:"idcRegion,omitempty"`
+}
+
+// Configuration settings for an Argo CD capability. This includes the Kubernetes
+// namespace, IAM Identity CenterIAM; Identity Center integration, RBAC role
+// mappings, and network access configuration.
+type ArgoCDConfigRequest struct {
+	// Configuration for integrating Argo CD with IAM Identity CenterIAM; Identity
+	// Center. This allows you to use your organization's identity provider for
+	// authentication to Argo CD.
+	AWSIDC    *ArgoCDAWSIDCConfigRequest `json:"awsIDC,omitempty"`
+	Namespace *string                    `json:"namespace,omitempty"`
+	// Configuration for network access to the Argo CD capability's managed API
+	// server endpoint. When VPC endpoint IDs are specified, public access is blocked
+	// and the Argo CD server is only accessible through the specified VPC endpoints.
+	NetworkAccess    *ArgoCDNetworkAccessConfigRequest `json:"networkAccess,omitempty"`
+	RbacRoleMappings []*ArgoCDRoleMapping              `json:"rbacRoleMappings,omitempty"`
+}
+
+// The response object containing Argo CD configuration details, including the
+// server URL that you use to access the Argo CD web interface and API.
+type ArgoCDConfigResponse struct {
+	// The response object containing IAM Identity CenterIAM; Identity Center configuration
+	// details for an Argo CD capability.
+	AWSIDC    *ArgoCDAWSIDCConfigResponse `json:"awsIDC,omitempty"`
+	Namespace *string                     `json:"namespace,omitempty"`
+	// The response object containing network access configuration for the Argo
+	// CD capability's managed API server endpoint. If VPC endpoint IDs are present,
+	// public access is blocked and the Argo CD server is only accessible through
+	// the specified VPC endpoints.
+	NetworkAccess    *ArgoCDNetworkAccessConfigResponse `json:"networkAccess,omitempty"`
+	RbacRoleMappings []*ArgoCDRoleMapping               `json:"rbacRoleMappings,omitempty"`
+	ServerURL        *string                            `json:"serverURL,omitempty"`
+}
+
+// Configuration for network access to the Argo CD capability's managed API
+// server endpoint. When VPC endpoint IDs are specified, public access is blocked
+// and the Argo CD server is only accessible through the specified VPC endpoints.
+type ArgoCDNetworkAccessConfigRequest struct {
+	VPCEIDs []*string `json:"vpceIDs,omitempty"`
+}
+
+// The response object containing network access configuration for the Argo
+// CD capability's managed API server endpoint. If VPC endpoint IDs are present,
+// public access is blocked and the Argo CD server is only accessible through
+// the specified VPC endpoints.
+type ArgoCDNetworkAccessConfigResponse struct {
+	VPCEIDs []*string `json:"vpceIDs,omitempty"`
+}
+
+// A mapping between an Argo CD role and IAM Identity CenterIAM; Identity Center
+// identities. This defines which users or groups have specific permissions
+// in Argo CD.
+type ArgoCDRoleMapping struct {
+	Identities []*SsoIdentity `json:"identities,omitempty"`
+	Role       *string        `json:"role,omitempty"`
+}
+
 type AssociateAccessPolicyInput struct {
 	// The scope of an AccessPolicy that's associated to an AccessEntry.
 	AccessScope *AccessScope `json:"accessScope,omitempty"`
@@ -215,8 +287,8 @@ type AssociatedAccessPolicy struct {
 	PolicyARN    *string      `json:"policyARN,omitempty"`
 }
 
-// An Auto Scaling group that is associated with an Amazon EKS managed node
-// group.
+// An Amazon EC2 Auto Scaling group that is associated with an Amazon EKS managed
+// node group.
 type AutoScalingGroup struct {
 	Name *string `json:"name,omitempty"`
 }
@@ -228,6 +300,92 @@ type AutoScalingGroup struct {
 // see EKS Auto Mode block storage capability in the Amazon EKS User Guide.
 type BlockStorage struct {
 	Enabled *bool `json:"enabled,omitempty"`
+}
+
+// Configuration settings for a capability. The structure of this object varies
+// depending on the capability type.
+type CapabilityConfigurationRequest struct {
+	// Configuration settings for an Argo CD capability. This includes the Kubernetes
+	// namespace, IAM Identity CenterIAM; Identity Center integration, RBAC role
+	// mappings, and network access configuration.
+	ArgoCD *ArgoCDConfigRequest `json:"argoCD,omitempty"`
+}
+
+// The response object containing capability configuration details.
+type CapabilityConfigurationResponse struct {
+	// The response object containing Argo CD configuration details, including the
+	// server URL that you use to access the Argo CD web interface and API.
+	ArgoCD *ArgoCDConfigResponse `json:"argoCD,omitempty"`
+}
+
+// Health information for a capability, including any issues that may be affecting
+// its operation.
+type CapabilityHealth struct {
+	Issues []*CapabilityIssue `json:"issues,omitempty"`
+}
+
+// An issue affecting a capability's health or operation.
+type CapabilityIssue struct {
+	Code    *string `json:"code,omitempty"`
+	Message *string `json:"message,omitempty"`
+}
+
+// A summary of a capability, containing basic information without the full
+// configuration details. This is returned by the ListCapabilities operation.
+type CapabilitySummary struct {
+	ARN            *string      `json:"arn,omitempty"`
+	CapabilityName *string      `json:"capabilityName,omitempty"`
+	CreatedAt      *metav1.Time `json:"createdAt,omitempty"`
+	ModifiedAt     *metav1.Time `json:"modifiedAt,omitempty"`
+	Status         *string      `json:"status,omitempty"`
+	Type           *string      `json:"type_,omitempty"`
+	Version        *string      `json:"version,omitempty"`
+}
+
+// An object representing a managed capability in an Amazon EKS cluster. This
+// includes all configuration, status, and health information for the capability.
+type Capability_SDK struct {
+	ARN            *string `json:"arn,omitempty"`
+	CapabilityName *string `json:"capabilityName,omitempty"`
+	ClusterName    *string `json:"clusterName,omitempty"`
+	// The response object containing capability configuration details.
+	Configuration           *CapabilityConfigurationResponse `json:"configuration,omitempty"`
+	CreatedAt               *metav1.Time                     `json:"createdAt,omitempty"`
+	DeletePropagationPolicy *string                          `json:"deletePropagationPolicy,omitempty"`
+	// Health information for a capability, including any issues that may be affecting
+	// its operation.
+	Health     *CapabilityHealth `json:"health,omitempty"`
+	ModifiedAt *metav1.Time      `json:"modifiedAt,omitempty"`
+	RoleARN    *string           `json:"roleARN,omitempty"`
+	Status     *string           `json:"status,omitempty"`
+	// The metadata that you apply to a resource to help you categorize and organize
+	// them. Each tag consists of a key and an optional value. You define them.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource – 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length – 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length – 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for Amazon Web
+	//    Services use. You cannot edit or delete tag keys or values with this prefix.
+	//    Tags with this prefix do not count against your tags per resource limit.
+	Tags    map[string]*string `json:"tags,omitempty"`
+	Type    *string            `json:"type_,omitempty"`
+	Version *string            `json:"version,omitempty"`
 }
 
 // An object representing the certificate-authority-data for your cluster.
@@ -668,7 +826,20 @@ type MarketplaceInformation struct {
 
 // The node auto repair configuration for the node group.
 type NodeRepairConfig struct {
-	Enabled *bool `json:"enabled,omitempty"`
+	Enabled                             *bool  `json:"enabled,omitempty"`
+	MaxParallelNodesRepairedCount       *int64 `json:"maxParallelNodesRepairedCount,omitempty"`
+	MaxParallelNodesRepairedPercentage  *int64 `json:"maxParallelNodesRepairedPercentage,omitempty"`
+	MaxUnhealthyNodeThresholdCount      *int64 `json:"maxUnhealthyNodeThresholdCount,omitempty"`
+	MaxUnhealthyNodeThresholdPercentage *int64 `json:"maxUnhealthyNodeThresholdPercentage,omitempty"`
+}
+
+// Specify granular overrides for specific repair actions. These overrides control
+// the repair action and the repair delay time before a node is considered eligible
+// for repair. If you use this, you must specify all the values.
+type NodeRepairConfigOverrides struct {
+	MinRepairWaitTimeMins   *int64  `json:"minRepairWaitTimeMins,omitempty"`
+	NodeMonitoringCondition *string `json:"nodeMonitoringCondition,omitempty"`
+	NodeUnhealthyReason     *string `json:"nodeUnhealthyReason,omitempty"`
 }
 
 // An object representing the health status of the node group.
@@ -683,10 +854,10 @@ type NodegroupResources struct {
 	RemoteAccessSecurityGroup *string             `json:"remoteAccessSecurityGroup,omitempty"`
 }
 
-// An object representing the scaling configuration details for the Auto Scaling
-// group that is associated with your node group. When creating a node group,
-// you must specify all or none of the properties. When updating a node group,
-// you can specify any or none of the properties.
+// An object representing the scaling configuration details for the Amazon EC2
+// Auto Scaling group that is associated with your node group. When creating
+// a node group, you must specify all or none of the properties. When updating
+// a node group, you can specify any or none of the properties.
 type NodegroupScalingConfig struct {
 	DesiredSize *int64 `json:"desiredSize,omitempty"`
 	MaxSize     *int64 `json:"maxSize,omitempty"`
@@ -739,10 +910,10 @@ type Nodegroup_SDK struct {
 	// An object representing the resources associated with the node group, such
 	// as Auto Scaling groups and security groups for remote access.
 	Resources *NodegroupResources `json:"resources,omitempty"`
-	// An object representing the scaling configuration details for the Auto Scaling
-	// group that is associated with your node group. When creating a node group,
-	// you must specify all or none of the properties. When updating a node group,
-	// you can specify any or none of the properties.
+	// An object representing the scaling configuration details for the Amazon EC2
+	// Auto Scaling group that is associated with your node group. When creating
+	// a node group, you must specify all or none of the properties. When updating
+	// a node group, you can specify any or none of the properties.
 	ScalingConfig *NodegroupScalingConfig `json:"scalingConfig,omitempty"`
 	Status        *string                 `json:"status,omitempty"`
 	Subnets       []*string               `json:"subnets,omitempty"`
@@ -1023,6 +1194,13 @@ type RemotePodNetwork struct {
 	CIDRs []*string `json:"cidrs,omitempty"`
 }
 
+// An IAM Identity CenterIAM; Identity Center identity (user or group) that
+// can be assigned permissions in a capability.
+type SsoIdentity struct {
+	ID   *string `json:"id,omitempty"`
+	Type *string `json:"type,omitempty"`
+}
+
 // Request to update the configuration of the storage capability of your EKS
 // Auto Mode cluster. For example, enable the capability. For more information,
 // see EKS Auto Mode block storage capability in the Amazon EKS User Guide.
@@ -1070,6 +1248,26 @@ type UpdateAccessConfigRequest struct {
 	AuthenticationMode *string `json:"authenticationMode,omitempty"`
 }
 
+// Configuration updates for an Argo CD capability. You only need to specify
+// the fields you want to update.
+type UpdateArgoCDConfig struct {
+	// Configuration for network access to the Argo CD capability's managed API
+	// server endpoint. When VPC endpoint IDs are specified, public access is blocked
+	// and the Argo CD server is only accessible through the specified VPC endpoints.
+	NetworkAccess *ArgoCDNetworkAccessConfigRequest `json:"networkAccess,omitempty"`
+	// Updates to RBAC role mappings for an Argo CD capability. You can add, update,
+	// or remove role mappings in a single operation.
+	RbacRoleMappings *UpdateRoleMappings `json:"rbacRoleMappings,omitempty"`
+}
+
+// Configuration updates for a capability. The structure varies depending on
+// the capability type.
+type UpdateCapabilityConfiguration struct {
+	// Configuration updates for an Argo CD capability. You only need to specify
+	// the fields you want to update.
+	ArgoCD *UpdateArgoCDConfig `json:"argoCD,omitempty"`
+}
+
 // An object representing a Kubernetes label change for a managed node group.
 type UpdateLabelsPayload struct {
 	AddOrUpdateLabels map[string]*string `json:"addOrUpdateLabels,omitempty"`
@@ -1079,6 +1277,13 @@ type UpdateLabelsPayload struct {
 type UpdateParam struct {
 	Type  *string `json:"type_,omitempty"`
 	Value *string `json:"value,omitempty"`
+}
+
+// Updates to RBAC role mappings for an Argo CD capability. You can add, update,
+// or remove role mappings in a single operation.
+type UpdateRoleMappings struct {
+	AddOrUpdateRoleMappings []*ArgoCDRoleMapping `json:"addOrUpdateRoleMappings,omitempty"`
+	RemoveRoleMappings      []*ArgoCDRoleMapping `json:"removeRoleMappings,omitempty"`
 }
 
 // An object representing the details of an update to a taints payload. For

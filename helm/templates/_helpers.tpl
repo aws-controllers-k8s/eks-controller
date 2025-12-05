@@ -84,6 +84,7 @@ rules:
   resources:
   - accessentries
   - addons
+  - capabilities
   - clusters
   - fargateprofiles
   - identityproviderconfigs
@@ -102,6 +103,7 @@ rules:
   resources:
   - accessentries/status
   - addons/status
+  - capabilities/status
   - clusters/status
   - fargateprofiles/status
   - identityproviderconfigs/status

@@ -1,0 +1,1 @@
+	setConfiguration(input, desired, latest)
