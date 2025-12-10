@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- eks.services.k8s.aws_accessentries.yaml
+- eks.services.k8s.aws_addons.yaml
+- eks.services.k8s.aws_capabilities.yaml
+- eks.services.k8s.aws_clusters.yaml
+- eks.services.k8s.aws_fargateprofiles.yaml
+- eks.services.k8s.aws_identityproviderconfigs.yaml
+- eks.services.k8s.aws_nodegroups.yaml
+- eks.services.k8s.aws_podidentityassociations.yaml
+- services.k8s.aws_fieldexports.yaml
+- services.k8s.aws_iamroleselectors.yaml
