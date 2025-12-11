@@ -13,6 +13,44 @@
 
 package pod_identity_association
 
-import "github.com/aws-controllers-k8s/eks-controller/pkg/tags"
+import (
+	"context"
+
+	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
+	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
+	svcsdk "github.com/aws/aws-sdk-go-v2/service/eks"
+)
 
 var syncTags = tags.SyncTags
+
+func (rm *resourceManager) getAssociationID(ctx context.Context, r *resource) (id *string, err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.getSecretID")
+	defer func() {
+		exit(err)
+	}()
+
+	// ClusterName is a required field for ListPodIdentityAssociations operation
+	// we treat an undefined ClusterName as not found.
+	if r.ko.Spec.ClusterName == nil {
+		return nil, nil
+	}
+
+	resp, err := rm.sdkapi.ListPodIdentityAssociations(ctx, &svcsdk.ListPodIdentityAssociationsInput{
+		ClusterName:    r.ko.Spec.ClusterName,
+		Namespace:      r.ko.Spec.Namespace,
+		ServiceAccount: r.ko.Spec.ServiceAccount,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// if more than one are returned, we don't want to manage them
+	// and treat it as not found
+	if len(resp.Associations) != 1 {
+		return nil, nil
+	}
+
+	return resp.Associations[0].AssociationId, nil
+
+}
