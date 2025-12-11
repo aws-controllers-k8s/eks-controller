@@ -1172,7 +1172,6 @@ func (rm *resourceManager) terminalAWSError(err error) bool {
 		"OptInRequired",
 		"InvalidParameterCombination",
 		"InvalidParameterValue",
-		"InvalidParameterException",
 		"InvalidQueryParameter",
 		"MalformedQueryString",
 		"MissingAction",
