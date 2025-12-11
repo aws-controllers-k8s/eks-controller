@@ -190,7 +190,6 @@ resources:
         - OptInRequired
         - InvalidParameterCombination
         - InvalidParameterValue
-        - InvalidParameterException
         - InvalidQueryParameter
         - MalformedQueryString
         - MissingAction
