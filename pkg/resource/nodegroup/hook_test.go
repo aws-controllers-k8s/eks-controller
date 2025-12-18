@@ -346,7 +346,7 @@ func Test_resourceManager_newUpdateScalingConfigPayload_ManagedByExternalAutosca
 				desired: newNodegroupScalingConfigManagedByExternalAutoscaler(20, 15, 20),
 				latest:  newNodegroupScalingConfigManagedByExternalAutoscaler(10, 10, 10),
 			},
-			want:    newUpdateScalingConfigPayload(10, 15, 20),
+			want:    newUpdateScalingConfigPayload(20, 15, 20),
 			wantErr: false,
 		},
 		{
@@ -355,7 +355,7 @@ func Test_resourceManager_newUpdateScalingConfigPayload_ManagedByExternalAutosca
 				desired: newNodegroupScalingConfigManagedByExternalAutoscaler(10, 15, 20),
 				latest:  newNodegroupScalingConfigManagedByExternalAutoscaler(10, 10, 10),
 			},
-			want:    newUpdateScalingConfigPayload(10, 15, 20),
+			want:    newUpdateScalingConfigPayload(20, 15, 20),
 			wantErr: false,
 		},
 		{
