@@ -17,16 +17,15 @@ package addon
 
 import (
 	"bytes"
-	"reflect"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	acktags "github.com/aws-controllers-k8s/runtime/pkg/tags"
+	"k8s.io/apimachinery/pkg/api/equality"
 )
 
 // Hack to avoid import errors during build...
 var (
 	_ = &bytes.Buffer{}
-	_ = &reflect.Method{}
 	_ = &acktags.Tags{}
 )
 
@@ -65,7 +64,7 @@ func newResourceDelta(
 			delta.Add("Spec.ClusterName", a.ko.Spec.ClusterName, b.ko.Spec.ClusterName)
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef) {
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef) {
 		delta.Add("Spec.ClusterRef", a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef)
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.ConfigurationValues, b.ko.Spec.ConfigurationValues) {
@@ -96,7 +95,7 @@ func newResourceDelta(
 			delta.Add("Spec.ServiceAccountRoleARN", a.ko.Spec.ServiceAccountRoleARN, b.ko.Spec.ServiceAccountRoleARN)
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.ServiceAccountRoleRef, b.ko.Spec.ServiceAccountRoleRef) {
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.ServiceAccountRoleRef, b.ko.Spec.ServiceAccountRoleRef) {
 		delta.Add("Spec.ServiceAccountRoleRef", a.ko.Spec.ServiceAccountRoleRef, b.ko.Spec.ServiceAccountRoleRef)
 	}
 	desiredACKTags, _ := convertToOrderedACKTags(a.ko.Spec.Tags)

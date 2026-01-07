@@ -17,16 +17,15 @@ package cluster
 
 import (
 	"bytes"
-	"reflect"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	acktags "github.com/aws-controllers-k8s/runtime/pkg/tags"
+	"k8s.io/apimachinery/pkg/api/equality"
 )
 
 // Hack to avoid import errors during build...
 var (
 	_ = &bytes.Buffer{}
-	_ = &reflect.Method{}
 	_ = &acktags.Tags{}
 )
 
@@ -90,7 +89,7 @@ func newResourceDelta(
 	if len(a.ko.Spec.EncryptionConfig) != len(b.ko.Spec.EncryptionConfig) {
 		delta.Add("Spec.EncryptionConfig", a.ko.Spec.EncryptionConfig, b.ko.Spec.EncryptionConfig)
 	} else if len(a.ko.Spec.EncryptionConfig) > 0 {
-		if !reflect.DeepEqual(a.ko.Spec.EncryptionConfig, b.ko.Spec.EncryptionConfig) {
+		if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.EncryptionConfig, b.ko.Spec.EncryptionConfig) {
 			delta.Add("Spec.EncryptionConfig", a.ko.Spec.EncryptionConfig, b.ko.Spec.EncryptionConfig)
 		}
 	}
@@ -129,7 +128,7 @@ func newResourceDelta(
 		if len(a.ko.Spec.Logging.ClusterLogging) != len(b.ko.Spec.Logging.ClusterLogging) {
 			delta.Add("Spec.Logging.ClusterLogging", a.ko.Spec.Logging.ClusterLogging, b.ko.Spec.Logging.ClusterLogging)
 		} else if len(a.ko.Spec.Logging.ClusterLogging) > 0 {
-			if !reflect.DeepEqual(a.ko.Spec.Logging.ClusterLogging, b.ko.Spec.Logging.ClusterLogging) {
+			if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.Logging.ClusterLogging, b.ko.Spec.Logging.ClusterLogging) {
 				delta.Add("Spec.Logging.ClusterLogging", a.ko.Spec.Logging.ClusterLogging, b.ko.Spec.Logging.ClusterLogging)
 			}
 		}
@@ -176,14 +175,14 @@ func newResourceDelta(
 		if len(a.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks) != len(b.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks) {
 			delta.Add("Spec.RemoteNetworkConfig.RemoteNodeNetworks", a.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks, b.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks)
 		} else if len(a.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks) > 0 {
-			if !reflect.DeepEqual(a.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks, b.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks) {
+			if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks, b.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks) {
 				delta.Add("Spec.RemoteNetworkConfig.RemoteNodeNetworks", a.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks, b.ko.Spec.RemoteNetworkConfig.RemoteNodeNetworks)
 			}
 		}
 		if len(a.ko.Spec.RemoteNetworkConfig.RemotePodNetworks) != len(b.ko.Spec.RemoteNetworkConfig.RemotePodNetworks) {
 			delta.Add("Spec.RemoteNetworkConfig.RemotePodNetworks", a.ko.Spec.RemoteNetworkConfig.RemotePodNetworks, b.ko.Spec.RemoteNetworkConfig.RemotePodNetworks)
 		} else if len(a.ko.Spec.RemoteNetworkConfig.RemotePodNetworks) > 0 {
-			if !reflect.DeepEqual(a.ko.Spec.RemoteNetworkConfig.RemotePodNetworks, b.ko.Spec.RemoteNetworkConfig.RemotePodNetworks) {
+			if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.RemoteNetworkConfig.RemotePodNetworks, b.ko.Spec.RemoteNetworkConfig.RemotePodNetworks) {
 				delta.Add("Spec.RemoteNetworkConfig.RemotePodNetworks", a.ko.Spec.RemoteNetworkConfig.RemotePodNetworks, b.ko.Spec.RemoteNetworkConfig.RemotePodNetworks)
 			}
 		}
@@ -234,7 +233,7 @@ func newResourceDelta(
 			delta.Add("Spec.RoleARN", a.ko.Spec.RoleARN, b.ko.Spec.RoleARN)
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.RoleRef, b.ko.Spec.RoleRef) {
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.RoleRef, b.ko.Spec.RoleRef) {
 		delta.Add("Spec.RoleRef", a.ko.Spec.RoleRef, b.ko.Spec.RoleRef)
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.StorageConfig, b.ko.Spec.StorageConfig) {
