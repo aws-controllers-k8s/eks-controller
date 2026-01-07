@@ -17,16 +17,15 @@ package fargate_profile
 
 import (
 	"bytes"
-	"reflect"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	acktags "github.com/aws-controllers-k8s/runtime/pkg/tags"
+	"k8s.io/apimachinery/pkg/api/equality"
 )
 
 // Hack to avoid import errors during build...
 var (
 	_ = &bytes.Buffer{}
-	_ = &reflect.Method{}
 	_ = &acktags.Tags{}
 )
 
@@ -58,7 +57,7 @@ func newResourceDelta(
 			delta.Add("Spec.ClusterName", a.ko.Spec.ClusterName, b.ko.Spec.ClusterName)
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef) {
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef) {
 		delta.Add("Spec.ClusterRef", a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef)
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Name, b.ko.Spec.Name) {
@@ -75,17 +74,17 @@ func newResourceDelta(
 			delta.Add("Spec.PodExecutionRoleARN", a.ko.Spec.PodExecutionRoleARN, b.ko.Spec.PodExecutionRoleARN)
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.PodExecutionRoleRef, b.ko.Spec.PodExecutionRoleRef) {
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.PodExecutionRoleRef, b.ko.Spec.PodExecutionRoleRef) {
 		delta.Add("Spec.PodExecutionRoleRef", a.ko.Spec.PodExecutionRoleRef, b.ko.Spec.PodExecutionRoleRef)
 	}
 	if len(a.ko.Spec.Selectors) != len(b.ko.Spec.Selectors) {
 		delta.Add("Spec.Selectors", a.ko.Spec.Selectors, b.ko.Spec.Selectors)
 	} else if len(a.ko.Spec.Selectors) > 0 {
-		if !reflect.DeepEqual(a.ko.Spec.Selectors, b.ko.Spec.Selectors) {
+		if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.Selectors, b.ko.Spec.Selectors) {
 			delta.Add("Spec.Selectors", a.ko.Spec.Selectors, b.ko.Spec.Selectors)
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs) {
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs) {
 		delta.Add("Spec.SubnetRefs", a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs)
 	}
 	if len(a.ko.Spec.Subnets) != len(b.ko.Spec.Subnets) {
