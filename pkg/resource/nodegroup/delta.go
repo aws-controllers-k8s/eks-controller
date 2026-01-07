@@ -17,16 +17,15 @@ package nodegroup
 
 import (
 	"bytes"
-	"reflect"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	acktags "github.com/aws-controllers-k8s/runtime/pkg/tags"
+	"k8s.io/apimachinery/pkg/api/equality"
 )
 
 // Hack to avoid import errors during build...
 var (
 	_ = &bytes.Buffer{}
-	_ = &reflect.Method{}
 	_ = &acktags.Tags{}
 )
 
@@ -72,7 +71,7 @@ func newResourceDelta(
 			delta.Add("Spec.ClusterName", a.ko.Spec.ClusterName, b.ko.Spec.ClusterName)
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef) {
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef) {
 		delta.Add("Spec.ClusterRef", a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef)
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.DiskSize, b.ko.Spec.DiskSize) {
@@ -135,7 +134,7 @@ func newResourceDelta(
 			delta.Add("Spec.NodeRole", a.ko.Spec.NodeRole, b.ko.Spec.NodeRole)
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.NodeRoleRef, b.ko.Spec.NodeRoleRef) {
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.NodeRoleRef, b.ko.Spec.NodeRoleRef) {
 		delta.Add("Spec.NodeRoleRef", a.ko.Spec.NodeRoleRef, b.ko.Spec.NodeRoleRef)
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.RemoteAccess, b.ko.Spec.RemoteAccess) {
@@ -181,7 +180,7 @@ func newResourceDelta(
 			}
 		}
 	}
-	if !reflect.DeepEqual(a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs) {
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs) {
 		delta.Add("Spec.SubnetRefs", a.ko.Spec.SubnetRefs, b.ko.Spec.SubnetRefs)
 	}
 	if len(a.ko.Spec.Subnets) != len(b.ko.Spec.Subnets) {
