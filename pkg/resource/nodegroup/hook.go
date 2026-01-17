@@ -483,11 +483,16 @@ func newUpdateNodegroupVersionPayload(
 	if delta.DifferentAt("Spec.LaunchTemplate") {
 		// We need to be careful here to not access a nil pointer
 		if desired.ko.Spec.LaunchTemplate != nil {
-			input.LaunchTemplate = &svcsdktypes.LaunchTemplateSpecification{
-				Id:      desired.ko.Spec.LaunchTemplate.ID,
-				Name:    desired.ko.Spec.LaunchTemplate.Name,
-				Version: desired.ko.Spec.LaunchTemplate.Version,
+			input.LaunchTemplate = &svcsdktypes.LaunchTemplateSpecification{}
+
+			// set only one out of ID or Name (priority to ID)
+			if desired.ko.Spec.LaunchTemplate.ID != nil {
+				input.LaunchTemplate.Id = desired.ko.Spec.LaunchTemplate.ID
+			} else if desired.ko.Spec.LaunchTemplate.Name != nil {
+				input.LaunchTemplate.Name = desired.ko.Spec.LaunchTemplate.Name
 			}
+
+			input.LaunchTemplate.Version = desired.ko.Spec.LaunchTemplate.Version
 		}
 	}
 
