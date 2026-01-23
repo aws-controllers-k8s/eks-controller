@@ -357,11 +357,7 @@ func (rm *resourceManager) customUpdate(
 			// For custom AMI with LaunchTemplate, we cannot update Version or ReleaseVersion via API
 			// Only proceed with update if LaunchTemplate itself changed
 			if !delta.DifferentAt("Spec.LaunchTemplate") {
-				// Version/ReleaseVersion cannot be updated via the API for custom AMI with LaunchTemplate
-				// but we still want to keep them in sync with AWS
-				// hence storing the values from latest into spec
 				rm.preserveVersionFields(updatedRes, latest)
-				
 				// No update needed, just return
 				rm.setStatusDefaults(updatedRes.ko)
 				return updatedRes, nil
@@ -395,6 +391,7 @@ func isAMITypeBottlerocket(amiType *string) bool {
 
 // preserveVersionFields copies Version and ReleaseVersion from latest to updated resource
 // This is needed when version updates are skipped (e.g., custom AMI with LaunchTemplate)
+// And we still need the Version,ReleaseVersion fields to be in sync with AWS
 func (rm *resourceManager) preserveVersionFields(updated *resource, latest *resource) {
 	if latest.ko.Spec.Version != nil {
 		updated.ko.Spec.Version = latest.ko.Spec.Version
