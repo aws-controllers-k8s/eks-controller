@@ -331,7 +331,7 @@ func (rm *resourceManager) customUpdate(
 		if desired.ko.Spec.Version != nil && desired.ko.Spec.ReleaseVersion != nil &&
 			*desired.ko.Spec.Version != "" && *desired.ko.Spec.ReleaseVersion != "" {
 
-			if !isAMITypeBottlerocket(desired.ko.Spec.AMIType) {
+			if !isAMITypeBottlerocket(desired.ko.Spec.AMIType) && !isAMITypeCustom(desired) {
 				// First parse the user provided release version and desired release
 				desiredReleaseVersionTrimmed, err := util.GetEKSVersionFromReleaseVersion(*desired.ko.Spec.ReleaseVersion)
 				if err != nil {
@@ -353,10 +353,11 @@ func (rm *resourceManager) customUpdate(
 		}
 
 		// Check if this is a custom AMI with LaunchTemplate scenario
-		if isCustomAMIWithLaunchTemplate(desired) {
+		if isAMITypeCustom(desired) {
 			// For custom AMI with LaunchTemplate, we cannot update Version or ReleaseVersion via API
 			// Only proceed with update if LaunchTemplate itself changed
 			if !delta.DifferentAt("Spec.LaunchTemplate") {
+				// Need this function to have the spec in sync with AWS
 				rm.preserveVersionFields(updatedRes, latest)
 				// No update needed, just return
 				rm.setStatusDefaults(updatedRes.ko)
@@ -401,8 +402,8 @@ func (rm *resourceManager) preserveVersionFields(updated *resource, latest *reso
 	}
 }
 
-// isCustomAMIWithLaunchTemplate checks if the nodegroup uses a custom AMI with LaunchTemplate
-func isCustomAMIWithLaunchTemplate(r *resource) bool {
+// isAMITypeCustom checks if the nodegroup uses a custom AMI
+func isAMITypeCustom(r *resource) bool {
 	return r.ko.Spec.LaunchTemplate != nil &&
 		r.ko.Spec.AMIType != nil &&
 		*r.ko.Spec.AMIType == string(svcapitypes.AMITypes_CUSTOM)
@@ -529,7 +530,8 @@ func newUpdateNodegroupVersionPayload(
 
 	// If LaunchTemplate is being used with a custom AMI,
 	// we cannot set Version or ReleaseVersion in the update request as per the EKS API specification.
-	if isCustomAMIWithLaunchTemplate(desired) {
+	// https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateNodegroupVersion.html#API_UpdateNodegroupVersion_RequestBody
+	if isAMITypeCustom(desired) {
 		input.ReleaseVersion = nil
 		input.Version = nil
 	}
