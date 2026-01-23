@@ -352,6 +352,22 @@ func (rm *resourceManager) customUpdate(
 			}
 		}
 
+		// Check if this is a custom AMI with LaunchTemplate scenario
+		if isCustomAMIWithLaunchTemplate(desired) {
+			// For custom AMI with LaunchTemplate, we cannot update Version or ReleaseVersion via API
+			// Only proceed with update if LaunchTemplate itself changed
+			if !delta.DifferentAt("Spec.LaunchTemplate") {
+				// Version/ReleaseVersion cannot be updated via the API for custom AMI with LaunchTemplate
+				// but we still want to keep them in sync with AWS
+				// hence storing the values from latest into spec
+				rm.preserveVersionFields(updatedRes, latest)
+				
+				// No update needed, just return
+				rm.setStatusDefaults(updatedRes.ko)
+				return updatedRes, nil
+			}
+		}
+
 		if err := rm.updateVersion(ctx, delta, desired); err != nil {
 			return nil, err
 		}
@@ -375,6 +391,24 @@ func isAMITypeBottlerocket(amiType *string) bool {
 	}
 
 	return false
+}
+
+// preserveVersionFields copies Version and ReleaseVersion from latest to updated resource
+// This is needed when version updates are skipped (e.g., custom AMI with LaunchTemplate)
+func (rm *resourceManager) preserveVersionFields(updated *resource, latest *resource) {
+	if latest.ko.Spec.Version != nil {
+		updated.ko.Spec.Version = latest.ko.Spec.Version
+	}
+	if latest.ko.Spec.ReleaseVersion != nil {
+		updated.ko.Spec.ReleaseVersion = latest.ko.Spec.ReleaseVersion
+	}
+}
+
+// isCustomAMIWithLaunchTemplate checks if the nodegroup uses a custom AMI with LaunchTemplate
+func isCustomAMIWithLaunchTemplate(r *resource) bool {
+	return r.ko.Spec.LaunchTemplate != nil &&
+		r.ko.Spec.AMIType != nil &&
+		*r.ko.Spec.AMIType == string(svcapitypes.AMITypes_CUSTOM)
 }
 
 // newUpdateLabelsPayload determines which of the labels should be added or
@@ -494,6 +528,13 @@ func newUpdateNodegroupVersionPayload(
 
 			input.LaunchTemplate.Version = desired.ko.Spec.LaunchTemplate.Version
 		}
+	}
+
+	// If LaunchTemplate is being used with a custom AMI,
+	// we cannot set Version or ReleaseVersion in the update request as per the EKS API specification.
+	if isCustomAMIWithLaunchTemplate(desired) {
+		input.ReleaseVersion = nil
+		input.Version = nil
 	}
 
 	// If the force annotation is set, we set the force flag on the input
