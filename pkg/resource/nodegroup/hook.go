@@ -517,11 +517,23 @@ func newUpdateNodegroupVersionPayload(
 		if desired.ko.Spec.LaunchTemplate != nil {
 			input.LaunchTemplate = &svcsdktypes.LaunchTemplateSpecification{}
 
-			// set only one out of ID or Name (priority to ID)
-			if desired.ko.Spec.LaunchTemplate.ID != nil {
+			if delta.DifferentAt("Spec.LaunchTemplate.ID") {
 				input.LaunchTemplate.Id = desired.ko.Spec.LaunchTemplate.ID
-			} else if desired.ko.Spec.LaunchTemplate.Name != nil {
+			}
+
+			if delta.DifferentAt("Spec.LaunchTemplate.Name") {
 				input.LaunchTemplate.Name = desired.ko.Spec.LaunchTemplate.Name
+			}
+
+			// If neither the Name nor ID fields have changed, we need to
+			// set the one of ID/Name field in the payload
+			// preference is given to ID over Name
+			if !delta.DifferentAt("Spec.LaunchTemplate.Name") && !delta.DifferentAt("Spec.LaunchTemplate.ID") {
+				if desired.ko.Spec.LaunchTemplate.ID != nil {
+					input.LaunchTemplate.Id = desired.ko.Spec.LaunchTemplate.ID
+				} else if desired.ko.Spec.LaunchTemplate.Name != nil {
+					input.LaunchTemplate.Name = desired.ko.Spec.LaunchTemplate.Name
+				}
 			}
 
 			input.LaunchTemplate.Version = desired.ko.Spec.LaunchTemplate.Version
