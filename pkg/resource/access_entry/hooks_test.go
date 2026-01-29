@@ -188,6 +188,66 @@ func Test_computeAccessPoliciesDelta(t *testing.T) {
 				aws.String("policy-arn-10"),
 			},
 		},
+		{
+			name: "nil policyARN in desired - should be added to toAdd",
+			args: args{
+				desired: []*v1alpha1.AssociateAccessPolicyInput{
+					{PolicyARN: nil, AccessScope: &v1alpha1.AccessScope{Type: aws.String("cluster")}},
+				},
+				latest: nil,
+			},
+			wantToAdd: []*v1alpha1.AssociateAccessPolicyInput{
+				{PolicyARN: nil, AccessScope: &v1alpha1.AccessScope{Type: aws.String("cluster")}},
+			},
+			wantToDelete: nil,
+		},
+		{
+			name: "nil policyARN in desired with valid policies",
+			args: args{
+				desired: []*v1alpha1.AssociateAccessPolicyInput{
+					{PolicyARN: aws.String("policy-arn-1"), AccessScope: &v1alpha1.AccessScope{Type: aws.String("cluster")}},
+					{PolicyARN: nil, AccessScope: &v1alpha1.AccessScope{Type: aws.String("cluster")}},
+				},
+				latest: nil,
+			},
+			wantToAdd: []*v1alpha1.AssociateAccessPolicyInput{
+				{PolicyARN: aws.String("policy-arn-1"), AccessScope: &v1alpha1.AccessScope{Type: aws.String("cluster")}},
+				{PolicyARN: nil, AccessScope: &v1alpha1.AccessScope{Type: aws.String("cluster")}},
+			},
+			wantToDelete: nil,
+		},
+		{
+			name: "nil policyARN in latest - should not panic",
+			args: args{
+				desired: []*v1alpha1.AssociateAccessPolicyInput{
+					{PolicyARN: aws.String("policy-arn-1"), AccessScope: &v1alpha1.AccessScope{Type: aws.String("cluster")}},
+				},
+				latest: []*v1alpha1.AssociateAccessPolicyInput{
+					{PolicyARN: nil, AccessScope: &v1alpha1.AccessScope{Type: aws.String("cluster")}},
+				},
+			},
+			wantToAdd: []*v1alpha1.AssociateAccessPolicyInput{
+				{PolicyARN: aws.String("policy-arn-1"), AccessScope: &v1alpha1.AccessScope{Type: aws.String("cluster")}},
+			},
+			wantToDelete: nil,
+		},
+		{
+			name: "nil policyARN in both desired and latest",
+			args: args{
+				desired: []*v1alpha1.AssociateAccessPolicyInput{
+					{PolicyARN: nil, AccessScope: &v1alpha1.AccessScope{Type: aws.String("cluster")}},
+					{PolicyARN: aws.String("policy-arn-1"), AccessScope: &v1alpha1.AccessScope{Type: aws.String("cluster")}},
+				},
+				latest: []*v1alpha1.AssociateAccessPolicyInput{
+					{PolicyARN: nil, AccessScope: &v1alpha1.AccessScope{Type: aws.String("namespace")}},
+					{PolicyARN: aws.String("policy-arn-1"), AccessScope: &v1alpha1.AccessScope{Type: aws.String("cluster")}},
+				},
+			},
+			wantToAdd: []*v1alpha1.AssociateAccessPolicyInput{
+				{PolicyARN: nil, AccessScope: &v1alpha1.AccessScope{Type: aws.String("cluster")}},
+			},
+			wantToDelete: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
