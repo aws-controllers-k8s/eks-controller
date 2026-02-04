@@ -51,6 +51,26 @@ func (rm *resourceManager) getAssociationID(ctx context.Context, r *resource) (i
 		return nil, nil
 	}
 
+	// expect Namespace, ClusterName, and ServiceAccount defined by the user
+	// to match the returned association
+	pia := resp.Associations[0]
+	if !isPtrEqual(pia.ClusterName, r.ko.Spec.ClusterName) ||
+		!isPtrEqual(pia.Namespace, r.ko.Spec.Namespace) ||
+		!isPtrEqual(pia.ServiceAccount, r.ko.Spec.ServiceAccount) {
+		return nil, nil
+	}
+
 	return resp.Associations[0].AssociationId, nil
 
+}
+
+func isPtrEqual(a, b *string) bool {
+	// we expect both to be non-nil, return false otherwise
+	if a == nil {
+		return false
+	}
+	if b == nil {
+		return false
+	}
+	return *a == *b
 }
