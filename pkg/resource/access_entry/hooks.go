@@ -23,7 +23,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	svcsdk "github.com/aws/aws-sdk-go-v2/service/eks"
 	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
-	smithy "github.com/aws/smithy-go"
 
 	"github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
@@ -100,6 +99,15 @@ func (rm *resourceManager) syncAccessPolicies(ctx context.Context, desired, late
 	existingPolicies := latest.ko.Spec.AccessPolicies
 	desiredPolicies := desired.ko.Spec.AccessPolicies
 
+	// Validate that add desired policies have a non-nil policy arn before preceding to
+	// avoid partial updates to access policies when an invalid entry is present.
+	for _, desiredPolicy := range desiredPolicies {
+		if desiredPolicy.PolicyARN == nil {
+			return ackerr.NewTerminalError(errors.New("All Access Policy entries must specify a Policy ARN."))
+		}
+
+	}
+
 	toAdd, toDelete := computeAccessPoliciesDelta(desiredPolicies, existingPolicies)
 
 	// remove policies first (to avoid conflicts)
@@ -110,16 +118,12 @@ func (rm *resourceManager) syncAccessPolicies(ctx context.Context, desired, late
 		}
 	}
 	for _, p := range toAdd {
-		policyARN := "<nil>"
+		policyARN := ""
 		if p.PolicyARN != nil {
 			policyARN = *p.PolicyARN
 		}
 		rlog.Debug("associating access policy to access entry", "policy_arn", policyARN)
 		if err = rm.associateAccessPolicy(ctx, desired, p); err != nil {
-			var invalidParamsErr smithy.InvalidParamsError
-			if errors.As(err, &invalidParamsErr) {
-				return ackerr.NewTerminalError(invalidParamsErr)
-			}
 			return err
 		}
 	}
