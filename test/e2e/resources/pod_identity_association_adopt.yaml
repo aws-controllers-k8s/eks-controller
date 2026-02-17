@@ -3,7 +3,7 @@ kind: PodIdentityAssociation
 metadata:
   name: $CR_NAME
   annotations:
-    services.k8s.aws/deletion-policy: $DELETION_POLICY
+    services.k8s.aws/adoption-policy: adopt-or-create
 spec:
   clusterName: $CLUSTER_NAME
   namespace: $NAMESPACE

@@ -53,6 +53,7 @@ def pod_identity_association(k8s_service_account, eks_client, simple_cluster) ->
     replacements["NAMESPACE"] = namespace
     replacements["ROLE_ARN"] = "arn:aws:iam::632556926448:role/ack-eks-controller-pia-role"
     replacements["SERVICE_ACCOUNT"] = service_account_name
+    replacements["DELETION_POLICY"] = "delete"
 
     resource_data = load_eks_resource(
         "pod_identity_association",
@@ -79,6 +80,73 @@ def pod_identity_association(k8s_service_account, eks_client, simple_cluster) ->
     assert deleted
 
 
+@pytest.fixture
+def adoption_pod_identity_association(k8s_service_account, eks_client, simple_cluster) -> Tuple[k8s.CustomResourceReference, Dict]:
+    cr_name = random_suffix_name("s3-readonly-pia", 24)
+    namespace = "default"
+    service_account_name = "s3-admin-service-account"
+    _ = k8s_service_account(namespace, service_account_name)
+    
+    (ref, cr) = simple_cluster
+    cluster_name = cr["spec"]["name"]
+
+    wait_for_cluster_active(eks_client, cluster_name)
+
+    replacements = REPLACEMENT_VALUES.copy()
+    replacements["CR_NAME"] = cr_name
+    replacements["CLUSTER_NAME"] = cluster_name
+    replacements["NAMESPACE"] = namespace
+    replacements["ROLE_ARN"] = "arn:aws:iam::632556926448:role/ack-eks-controller-pia-role"
+    replacements["SERVICE_ACCOUNT"] = service_account_name
+    replacements["DELETION_POLICY"] = "retain"
+
+    resource_data = load_eks_resource(
+        "pod_identity_association",
+        additional_replacements=replacements,
+    )
+    logging.debug(resource_data)
+
+    # Create the k8s resource
+    ref = k8s.CustomResourceReference(
+        CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+        cr_name, namespace="default",
+    )
+    k8s.create_custom_resource(ref, resource_data)
+    cr = k8s.wait_resource_consumed_by_controller(ref)
+
+    assert cr is not None
+    assert k8s.get_resource_exists(ref)
+
+    association_id = cr["status"]["associationID"]
+
+    _, deleted = k8s.delete_custom_resource(ref, 3, 10)
+    assert deleted
+
+    resource_data = load_eks_resource(
+        "pod_identity_association_adopt",
+        additional_replacements=replacements,
+    )
+    logging.debug(resource_data)
+
+    # Create the k8s resource
+    ref = k8s.CustomResourceReference(
+        CRD_GROUP, CRD_VERSION, RESOURCE_PLURAL,
+        cr_name, namespace="default",
+    )
+    k8s.create_custom_resource(ref, resource_data)
+    cr = k8s.wait_resource_consumed_by_controller(ref)
+
+    assert cr is not None
+    assert k8s.get_resource_exists(ref)
+
+    time.sleep(CREATE_WAIT_AFTER_SECONDS)
+
+    yield (ref, cr, association_id)
+
+    _, deleted = k8s.delete_custom_resource(ref, 3, 10)
+    assert deleted
+
+
 @service_marker
 class TestPodIdentityAssociation:
     def test_create_delete_pod_identity_association(self, pod_identity_association, eks_client):
@@ -88,6 +156,31 @@ class TestPodIdentityAssociation:
         association_id = cr["status"]["associationID"]
         namespace = cr["spec"]["namespace"]
         role_arn = cr["spec"]["roleARN"]
+
+        try:
+            aws_res = eks_client.describe_pod_identity_association(
+                clusterName=cluster_name,
+                associationId=association_id
+            )
+            assert aws_res is not None
+
+            assert aws_res["association"]["namespace"] == namespace
+            assert aws_res["association"]["roleArn"] == role_arn
+            assert aws_res["association"]["associationId"] == association_id
+        except eks_client.exceptions.ResourceNotFoundException:
+            pytest.fail(f"Could not find PodIdentityAssociation '{ref.name}' in EKS")
+
+        assert_tagging_functionality(ref, cr["status"]["ackResourceMetadata"]["arn"])
+
+    def test_pod_identity_association_adoption(self, adoption_pod_identity_association, eks_client):
+        (ref, cr, old_association_id) = adoption_pod_identity_association
+
+        cluster_name = cr["spec"]["clusterName"]
+        association_id = cr["status"]["associationID"]
+        namespace = cr["spec"]["namespace"]
+        role_arn = cr["spec"]["roleARN"]
+
+        assert old_association_id == association_id
 
         try:
             aws_res = eks_client.describe_pod_identity_association(
