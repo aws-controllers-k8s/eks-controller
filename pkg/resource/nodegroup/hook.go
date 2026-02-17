@@ -331,7 +331,7 @@ func (rm *resourceManager) customUpdate(
 		if desired.ko.Spec.Version != nil && desired.ko.Spec.ReleaseVersion != nil &&
 			*desired.ko.Spec.Version != "" && *desired.ko.Spec.ReleaseVersion != "" {
 
-			if !isAMITypeBottlerocket(desired.ko.Spec.AMIType) {
+			if !isAMITypeBottlerocket(desired.ko.Spec.AMIType) && !isAMITypeCustom(desired) {
 				// First parse the user provided release version and desired release
 				desiredReleaseVersionTrimmed, err := util.GetEKSVersionFromReleaseVersion(*desired.ko.Spec.ReleaseVersion)
 				if err != nil {
@@ -349,6 +349,19 @@ func (rm *resourceManager) customUpdate(
 						fmt.Errorf("version and release version do not match: %s and %s", *desired.ko.Spec.Version, desiredReleaseVersionTrimmed),
 					)
 				}
+			}
+		}
+
+		// Check if this is a custom AMI with LaunchTemplate scenario
+		if isAMITypeCustom(desired) {
+			// For custom AMI with LaunchTemplate, we cannot update Version or ReleaseVersion via API
+			// Only proceed with update if LaunchTemplate itself changed
+			if !delta.DifferentAt("Spec.LaunchTemplate") {
+				// Need this function to have the spec in sync with AWS
+				rm.preserveVersionFields(updatedRes, latest)
+				// No update needed, just return
+				rm.setStatusDefaults(updatedRes.ko)
+				return updatedRes, nil
 			}
 		}
 
@@ -375,6 +388,25 @@ func isAMITypeBottlerocket(amiType *string) bool {
 	}
 
 	return false
+}
+
+// preserveVersionFields copies Version and ReleaseVersion from latest to updated resource
+// This is needed when version updates are skipped (e.g., custom AMI with LaunchTemplate)
+// And we still need the Version,ReleaseVersion fields to be in sync with AWS
+func (rm *resourceManager) preserveVersionFields(updated *resource, latest *resource) {
+	if latest.ko.Spec.Version != nil {
+		updated.ko.Spec.Version = latest.ko.Spec.Version
+	}
+	if latest.ko.Spec.ReleaseVersion != nil {
+		updated.ko.Spec.ReleaseVersion = latest.ko.Spec.ReleaseVersion
+	}
+}
+
+// isAMITypeCustom checks if the nodegroup uses a custom AMI
+func isAMITypeCustom(r *resource) bool {
+	return r.ko.Spec.LaunchTemplate != nil &&
+		r.ko.Spec.AMIType != nil &&
+		*r.ko.Spec.AMIType == string(svcapitypes.AMITypes_CUSTOM)
 }
 
 // newUpdateLabelsPayload determines which of the labels should be added or
@@ -483,12 +515,37 @@ func newUpdateNodegroupVersionPayload(
 	if delta.DifferentAt("Spec.LaunchTemplate") {
 		// We need to be careful here to not access a nil pointer
 		if desired.ko.Spec.LaunchTemplate != nil {
-			input.LaunchTemplate = &svcsdktypes.LaunchTemplateSpecification{
-				Id:      desired.ko.Spec.LaunchTemplate.ID,
-				Name:    desired.ko.Spec.LaunchTemplate.Name,
-				Version: desired.ko.Spec.LaunchTemplate.Version,
+			input.LaunchTemplate = &svcsdktypes.LaunchTemplateSpecification{}
+
+			if delta.DifferentAt("Spec.LaunchTemplate.ID") {
+				input.LaunchTemplate.Id = desired.ko.Spec.LaunchTemplate.ID
 			}
+
+			if delta.DifferentAt("Spec.LaunchTemplate.Name") {
+				input.LaunchTemplate.Name = desired.ko.Spec.LaunchTemplate.Name
+			}
+
+			// If neither the Name nor ID fields have changed, we need to
+			// set the one of ID/Name field in the payload
+			// preference is given to ID over Name
+			if !delta.DifferentAt("Spec.LaunchTemplate.Name") && !delta.DifferentAt("Spec.LaunchTemplate.ID") {
+				if desired.ko.Spec.LaunchTemplate.ID != nil {
+					input.LaunchTemplate.Id = desired.ko.Spec.LaunchTemplate.ID
+				} else if desired.ko.Spec.LaunchTemplate.Name != nil {
+					input.LaunchTemplate.Name = desired.ko.Spec.LaunchTemplate.Name
+				}
+			}
+
+			input.LaunchTemplate.Version = desired.ko.Spec.LaunchTemplate.Version
 		}
+	}
+
+	// If LaunchTemplate is being used with a custom AMI,
+	// we cannot set Version or ReleaseVersion in the update request as per the EKS API specification.
+	// https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateNodegroupVersion.html#API_UpdateNodegroupVersion_RequestBody
+	if isAMITypeCustom(desired) {
+		input.ReleaseVersion = nil
+		input.Version = nil
 	}
 
 	// If the force annotation is set, we set the force flag on the input

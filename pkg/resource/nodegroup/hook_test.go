@@ -21,12 +21,14 @@ import (
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
 	svcsdktypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
+	svcapitypes "github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 )
 
 func TestTaints(t *testing.T) {
@@ -547,6 +549,189 @@ func Test_newUpdateNodegroupPayload(t *testing.T) {
 			} else {
 				assert.Nil(t, got.LaunchTemplate)
 			}
+		})
+	}
+}
+
+func Test_newUpdateNodegroupPayloadWithLaunchTemplate(t *testing.T) {
+	delta := ackcompare.NewDelta()
+	delta.Add("Spec.Version", nil, nil)
+	delta.Add("Spec.LaunchTemplate", nil, nil)
+
+	type args struct {
+		r *resource
+	}
+	tests := []struct {
+		name        string
+		args        args
+		wantPayload *eks.UpdateNodegroupVersionInput
+	}{
+		{
+			name: "only id in launch template",
+			args: args{
+				r: &resource{
+					ko: &v1alpha1.Nodegroup{
+						Spec: v1alpha1.NodegroupSpec{
+							LaunchTemplate: &v1alpha1.LaunchTemplateSpecification{
+								ID:      aws.String("lt-12345"),
+								Version: aws.String("1"),
+							},
+						},
+					},
+				},
+			},
+			wantPayload: &eks.UpdateNodegroupVersionInput{
+				ClusterName:   nil,
+				NodegroupName: nil,
+				LaunchTemplate: &svcsdktypes.LaunchTemplateSpecification{
+					Id:      aws.String("lt-12345"),
+					Version: aws.String("1"),
+				},
+			},
+		},
+		{
+			name: "only name in launch template",
+			args: args{
+				r: &resource{
+					ko: &v1alpha1.Nodegroup{
+						Spec: v1alpha1.NodegroupSpec{
+							LaunchTemplate: &v1alpha1.LaunchTemplateSpecification{
+								Name:    aws.String("my-launch-template"),
+								Version: aws.String("1"),
+							},
+						},
+					},
+				},
+			},
+			wantPayload: &eks.UpdateNodegroupVersionInput{
+				ClusterName:   nil,
+				NodegroupName: nil,
+				LaunchTemplate: &svcsdktypes.LaunchTemplateSpecification{
+					Name:    aws.String("my-launch-template"),
+					Version: aws.String("1"),
+				},
+			},
+		},
+		{
+			name: "id and name in launch template",
+			args: args{
+				r: &resource{
+					ko: &v1alpha1.Nodegroup{
+						Spec: v1alpha1.NodegroupSpec{
+							LaunchTemplate: &v1alpha1.LaunchTemplateSpecification{
+								ID:      aws.String("lt-12345"),
+								Name:    aws.String("my-launch-template"),
+								Version: aws.String("1"),
+							},
+						},
+					},
+				},
+			},
+			wantPayload: &eks.UpdateNodegroupVersionInput{
+				ClusterName:   nil,
+				NodegroupName: nil,
+				LaunchTemplate: &svcsdktypes.LaunchTemplateSpecification{
+					Id:      aws.String("lt-12345"),
+					Version: aws.String("1"),
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := newUpdateNodegroupVersionPayload(delta, tt.args.r)
+			assert.Equal(t, tt.wantPayload, got)
+		})
+	}
+}
+
+func Test_customUpdateWithCustomAMIAndLaunchTemplate(t *testing.T) {
+	customAMI := string(svcapitypes.AMITypes_CUSTOM)
+
+	tests := []struct {
+		name                string
+		desired             *resource
+		latest              *resource
+		expectVersionInSpec bool
+		expectedVersion     string
+		expectedRelease     string
+	}{
+		{
+			name: "custom AMI with launch template - version fields preserved from latest",
+			desired: &resource{
+				ko: &v1alpha1.Nodegroup{
+					Spec: v1alpha1.NodegroupSpec{
+						Name:           aws.String("test-ng"),
+						ClusterName:    aws.String("test-cluster"),
+						AMIType:        &customAMI,
+						Version:        aws.String("1.28"),
+						ReleaseVersion: aws.String("1.28.1-20231201"),
+						LaunchTemplate: &v1alpha1.LaunchTemplateSpecification{
+							ID:      aws.String("lt-12345"),
+							Version: aws.String("2"),
+						},
+					},
+					Status: v1alpha1.NodegroupStatus{
+						Status: aws.String(StatusActive),
+					},
+				},
+			},
+			latest: &resource{
+				ko: &v1alpha1.Nodegroup{
+					Spec: v1alpha1.NodegroupSpec{
+						Name:           aws.String("test-ng"),
+						ClusterName:    aws.String("test-cluster"),
+						AMIType:        &customAMI,
+						Version:        aws.String("1.27"),
+						ReleaseVersion: aws.String("1.27.5-20231101"),
+						LaunchTemplate: &v1alpha1.LaunchTemplateSpecification{
+							ID:      aws.String("lt-12345"),
+							Version: aws.String("1"),
+						},
+					},
+					Status: v1alpha1.NodegroupStatus{
+						Status: aws.String(StatusActive),
+					},
+				},
+			},
+			expectVersionInSpec: true,
+			expectedVersion:     "1.27",            // Should preserve from latest, not use desired
+			expectedRelease:     "1.27.5-20231101", // Should preserve from latest, not use desired
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			delta := newResourceDelta(tt.desired, tt.latest)
+
+			// Verify that the update payload does NOT include version/releaseVersion
+			if delta.DifferentAt("Spec.LaunchTemplate") {
+				payload := newUpdateNodegroupVersionPayload(delta, tt.desired)
+				assert.Nil(t, payload.Version,
+					"Version should be nil in update payload for custom AMI with launch template")
+				assert.Nil(t, payload.ReleaseVersion,
+					"ReleaseVersion should be nil in update payload for custom AMI with launch template")
+				assert.NotNil(t, payload.LaunchTemplate,
+					"LaunchTemplate should be present in update payload")
+			}
+
+			// Verify that version and releaseVersion are preserved in spec
+			// even though they won't be in the update payload
+			if tt.expectVersionInSpec {
+				// After customUpdate logic, the version fields should be preserved from latest
+				rm := &resourceManager{}
+				rm.preserveVersionFields(tt.desired, tt.latest)
+
+				assert.NotNil(t, tt.desired.ko.Spec.Version)
+				assert.Equal(t, tt.expectedVersion, *tt.desired.ko.Spec.Version,
+					"Version should be preserved from latest, not from desired")
+
+				assert.NotNil(t, tt.desired.ko.Spec.ReleaseVersion)
+				assert.Equal(t, tt.expectedRelease, *tt.desired.ko.Spec.ReleaseVersion,
+					"ReleaseVersion should be preserved from latest, not from desired")
+			}
+
 		})
 	}
 }
