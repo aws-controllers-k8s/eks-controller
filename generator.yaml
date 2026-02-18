@@ -310,9 +310,6 @@ resources:
       DesiredSize:
         is_read_only: true
         type: int
-        # ideally, this should work. We do not need to create a new file
-        # dedicated to documentation.
-        documentation: "DesiredSize is the observed desired size of the node group in AWS."
       ClusterName:
         references:
           resource: Cluster
