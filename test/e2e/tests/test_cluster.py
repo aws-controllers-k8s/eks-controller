@@ -233,7 +233,10 @@ class TestCluster:
         aws_res = eks_client.describe_cluster(name=cluster_name)
         assert sorted(aws_res["cluster"]["resourcesVpcConfig"]["subnetIds"]) == sorted(subnets_ids)
 
-        # Update the logging fields
+        # Update the logging fields specifying only enabled types. The
+        # controller must handle partial specs correctly — the EKS API
+        # returns both enabled and disabled entries, but users should not
+        # be required to list disabled types explicitly.
         updates = {
             "spec": {
                 "logging": {
@@ -241,10 +244,6 @@ class TestCluster:
                         {
                             "enabled": True,
                             "types": ["api"]
-                        },
-                        {
-                            "enabled": False,
-                            "types": ["audit", "authenticator", "controllerManager", "scheduler"]
                         },
                     ]
                 },
@@ -257,10 +256,11 @@ class TestCluster:
         wait_for_cluster_active(eks_client, cluster_name)
 
         aws_res = eks_client.describe_cluster(name=cluster_name)
-        assert len(aws_res["cluster"]["logging"]["clusterLogging"]) > 0
-        logging = aws_res["cluster"]["logging"]["clusterLogging"][0]
-        assert logging["enabled"] == True
-        assert logging["types"] == ["api"]
+        enabled_types = []
+        for log_setup in aws_res["cluster"]["logging"]["clusterLogging"]:
+            if log_setup.get("enabled"):
+                enabled_types.extend(log_setup["types"])
+        assert enabled_types == ["api"]
 
         # Update the AccessConfig field
         updates = {

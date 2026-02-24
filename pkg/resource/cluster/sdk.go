@@ -1183,37 +1183,6 @@ func (rm *resourceManager) terminalAWSError(err error) bool {
 	}
 }
 
-// newLogging returns a Logging object
-// with each the field set by the resource's corresponding spec field.
-func (rm *resourceManager) newLogging(
-	r *resource,
-) *svcsdktypes.Logging {
-	res := &svcsdktypes.Logging{}
-
-	if r.ko.Spec.Logging.ClusterLogging != nil {
-		resf0 := []svcsdktypes.LogSetup{}
-		for _, resf0iter := range r.ko.Spec.Logging.ClusterLogging {
-			resf0elem := &svcsdktypes.LogSetup{}
-			if resf0iter.Enabled != nil {
-				resf0elem.Enabled = resf0iter.Enabled
-			}
-			if resf0iter.Types != nil {
-				resf0elemf1 := []svcsdktypes.LogType{}
-				for _, resf0elemf1iter := range resf0iter.Types {
-					var resf0elemf1elem string
-					resf0elemf1elem = string(*resf0elemf1iter)
-					resf0elemf1 = append(resf0elemf1, svcsdktypes.LogType(resf0elemf1elem))
-				}
-				resf0elem.Types = resf0elemf1
-			}
-			resf0 = append(resf0, *resf0elem)
-		}
-		res.ClusterLogging = resf0
-	}
-
-	return res
-}
-
 // newVpcConfigRequest returns a VpcConfigRequest object
 // with each the field set by the resource's corresponding spec field.
 func (rm *resourceManager) newVpcConfigRequest(
