@@ -3,7 +3,7 @@
 
 {{/* Find the structure field within the operation */}}
 {{- range $fieldName, $field := $CRD.SpecFields -}}
-{{- if (or (eq $field.Path "Logging") (eq $field.Path "ResourcesVPCConfig")) }}
+{{- if (eq $field.Path "ResourcesVPCConfig") }}
 
 {{- $shapeName := $field.ShapeRef.ShapeName }}
 

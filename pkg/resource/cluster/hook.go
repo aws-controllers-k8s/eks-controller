@@ -37,10 +37,6 @@ import (
 	"github.com/aws-controllers-k8s/eks-controller/pkg/util"
 )
 
-const (
-	LoggingNoChangesError = "No changes needed for the logging config provided"
-)
-
 // Taken from the list of cluster statuses on the boto3 documentation
 // https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/eks.html#EKS.Client.describe_cluster
 const (
@@ -185,12 +181,38 @@ func (rm *resourceManager) clusterInUse(ctx context.Context, r *resource) (bool,
 }
 
 func customPreCompare(
+	delta *ackcompare.Delta,
 	a *resource,
 	b *resource,
 ) {
 	if a.ko.Spec.UpgradePolicy == nil && b.ko.Spec.UpgradePolicy != nil {
 		a.ko.Spec.UpgradePolicy = b.ko.Spec.UpgradePolicy.DeepCopy()
 	}
+	// Custom logging comparison. The EKS API always returns both enabled and
+	// disabled log type entries, but users may only specify enabled ones. A
+	// missing enabled list means everything is disabled. We compare the
+	// effective set of enabled log types to avoid false positives.
+	desiredEnabled := enabledLogTypes(a)
+	latestEnabled := enabledLogTypes(b)
+	if !ackcompare.SliceStringPEqual(desiredEnabled, latestEnabled) {
+		delta.Add("Spec.Logging", a.ko.Spec.Logging, b.ko.Spec.Logging)
+	}
+}
+
+// enabledLogTypes returns the list of log type strings that are enabled in the
+// resource's logging config. A nil logging config or missing entries means
+// nothing is enabled.
+func enabledLogTypes(r *resource) []*string {
+	var enabled []*string
+	if r.ko.Spec.Logging == nil {
+		return enabled
+	}
+	for _, ls := range r.ko.Spec.Logging.ClusterLogging {
+		if ls.Enabled != nil && *ls.Enabled {
+			enabled = append(enabled, ls.Types...)
+		}
+	}
+	return enabled
 }
 
 func (rm *resourceManager) customUpdate(
@@ -249,15 +271,12 @@ func (rm *resourceManager) customUpdate(
 		if err := rm.updateConfigLogging(ctx, desired); err != nil {
 			awsErr, ok := extractAWSError(err)
 
-			// The API responds with an error if there were no changes applied
-			if !ok || awsErr.Message != LoggingNoChangesError {
-				return nil, err
-			}
-
 			// Check to see if we've raced an async update call and need to requeue
 			if ok && awsErr.Code == "ResourceInUseException" {
 				return nil, requeueAfterAsyncUpdate()
 			}
+
+			return nil, err
 		}
 		return returnClusterUpdating(updatedRes)
 	}
@@ -472,6 +491,15 @@ func (rm *resourceManager) updateVersion(
 	return nil
 }
 
+// allEKSLogTypes is the complete set of EKS control plane log types.
+var allEKSLogTypes = []svcsdktypes.LogType{
+	svcsdktypes.LogTypeApi,
+	svcsdktypes.LogTypeAudit,
+	svcsdktypes.LogTypeAuthenticator,
+	svcsdktypes.LogTypeControllerManager,
+	svcsdktypes.LogTypeScheduler,
+}
+
 func (rm *resourceManager) updateConfigLogging(
 	ctx context.Context,
 	r *resource,
@@ -481,7 +509,7 @@ func (rm *resourceManager) updateConfigLogging(
 	defer exit(err)
 	input := &svcsdk.UpdateClusterConfigInput{
 		Name:    r.ko.Spec.Name,
-		Logging: rm.newLogging(r),
+		Logging: newFullLogging(r),
 	}
 
 	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
@@ -491,6 +519,61 @@ func (rm *resourceManager) updateConfigLogging(
 	}
 
 	return nil
+}
+
+// newFullLogging builds a complete EKS logging config with all log types
+// explicitly set to enabled or disabled. The EKS API expects the full config;
+// sending only enabled types causes "No changes needed" errors when the
+// effective state hasn't changed.
+//
+// All user-specified enabled types are passed through to the API (including
+// unknown ones, so that EKS can validate and reject them). The disabled set
+// is built from the known EKS log types minus whatever the user enabled.
+func newFullLogging(r *resource) *svcsdktypes.Logging {
+	// Collect the set of log types the user wants enabled.
+	enabled := make(map[svcsdktypes.LogType]bool)
+	var enabledTypes []svcsdktypes.LogType
+	if r.ko.Spec.Logging != nil {
+		for _, ls := range r.ko.Spec.Logging.ClusterLogging {
+			if ls.Enabled != nil && *ls.Enabled {
+				for _, t := range ls.Types {
+					if t != nil {
+						lt := svcsdktypes.LogType(*t)
+						if !enabled[lt] {
+							enabled[lt] = true
+							enabledTypes = append(enabledTypes, lt)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Disabled types: known EKS log types that the user did not enable.
+	var disabledTypes []svcsdktypes.LogType
+	for _, lt := range allEKSLogTypes {
+		if !enabled[lt] {
+			disabledTypes = append(disabledTypes, lt)
+		}
+	}
+
+	var clusterLogging []svcsdktypes.LogSetup
+	if len(enabledTypes) > 0 {
+		clusterLogging = append(clusterLogging, svcsdktypes.LogSetup{
+			Enabled: aws.Bool(true),
+			Types:   enabledTypes,
+		})
+	}
+	if len(disabledTypes) > 0 {
+		clusterLogging = append(clusterLogging, svcsdktypes.LogSetup{
+			Enabled: aws.Bool(false),
+			Types:   disabledTypes,
+		})
+	}
+
+	return &svcsdktypes.Logging{
+		ClusterLogging: clusterLogging,
+	}
 }
 
 func newAccessConfig(r *resource) *svcsdktypes.UpdateAccessConfigRequest {

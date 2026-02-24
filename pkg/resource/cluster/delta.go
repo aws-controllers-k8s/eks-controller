@@ -41,7 +41,7 @@ func newResourceDelta(
 		delta.Add("", a, b)
 		return delta
 	}
-	customPreCompare(a, b)
+	customPreCompare(delta, a, b)
 
 	if ackcompare.HasNilDifference(a.ko.Spec.AccessConfig, b.ko.Spec.AccessConfig) {
 		delta.Add("Spec.AccessConfig", a.ko.Spec.AccessConfig, b.ko.Spec.AccessConfig)
@@ -119,17 +119,6 @@ func newResourceDelta(
 		} else if a.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR != nil && b.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR != nil {
 			if *a.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR != *b.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR {
 				delta.Add("Spec.KubernetesNetworkConfig.ServiceIPv4CIDR", a.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR, b.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR)
-			}
-		}
-	}
-	if ackcompare.HasNilDifference(a.ko.Spec.Logging, b.ko.Spec.Logging) {
-		delta.Add("Spec.Logging", a.ko.Spec.Logging, b.ko.Spec.Logging)
-	} else if a.ko.Spec.Logging != nil && b.ko.Spec.Logging != nil {
-		if len(a.ko.Spec.Logging.ClusterLogging) != len(b.ko.Spec.Logging.ClusterLogging) {
-			delta.Add("Spec.Logging.ClusterLogging", a.ko.Spec.Logging.ClusterLogging, b.ko.Spec.Logging.ClusterLogging)
-		} else if len(a.ko.Spec.Logging.ClusterLogging) > 0 {
-			if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.Logging.ClusterLogging, b.ko.Spec.Logging.ClusterLogging) {
-				delta.Add("Spec.Logging.ClusterLogging", a.ko.Spec.Logging.ClusterLogging, b.ko.Spec.Logging.ClusterLogging)
 			}
 		}
 	}
