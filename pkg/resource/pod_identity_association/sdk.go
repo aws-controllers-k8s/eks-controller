@@ -134,6 +134,11 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Status.OwnerARN = nil
 	}
+	if resp.Association.Policy != nil {
+		ko.Spec.Policy = resp.Association.Policy
+	} else {
+		ko.Spec.Policy = nil
+	}
 	if resp.Association.RoleArn != nil {
 		ko.Spec.RoleARN = resp.Association.RoleArn
 	} else {
@@ -262,6 +267,11 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Status.OwnerARN = nil
 	}
+	if resp.Association.Policy != nil {
+		ko.Spec.Policy = resp.Association.Policy
+	} else {
+		ko.Spec.Policy = nil
+	}
 	if resp.Association.RoleArn != nil {
 		ko.Spec.RoleARN = resp.Association.RoleArn
 	} else {
@@ -309,6 +319,9 @@ func (rm *resourceManager) newCreateRequestPayload(
 	}
 	if r.ko.Spec.Namespace != nil {
 		res.Namespace = r.ko.Spec.Namespace
+	}
+	if r.ko.Spec.Policy != nil {
+		res.Policy = r.ko.Spec.Policy
 	}
 	if r.ko.Spec.RoleARN != nil {
 		res.RoleArn = r.ko.Spec.RoleARN
@@ -427,6 +440,11 @@ func (rm *resourceManager) sdkUpdate(
 	} else {
 		ko.Status.OwnerARN = nil
 	}
+	if resp.Association.Policy != nil {
+		ko.Spec.Policy = resp.Association.Policy
+	} else {
+		ko.Spec.Policy = nil
+	}
 	if resp.Association.RoleArn != nil {
 		ko.Spec.RoleARN = resp.Association.RoleArn
 	} else {
@@ -472,6 +490,9 @@ func (rm *resourceManager) newUpdateRequestPayload(
 	}
 	if r.ko.Spec.DisableSessionTags != nil {
 		res.DisableSessionTags = r.ko.Spec.DisableSessionTags
+	}
+	if r.ko.Spec.Policy != nil {
+		res.Policy = r.ko.Spec.Policy
 	}
 	if r.ko.Spec.RoleARN != nil {
 		res.RoleArn = r.ko.Spec.RoleARN

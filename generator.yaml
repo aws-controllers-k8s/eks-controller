@@ -456,6 +456,8 @@ resources:
           service_name: iam
           resource: Role
           path: Status.ACKResourceMetadata.ARN
+      Policy:
+        is_iam_policy: true
     print:
       add_age_column: true
       add_synced_column: true
