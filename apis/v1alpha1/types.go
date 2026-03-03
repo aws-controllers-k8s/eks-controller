@@ -287,8 +287,8 @@ type AssociatedAccessPolicy struct {
 	PolicyARN    *string      `json:"policyARN,omitempty"`
 }
 
-// An Amazon EC2 Auto Scaling group that is associated with an Amazon EKS managed
-// node group.
+// An Auto Scaling group that is associated with an Amazon EKS managed node
+// group.
 type AutoScalingGroup struct {
 	Name *string `json:"name,omitempty"`
 }
@@ -854,10 +854,10 @@ type NodegroupResources struct {
 	RemoteAccessSecurityGroup *string             `json:"remoteAccessSecurityGroup,omitempty"`
 }
 
-// An object representing the scaling configuration details for the Amazon EC2
-// Auto Scaling group that is associated with your node group. When creating
-// a node group, you must specify all or none of the properties. When updating
-// a node group, you can specify any or none of the properties.
+// An object representing the scaling configuration details for the Auto Scaling
+// group that is associated with your node group. When creating a node group,
+// you must specify all or none of the properties. When updating a node group,
+// you can specify any or none of the properties.
 type NodegroupScalingConfig struct {
 	DesiredSize *int64 `json:"desiredSize,omitempty"`
 	MaxSize     *int64 `json:"maxSize,omitempty"`
@@ -910,10 +910,10 @@ type Nodegroup_SDK struct {
 	// An object representing the resources associated with the node group, such
 	// as Auto Scaling groups and security groups for remote access.
 	Resources *NodegroupResources `json:"resources,omitempty"`
-	// An object representing the scaling configuration details for the Amazon EC2
-	// Auto Scaling group that is associated with your node group. When creating
-	// a node group, you must specify all or none of the properties. When updating
-	// a node group, you can specify any or none of the properties.
+	// An object representing the scaling configuration details for the Auto Scaling
+	// group that is associated with your node group. When creating a node group,
+	// you must specify all or none of the properties. When updating a node group,
+	// you can specify any or none of the properties.
 	ScalingConfig *NodegroupScalingConfig `json:"scalingConfig,omitempty"`
 	Status        *string                 `json:"status,omitempty"`
 	Subnets       []*string               `json:"subnets,omitempty"`
@@ -1076,6 +1076,7 @@ type PodIdentityAssociation_SDK struct {
 	ModifiedAt         *metav1.Time `json:"modifiedAt,omitempty"`
 	Namespace          *string      `json:"namespace,omitempty"`
 	OwnerARN           *string      `json:"ownerARN,omitempty"`
+	Policy             *string      `json:"policy,omitempty"`
 	RoleARN            *string      `json:"roleARN,omitempty"`
 	ServiceAccount     *string      `json:"serviceAccount,omitempty"`
 	// The metadata that you apply to a resource to help you categorize and organize

@@ -13,6 +13,44 @@
 
 package pod_identity_association
 
-import "github.com/aws-controllers-k8s/eks-controller/pkg/tags"
+import (
+	"encoding/json"
+	"reflect"
+
+	awsiampolicy "github.com/micahhausler/aws-iam-policy/policy"
+
+	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
+	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
+)
 
 var syncTags = tags.SyncTags
+
+func customPreCompare(
+	delta *ackcompare.Delta,
+	a *resource,
+	b *resource,
+) {
+	comparePolicy(delta, a, b)
+}
+
+// use awsiampolicy to unmarshal Policy before we compare it to latest.
+// this ensures unecessary diffs (whitespace/order change/etc.) does not trigger
+// an update
+func comparePolicy(delta *ackcompare.Delta, a *resource, b *resource) {
+	if ackcompare.HasNilDifference(a.ko.Spec.Policy, b.ko.Spec.Policy) {
+		delta.Add("Spec.Policy", a.ko.Spec.Policy, b.ko.Spec.Policy)
+	} else if a.ko.Spec.Policy != nil && b.ko.Spec.Policy != nil {
+		var policyDocumentA awsiampolicy.Policy
+		var policyDocumentB awsiampolicy.Policy
+		errA := json.Unmarshal([]byte(*a.ko.Spec.Policy), &policyDocumentA)
+		errB := json.Unmarshal([]byte(*b.ko.Spec.Policy), &policyDocumentB)
+
+		if errA != nil || errB != nil {
+			if *a.ko.Spec.Policy != *b.ko.Spec.Policy {
+				delta.Add("Spec.Policy", a.ko.Spec.Policy, b.ko.Spec.Policy)
+			}
+		} else if !reflect.DeepEqual(policyDocumentA, policyDocumentB) {
+			delta.Add("Spec.Policy", a.ko.Spec.Policy, b.ko.Spec.Policy)
+		}
+	}
+}

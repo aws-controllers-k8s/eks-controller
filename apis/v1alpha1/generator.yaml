@@ -435,6 +435,8 @@ resources:
         priority: 1
   PodIdentityAssociation:
     hooks:
+      delta_pre_compare:
+        code: customPreCompare(delta, a, b)
       sdk_update_pre_build_request:
         template_path: hooks/pod_identity_association/sdk_update_pre_build_request.go.tpl
       sdk_update_post_build_request:
@@ -454,6 +456,9 @@ resources:
           service_name: iam
           resource: Role
           path: Status.ACKResourceMetadata.ARN
+      Policy:
+        compare:
+          is_ignored: true
     print:
       add_age_column: true
       add_synced_column: true
