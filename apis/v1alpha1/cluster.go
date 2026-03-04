@@ -64,6 +64,7 @@ type ClusterSpec struct {
 	// account that you're creating the cluster in.
 	//
 	// Regex Pattern: `^[0-9A-Za-z][A-Za-z0-9\-_]*$`
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable once set"
 	// +kubebuilder:validation:Required
 	Name *string `json:"name"`
 	// An object representing the configuration of your local Amazon EKS cluster

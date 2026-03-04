@@ -189,6 +189,9 @@ spec:
 
                   Regex Pattern: `^[0-9A-Za-z][A-Za-z0-9\-_]*$`
                 type: string
+                x-kubernetes-validations:
+                - message: Value is immutable once set
+                  rule: self == oldSelf
               outpostConfig:
                 description: |-
                   An object representing the configuration of your local Amazon EKS cluster
