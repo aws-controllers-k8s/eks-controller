@@ -15,8 +15,10 @@ package access_entry
 
 import (
 	"context"
+	"errors"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
+	ackerr "github.com/aws-controllers-k8s/runtime/pkg/errors"
 	ackrtlog "github.com/aws-controllers-k8s/runtime/pkg/runtime/log"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	svcsdk "github.com/aws/aws-sdk-go-v2/service/eks"
@@ -97,6 +99,15 @@ func (rm *resourceManager) syncAccessPolicies(ctx context.Context, desired, late
 	existingPolicies := latest.ko.Spec.AccessPolicies
 	desiredPolicies := desired.ko.Spec.AccessPolicies
 
+	// Validate that add desired policies have a non-nil policy arn before preceding to
+	// avoid partial updates to access policies when an invalid entry is present.
+	for _, desiredPolicy := range desiredPolicies {
+		if desiredPolicy.PolicyARN == nil {
+			return ackerr.NewTerminalError(errors.New("All Access Policy entries must specify a Policy ARN."))
+		}
+
+	}
+
 	toAdd, toDelete := computeAccessPoliciesDelta(desiredPolicies, existingPolicies)
 
 	// remove policies first (to avoid conflicts)
@@ -107,7 +118,11 @@ func (rm *resourceManager) syncAccessPolicies(ctx context.Context, desired, late
 		}
 	}
 	for _, p := range toAdd {
-		rlog.Debug("associating access policy to access entry", "policy_arn", *p.PolicyARN)
+		policyARN := ""
+		if p.PolicyARN != nil {
+			policyARN = *p.PolicyARN
+		}
+		rlog.Debug("associating access policy to access entry", "policy_arn", policyARN)
 		if err = rm.associateAccessPolicy(ctx, desired, p); err != nil {
 			return err
 		}
@@ -127,23 +142,34 @@ func (rm *resourceManager) associateAccessPolicy(
 	exit := rlog.Trace("rm.associateAccessPolicy")
 	defer func() { exit(err) }()
 
-	// Convert []*string to []string
-	namespaces := make([]string, 0, len(entry.AccessScope.Namespaces))
-	for _, ns := range entry.AccessScope.Namespaces {
-		if ns != nil {
-			namespaces = append(namespaces, *ns)
-		}
-	}
-
 	input := &svcsdk.AssociateAccessPolicyInput{
 		ClusterName:  r.ko.Spec.ClusterName,
 		PrincipalArn: r.ko.Spec.PrincipalARN,
 		PolicyArn:    entry.PolicyARN,
-		AccessScope: &svcsdktypes.AccessScope{
-			Type:       svcsdktypes.AccessScopeType(*entry.AccessScope.Type),
-			Namespaces: namespaces,
-		},
 	}
+
+	// Only set AccessScope if it's provided
+	if entry.AccessScope != nil {
+		accessScope := &svcsdktypes.AccessScope{}
+
+		if entry.AccessScope.Type != nil {
+			accessScope.Type = svcsdktypes.AccessScopeType(*entry.AccessScope.Type)
+		}
+
+		// Convert []*string to []string
+		if len(entry.AccessScope.Namespaces) > 0 {
+			namespaces := make([]string, 0, len(entry.AccessScope.Namespaces))
+			for _, ns := range entry.AccessScope.Namespaces {
+				if ns != nil {
+					namespaces = append(namespaces, *ns)
+				}
+			}
+			accessScope.Namespaces = namespaces
+		}
+
+		input.AccessScope = accessScope
+	}
+
 	_, err = rm.sdkapi.AssociateAccessPolicy(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "AssociateAccessPolicy", err)
 	return err
@@ -173,8 +199,11 @@ func (rm *resourceManager) disassociateAccessPolicy(
 // inAccessPolicies returns true if the supplied AccessPolicy ARN exists
 // in the slice of AccessPolicy objects.
 func inAccessPolicies(policy *v1alpha1.AssociateAccessPolicyInput, policies []*v1alpha1.AssociateAccessPolicyInput) bool {
+	if policy.PolicyARN == nil {
+		return false
+	}
 	for _, p := range policies {
-		if *p.PolicyARN == *policy.PolicyARN {
+		if p.PolicyARN != nil && *p.PolicyARN == *policy.PolicyARN {
 			return true
 		}
 	}
@@ -199,6 +228,9 @@ func equalAccessScopes(a, b *v1alpha1.AccessScope) bool {
 // exactMatchInAccessPolicies returns true if the supplied AccessPolicy is in the
 // slice of AccessPolicy objects and the AccessScope is exactly the same.
 func exactMatchInAccessPolicies(policy *v1alpha1.AssociateAccessPolicyInput, policies []*v1alpha1.AssociateAccessPolicyInput) bool {
+	if policy.PolicyARN == nil {
+		return false
+	}
 	for _, p := range policies {
 		if p.PolicyARN == nil {
 			continue
@@ -227,7 +259,10 @@ func computeAccessPoliciesDelta(desired, latest []*v1alpha1.AssociateAccessPolic
 	// AccessScope of an existing policy. We need to disassociate the policy and
 	// then reassociate it.
 	for _, p := range desired {
-		visited[*p.PolicyARN] = true
+		// Mark as visited if PolicyARN is not nil
+		if p.PolicyARN != nil {
+			visited[*p.PolicyARN] = true
+		}
 		// If it's an exact match, we don't need to do anything.
 		if exactMatchInAccessPolicies(p, latest) {
 			continue
@@ -239,6 +274,8 @@ func computeAccessPoliciesDelta(desired, latest []*v1alpha1.AssociateAccessPolic
 			toDelete = append(toDelete, p.PolicyARN)
 		} else {
 			// If it's not in the latest policies, we need to add it.
+			// This includes entries with nil PolicyARN, which will cause
+			// the AWS API to return a validation error.
 			toAdd = append(toAdd, p)
 		}
 	}
@@ -247,6 +284,10 @@ func computeAccessPoliciesDelta(desired, latest []*v1alpha1.AssociateAccessPolic
 	// latest policies and see if they are in the desired policies. If they are
 	// not, we need to add them to the toDelete slice.
 	for _, p := range latest {
+		// Skip entries with nil PolicyARN
+		if p.PolicyARN == nil {
+			continue
+		}
 		// If we've already visited this policy, we don't need to do anything.
 		if visited[*p.PolicyARN] {
 			continue
