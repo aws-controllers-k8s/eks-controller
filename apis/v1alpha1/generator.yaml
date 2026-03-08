@@ -153,6 +153,8 @@ resources:
       custom_method_name: customUpdate
   Cluster:
     fields:
+      Name:
+        is_immutable: true
       EncryptionConfig.Provider.KeyArn:
         references:
           service_name: kms
