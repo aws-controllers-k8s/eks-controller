@@ -13,6 +13,8 @@
 
 package pod_identity_association
 
-import "github.com/aws-controllers-k8s/eks-controller/pkg/tags"
+import (
+	"github.com/aws-controllers-k8s/eks-controller/pkg/tags"
+)
 
 var syncTags = tags.SyncTags
