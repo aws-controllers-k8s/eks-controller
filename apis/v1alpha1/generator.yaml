@@ -543,6 +543,8 @@ resources:
         template_path: hooks/capability/sdk_update_pre_build_request.go.tpl
       sdk_update_post_build_request:
         template_path: hooks/capability/sdk_update_post_build_request.go.tpl
+      sdk_update_post_set_output:
+        template_path: hooks/capability/sdk_update_post_set_output.go.tpl
     renames:
       operations:
         CreateCapability:
@@ -575,6 +577,13 @@ resources:
       Type:
         is_immutable: true
         go_tag: json:"type"
+        set:
+        - method: Update
+          ignore: from
+      Status:
+        set:
+        - method: Update
+          ignore: from
       Name:
         is_immutable: true
       ClusterName:
