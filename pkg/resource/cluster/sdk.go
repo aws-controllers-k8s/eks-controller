@@ -1190,25 +1190,28 @@ func (rm *resourceManager) newLogging(
 ) *svcsdktypes.Logging {
 	res := &svcsdktypes.Logging{}
 
-	if r.ko.Spec.Logging.ClusterLogging != nil {
-		resf0 := []svcsdktypes.LogSetup{}
-		for _, resf0iter := range r.ko.Spec.Logging.ClusterLogging {
-			resf0elem := &svcsdktypes.LogSetup{}
-			if resf0iter.Enabled != nil {
-				resf0elem.Enabled = resf0iter.Enabled
-			}
-			if resf0iter.Types != nil {
-				resf0elemf1 := []svcsdktypes.LogType{}
-				for _, resf0elemf1iter := range resf0iter.Types {
-					var resf0elemf1elem string
-					resf0elemf1elem = string(*resf0elemf1iter)
-					resf0elemf1 = append(resf0elemf1, svcsdktypes.LogType(resf0elemf1elem))
+	if r.ko.Spec.Logging != nil {
+		if r.ko.Spec.Logging.ClusterLogging != nil {
+			resf0 := []svcsdktypes.LogSetup{}
+			for _, resf0iter := range r.ko.Spec.Logging.ClusterLogging {
+				resf0elem := &svcsdktypes.LogSetup{}
+				if resf0iter.Enabled != nil {
+					resf0elem.Enabled = resf0iter.Enabled
 				}
-				resf0elem.Types = resf0elemf1
+				if resf0iter.Types != nil {
+					resf0elemf1 := []svcsdktypes.LogType{}
+					for _, resf0elemf1iter := range resf0iter.Types {
+						var resf0elemf1elem string
+						resf0elemf1elem = string(*resf0elemf1iter)
+						resf0elemf1 = append(resf0elemf1, svcsdktypes.LogType(resf0elemf1elem))
+					}
+					resf0elem.Types = resf0elemf1
+				}
+				resf0 = append(resf0, *resf0elem)
 			}
-			resf0 = append(resf0, *resf0elem)
+			res.ClusterLogging = resf0
 		}
-		res.ClusterLogging = resf0
+
 	}
 
 	return res
@@ -1221,20 +1224,23 @@ func (rm *resourceManager) newVpcConfigRequest(
 ) *svcsdktypes.VpcConfigRequest {
 	res := &svcsdktypes.VpcConfigRequest{}
 
-	if r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess != nil {
-		res.EndpointPrivateAccess = r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess
-	}
-	if r.ko.Spec.ResourcesVPCConfig.EndpointPublicAccess != nil {
-		res.EndpointPublicAccess = r.ko.Spec.ResourcesVPCConfig.EndpointPublicAccess
-	}
-	if r.ko.Spec.ResourcesVPCConfig.PublicAccessCIDRs != nil {
-		res.PublicAccessCidrs = aws.ToStringSlice(r.ko.Spec.ResourcesVPCConfig.PublicAccessCIDRs)
-	}
-	if r.ko.Spec.ResourcesVPCConfig.SecurityGroupIDs != nil {
-		res.SecurityGroupIds = aws.ToStringSlice(r.ko.Spec.ResourcesVPCConfig.SecurityGroupIDs)
-	}
-	if r.ko.Spec.ResourcesVPCConfig.SubnetIDs != nil {
-		res.SubnetIds = aws.ToStringSlice(r.ko.Spec.ResourcesVPCConfig.SubnetIDs)
+	if r.ko.Spec.ResourcesVPCConfig != nil {
+		if r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess != nil {
+			res.EndpointPrivateAccess = r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess
+		}
+		if r.ko.Spec.ResourcesVPCConfig.EndpointPublicAccess != nil {
+			res.EndpointPublicAccess = r.ko.Spec.ResourcesVPCConfig.EndpointPublicAccess
+		}
+		if r.ko.Spec.ResourcesVPCConfig.PublicAccessCIDRs != nil {
+			res.PublicAccessCidrs = aws.ToStringSlice(r.ko.Spec.ResourcesVPCConfig.PublicAccessCIDRs)
+		}
+		if r.ko.Spec.ResourcesVPCConfig.SecurityGroupIDs != nil {
+			res.SecurityGroupIds = aws.ToStringSlice(r.ko.Spec.ResourcesVPCConfig.SecurityGroupIDs)
+		}
+		if r.ko.Spec.ResourcesVPCConfig.SubnetIDs != nil {
+			res.SubnetIds = aws.ToStringSlice(r.ko.Spec.ResourcesVPCConfig.SubnetIDs)
+		}
+
 	}
 
 	return res
