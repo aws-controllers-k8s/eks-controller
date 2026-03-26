@@ -30,9 +30,9 @@ from e2e.common.waiter import wait_until_deleted
 from e2e.replacement_values import REPLACEMENT_VALUES
 from e2e.fixtures import assert_tagging_functionality
 from e2e.common import (
-    TESTS_DEFAULT_KUBERNETES_VERSION_1_30,
-    TESTS_DEFAULT_KUBERNETES_VERSION_1_31,
-    TESTS_DEFAULT_KUBERNETES_VERSION_1_32,
+    TESTS_DEFAULT_KUBERNETES_VERSION_1_33,
+    TESTS_DEFAULT_KUBERNETES_VERSION_1_34,
+    TESTS_DEFAULT_KUBERNETES_VERSION_1_35,
 )
 
 # Time to wait after modifying the CR for the status to change
@@ -76,7 +76,7 @@ def simple_cluster(eks_client):
 
     replacements = REPLACEMENT_VALUES.copy()
     replacements["CLUSTER_NAME"] = cluster_name
-    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_32
+    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_35
 
     resource_data = load_eks_resource(
         "cluster_simple",
@@ -111,7 +111,7 @@ def simple_cluster_version_minus_2(eks_client):
 
     replacements = REPLACEMENT_VALUES.copy()
     replacements["CLUSTER_NAME"] = cluster_name
-    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_30
+    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_33
 
     resource_data = load_eks_resource(
         "cluster_simple",
@@ -302,7 +302,7 @@ class TestCluster:
         # Bump two minor versions 1.30 -> 1.32
         updates = {
             "spec": {
-                "version": TESTS_DEFAULT_KUBERNETES_VERSION_1_32
+                "version": TESTS_DEFAULT_KUBERNETES_VERSION_1_35
             }
         }
         k8s.patch_custom_resource(ref, updates)
@@ -316,7 +316,7 @@ class TestCluster:
 
         # At this point, the cluster should be active again at version 1.31
         aws_res = eks_client.describe_cluster(name=cluster_name)
-        assert aws_res["cluster"]["version"] == TESTS_DEFAULT_KUBERNETES_VERSION_1_31
+        assert aws_res["cluster"]["version"] == TESTS_DEFAULT_KUBERNETES_VERSION_1_34
 
         # So we need to wait again for the CR to be updated.
         time.sleep(CHECK_STATUS_WAIT_SECONDS*1.5)
@@ -332,7 +332,7 @@ class TestCluster:
         
         # the cluster should be active again at version 1.32
         aws_res = eks_client.describe_cluster(name=cluster_name)
-        assert aws_res["cluster"]["version"] == TESTS_DEFAULT_KUBERNETES_VERSION_1_32
+        assert aws_res["cluster"]["version"] == TESTS_DEFAULT_KUBERNETES_VERSION_1_35
 
         # So we need to wait again for the CR to be updated.
         time.sleep(CHECK_STATUS_WAIT_SECONDS*1.5)
