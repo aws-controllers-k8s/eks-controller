@@ -104,7 +104,7 @@ class TestAddon:
     @pytest.mark.resource_data({'addons': [
         {
             "name": "coredns",
-            "version": "v1.11.4-eksbuild.2",
+            "version": "v1.13.2-eksbuild.3",
             "configurationValues": json.dumps({"resources": {"limits": {"memory": "64Mi"}, "requests": {"cpu": "10m", "memory": "64Mi"}}}),
             "resolveConflicts": "OVERWRITE", 
         },
@@ -142,13 +142,13 @@ class TestAddon:
     @pytest.mark.resource_data({'addons': [
         {
             "name": "eks-pod-identity-agent",
-            "version": "v1.3.0-eksbuild.1",
+            "version": "v1.3.10-eksbuild.2",
             "configurationValues": json.dumps({"resources": {"limits": {"memory": "64Mi"}, "requests": {"cpu": "10m", "memory": "64Mi"}}}),
             "resolveConflicts": "NONE",
         },
         {
             "name": "adot",
-            "version": "v0.94.1-eksbuild.1",
+            "version": "v0.141.0-eksbuild.1",
             "roleARN": PIA_ROLE,
         },
     ]})

@@ -14,7 +14,9 @@ func (rm *resourceManager) new{{ $shapeName }}(
 ) *svcsdktypes.{{ $shapeName }} {
     res := &svcsdktypes.{{ $shapeName }}{}
 
+    if r.ko.Spec.{{ $field.Names.Camel }} != nil {
 {{ GoCodeSetSDKForStruct $CRD "" "res" $field.ShapeRef "" (printf "r.ko.Spec.%s" $field.Names.Camel) 1 }}
+    }
 
     return res
 }
