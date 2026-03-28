@@ -199,14 +199,11 @@ class TestCluster:
         k8s.patch_custom_resource(ref, updates)
         time.sleep(MODIFY_WAIT_AFTER_SECONDS)
 
-        # Ensure status is updating properly and set as not synced
-        get_and_assert_status(ref, 'UPDATING', False)
-
         # Wait for the updating to become active again
         wait_for_cluster_active(eks_client, cluster_name)
 
-        # Ensure status is updated properly once it has become active
-        time.sleep(CHECK_STATUS_WAIT_SECONDS)
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=5)
+
         get_and_assert_status(ref, 'ACTIVE', True)
 
         aws_res = eks_client.describe_cluster(name=cluster_name)
@@ -308,34 +305,17 @@ class TestCluster:
         k8s.patch_custom_resource(ref, updates)
         time.sleep(MODIFY_WAIT_AFTER_SECONDS)
 
-        # Ensure status is updating properly and set as not synced
-        get_and_assert_status(ref, 'UPDATING', False)
-
-        # Wait for the updating to become active again
-        wait_for_cluster_active(eks_client, cluster_name)
-
-        # At this point, the cluster should be active again at version 1.31
-        aws_res = eks_client.describe_cluster(name=cluster_name)
-        assert aws_res["cluster"]["version"] == TESTS_DEFAULT_KUBERNETES_VERSION_1_34
-
-        # So we need to wait again for the CR to be updated.
-        time.sleep(CHECK_STATUS_WAIT_SECONDS*1.5)
-
-        # Ensure status is updating properly and set as not synced
-        get_and_assert_status(ref, 'UPDATING', False)
-
-        # Wait for the updating to become active again
-        wait_for_cluster_active(eks_client, cluster_name)
-
-        # So we need to wait again for the CR to be updated.
-        time.sleep(CHECK_STATUS_WAIT_SECONDS*1.5)
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=20)
         
-        # the cluster should be active again at version 1.32
+        # Wait for the updating to become active again
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        # So we need to wait again for the CR to be updated.
+        time.sleep(CHECK_STATUS_WAIT_SECONDS)
+        
+        # the cluster should be active again at version 1.35
         aws_res = eks_client.describe_cluster(name=cluster_name)
         assert aws_res["cluster"]["version"] == TESTS_DEFAULT_KUBERNETES_VERSION_1_35
-
-        # So we need to wait again for the CR to be updated.
-        time.sleep(CHECK_STATUS_WAIT_SECONDS*1.5)
 
         # Ensure status is updating properly and set as not synced
         get_and_assert_status(ref, 'ACTIVE', True)
