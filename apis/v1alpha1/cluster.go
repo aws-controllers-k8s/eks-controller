@@ -178,7 +178,7 @@ type ClusterStatus struct {
 	// Managed node groups use this security group for control-plane-to-data-plane
 	// communication.
 	// +kubebuilder:validation:Optional
-	ClusterSecurityGroupID *string `json:"clusterSecurityGroupID,omitempty"`
+	ResourcesVPCConfigClusterSecurityGroupID *string `json:"resourcesVPCConfigClusterSecurityGroupID,omitempty"`
 	// The current status of the cluster.
 	// +kubebuilder:validation:Optional
 	Status *string `json:"status,omitempty"`
