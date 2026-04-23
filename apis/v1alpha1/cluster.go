@@ -174,6 +174,11 @@ type ClusterStatus struct {
 	// in the Amazon EKS User Guide .
 	// +kubebuilder:validation:Optional
 	PlatformVersion *string `json:"platformVersion,omitempty"`
+	// The cluster security group that was created by Amazon EKS for the cluster.
+	// Managed node groups use this security group for control-plane-to-data-plane
+	// communication.
+	// +kubebuilder:validation:Optional
+	ClusterSecurityGroupID *string `json:"clusterSecurityGroupID,omitempty"`
 	// The current status of the cluster.
 	// +kubebuilder:validation:Optional
 	Status *string `json:"status,omitempty"`

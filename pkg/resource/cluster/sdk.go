@@ -346,6 +346,11 @@ func (rm *resourceManager) sdkFind(
 			f18.SubnetIDs = aws.StringSlice(resp.Cluster.ResourcesVpcConfig.SubnetIds)
 		}
 		ko.Spec.ResourcesVPCConfig = f18
+		if resp.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId != nil {
+			ko.Status.ClusterSecurityGroupID = resp.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId
+		} else {
+			ko.Status.ClusterSecurityGroupID = nil
+		}
 	} else {
 		ko.Spec.ResourcesVPCConfig = nil
 	}
@@ -728,6 +733,11 @@ func (rm *resourceManager) sdkCreate(
 			f18.SubnetIDs = aws.StringSlice(resp.Cluster.ResourcesVpcConfig.SubnetIds)
 		}
 		ko.Spec.ResourcesVPCConfig = f18
+		if resp.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId != nil {
+			ko.Status.ClusterSecurityGroupID = resp.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId
+		} else {
+			ko.Status.ClusterSecurityGroupID = nil
+		}
 	} else {
 		ko.Spec.ResourcesVPCConfig = nil
 	}

@@ -153,6 +153,11 @@ resources:
       custom_method_name: customUpdate
   Cluster:
     fields:
+      ResourcesVpcConfig.ClusterSecurityGroupId:
+        is_read_only: true
+        from:
+          operation: DescribeCluster
+          path: Cluster.ResourcesVpcConfig.ClusterSecurityGroupId
       Name:
         is_immutable: true
       EncryptionConfig.Provider.KeyArn:
