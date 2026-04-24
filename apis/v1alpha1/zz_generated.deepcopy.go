@@ -1953,6 +1953,11 @@ func (in *ClusterStatus) DeepCopyInto(out *ClusterStatus) {
 		*out = new(Certificate)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ClusterSecurityGroupID != nil {
+		in, out := &in.ClusterSecurityGroupID, &out.ClusterSecurityGroupID
+		*out = new(string)
+		**out = **in
+	}
 	if in.ConnectorConfig != nil {
 		in, out := &in.ConnectorConfig, &out.ConnectorConfig
 		*out = new(ConnectorConfigResponse)
