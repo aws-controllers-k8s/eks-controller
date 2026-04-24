@@ -402,6 +402,10 @@ func (rm *resourceManager) sdkFind(
 	}
 
 	rm.setStatusDefaults(ko)
+	if resp.Cluster.ResourcesVpcConfig != nil && resp.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId != nil {
+		ko.Status.ClusterSecurityGroupID = resp.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId
+	}
+
 	if r.ko.Spec.ResourcesVPCConfig != nil && r.ko.Spec.ResourcesVPCConfig.SubnetRefs != nil {
 		ko.Spec.ResourcesVPCConfig.SubnetRefs = r.ko.Spec.ResourcesVPCConfig.SubnetRefs
 	}
@@ -784,6 +788,10 @@ func (rm *resourceManager) sdkCreate(
 	}
 
 	rm.setStatusDefaults(ko)
+	if resp.Cluster.ResourcesVpcConfig != nil && resp.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId != nil {
+		ko.Status.ClusterSecurityGroupID = resp.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId
+	}
+
 	if desired.ko.Spec.ResourcesVPCConfig.SubnetRefs != nil {
 		ko.Spec.ResourcesVPCConfig.SubnetRefs = desired.ko.Spec.ResourcesVPCConfig.SubnetRefs
 	}

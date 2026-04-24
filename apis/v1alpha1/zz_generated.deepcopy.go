@@ -1953,6 +1953,11 @@ func (in *ClusterStatus) DeepCopyInto(out *ClusterStatus) {
 		*out = new(Certificate)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ClusterSecurityGroupID != nil {
+		in, out := &in.ClusterSecurityGroupID, &out.ClusterSecurityGroupID
+		*out = new(string)
+		**out = **in
+	}
 	if in.ConnectorConfig != nil {
 		in, out := &in.ConnectorConfig, &out.ConnectorConfig
 		*out = new(ConnectorConfigResponse)
@@ -1984,11 +1989,6 @@ func (in *ClusterStatus) DeepCopyInto(out *ClusterStatus) {
 	}
 	if in.PlatformVersion != nil {
 		in, out := &in.PlatformVersion, &out.PlatformVersion
-		*out = new(string)
-		**out = **in
-	}
-	if in.ResourcesVPCConfigClusterSecurityGroupID != nil {
-		in, out := &in.ResourcesVPCConfigClusterSecurityGroupID, &out.ResourcesVPCConfigClusterSecurityGroupID
 		*out = new(string)
 		**out = **in
 	}

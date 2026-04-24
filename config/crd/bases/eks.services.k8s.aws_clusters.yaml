@@ -492,6 +492,8 @@ spec:
                   data:
                     type: string
                 type: object
+              clusterSecurityGroupID:
+                type: string
               conditions:
                 description: |-
                   All CRs managed by ACK have a common `Status.Conditions` member that
@@ -594,12 +596,6 @@ spec:
                   in the Amazon EKS User Guide . For more information about local clusters
                   deployed on an Outpost, see Amazon EKS local cluster platform versions (https://docs.aws.amazon.com/eks/latest/userguide/eks-outposts-platform-versions.html)
                   in the Amazon EKS User Guide .
-                type: string
-              resourcesVPCConfigClusterSecurityGroupID:
-                description: |-
-                  The cluster security group that was created by Amazon EKS for the cluster.
-                  Managed node groups use this security group for control-plane-to-data-plane
-                  communication.
                 type: string
               status:
                 description: The current status of the cluster.

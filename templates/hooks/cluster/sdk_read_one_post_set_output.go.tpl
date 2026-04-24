@@ -1,3 +1,7 @@
+	if resp.Cluster.ResourcesVpcConfig != nil && resp.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId != nil {
+		ko.Status.ClusterSecurityGroupID = resp.Cluster.ResourcesVpcConfig.ClusterSecurityGroupId
+	}
+
 	if r.ko.Spec.ResourcesVPCConfig != nil && r.ko.Spec.ResourcesVPCConfig.SubnetRefs != nil {
 		ko.Spec.ResourcesVPCConfig.SubnetRefs = r.ko.Spec.ResourcesVPCConfig.SubnetRefs
 	}
