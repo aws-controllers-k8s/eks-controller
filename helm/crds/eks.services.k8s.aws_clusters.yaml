@@ -493,6 +493,10 @@ spec:
                     type: string
                 type: object
               clusterSecurityGroupID:
+                description: |-
+                  The cluster security group that was created by Amazon EKS for the cluster.
+                  Managed node groups use this security group for control-plane-to-data-plane
+                  communication.
                 type: string
               conditions:
                 description: |-

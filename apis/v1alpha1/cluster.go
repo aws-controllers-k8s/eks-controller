@@ -146,6 +146,9 @@ type ClusterStatus struct {
 	// The certificate-authority-data for your cluster.
 	// +kubebuilder:validation:Optional
 	CertificateAuthority *Certificate `json:"certificateAuthority,omitempty"`
+	// The cluster security group that was created by Amazon EKS for the cluster.
+	// Managed node groups use this security group for control-plane-to-data-plane
+	// communication.
 	// +kubebuilder:validation:Optional
 	ClusterSecurityGroupID *string `json:"clusterSecurityGroupID,omitempty"`
 	// The configuration used to connect to a cluster for registration.
