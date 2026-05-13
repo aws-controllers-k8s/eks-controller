@@ -31,6 +31,8 @@ resources:
         references:
           resource: Cluster
           path: Spec.Name
+      ConfigurationValues:
+        is_document: true
       ServiceAccountRoleArn:
         references:
           service_name: iam

@@ -70,7 +70,7 @@ func newResourceDelta(
 	if ackcompare.HasNilDifference(a.ko.Spec.ConfigurationValues, b.ko.Spec.ConfigurationValues) {
 		delta.Add("Spec.ConfigurationValues", a.ko.Spec.ConfigurationValues, b.ko.Spec.ConfigurationValues)
 	} else if a.ko.Spec.ConfigurationValues != nil && b.ko.Spec.ConfigurationValues != nil {
-		if *a.ko.Spec.ConfigurationValues != *b.ko.Spec.ConfigurationValues {
+		if equal, err := ackcompare.DocumentEqual(*a.ko.Spec.ConfigurationValues, *b.ko.Spec.ConfigurationValues); err != nil || !equal {
 			delta.Add("Spec.ConfigurationValues", a.ko.Spec.ConfigurationValues, b.ko.Spec.ConfigurationValues)
 		}
 	}
