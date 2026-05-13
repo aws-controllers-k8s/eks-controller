@@ -131,7 +131,7 @@ class TestAddon:
             assert aws_res is not None
 
             assert aws_res["addon"]["addonName"] == addon_name
-            assert aws_res["addon"]["configurationValues"] == configuration_values
+            assert json.loads(aws_res["addon"]["configurationValues"]) == json.loads(configuration_values)
             assert aws_res["addon"]["addonArn"] is not None
         except eks_client.exceptions.ResourceNotFoundException:
             pytest.fail(f"Could not find Addon '{cr_name}' in EKS")
