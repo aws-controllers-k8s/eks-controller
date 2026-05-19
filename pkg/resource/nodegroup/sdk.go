@@ -608,7 +608,7 @@ func (rm *resourceManager) newCreateRequestPayload(
 	if r.ko.Spec.DiskSize != nil {
 		diskSizeCopy0 := *r.ko.Spec.DiskSize
 		if diskSizeCopy0 > math.MaxInt32 || diskSizeCopy0 < math.MinInt32 {
-			return nil, fmt.Errorf("error: field DiskSize is of type int32")
+			return nil, fmt.Errorf("error: field diskSize is of type int32")
 		}
 		diskSizeCopy := int32(diskSizeCopy0)
 		res.DiskSize = &diskSizeCopy
@@ -791,6 +791,9 @@ func (rm *resourceManager) setStatusDefaults(
 	}
 	if ko.Status.ACKResourceMetadata.Region == nil {
 		ko.Status.ACKResourceMetadata.Region = &rm.awsRegion
+	}
+	if ko.Status.ACKResourceMetadata.Partition == nil {
+		ko.Status.ACKResourceMetadata.Partition = &rm.awsPartition
 	}
 	if ko.Status.ACKResourceMetadata.OwnerAccountID == nil {
 		ko.Status.ACKResourceMetadata.OwnerAccountID = &rm.awsAccountID
