@@ -93,7 +93,15 @@ def auto_mode_cluster(eks_client):
 
     yield (ref, cr)
 
-    pass
+    # Teardown: issue delete and wait for full EKS-side deletion.
+    # Since PR #220 the controller retains the finalizer until
+    # DescribeCluster returns ResourceNotFoundException, so the CR
+    # won't disappear within a short window.
+    try:
+        k8s.delete_custom_resource(ref, 3, 10)
+        wait_until_deleted(cluster_name)
+    except Exception:
+        pass
 
 
 @service_marker
@@ -139,8 +147,3 @@ class TestAutoModeCluster:
         # Wait for cluster to become active after update
         wait_for_cluster_active(eks_client, cluster_name)
         time.sleep(CHECK_STATUS_WAIT_SECONDS)
-
-        # Clean up
-        _, deleted = k8s.delete_custom_resource(ref, 3, 10)
-        assert deleted
-        wait_until_deleted(cluster_name)
