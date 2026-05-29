@@ -156,14 +156,18 @@ class TestClusterDeleteWaitsForNotFound:
 
         # Verify that EKS Auto Mode has attached instance profiles to the node role
         # (this may take a moment after cluster becomes active)
+        # Only track profiles belonging to THIS cluster (the node role is shared
+        # across parallel tests, so other clusters may also attach profiles).
         profiles = []
         for _ in range(12):  # wait up to 2 minutes
-            profiles = get_instance_profiles_for_role(iam_client, role_name)
+            all_profiles = get_instance_profiles_for_role(iam_client, role_name)
+            profiles = [p for p in all_profiles if cluster_name in p]
             if profiles:
                 break
             time.sleep(10)
 
-        logging.info(f"Instance profiles attached to {role_name}: {profiles}")
+        logging.info(f"Instance profiles attached to {role_name}: {get_instance_profiles_for_role(iam_client, role_name)}")
+        logging.info(f"Instance profiles for this cluster ({cluster_name}): {profiles}")
         # Note: if no profiles found, the test still validates the finalizer behavior
 
         # === Delete the Cluster CR ===
@@ -205,13 +209,18 @@ class TestClusterDeleteWaitsForNotFound:
 
         # === Verify instance profiles are cleaned up ===
         profiles_after = get_instance_profiles_for_role(iam_client, role_name)
+        # Only check profiles belonging to THIS cluster (node role is shared)
+        our_profiles_after = [p for p in profiles_after if cluster_name in p]
         logging.info(
             f"Instance profiles on {role_name} after deletion: {profiles_after}"
+        )
+        logging.info(
+            f"Instance profiles for this cluster after deletion: {our_profiles_after}"
         )
         # EKS should clean up its instance profiles when the cluster is deleted
         # (the profiles that were created by EKS Auto Mode should be gone)
         for p in profiles:
-            assert p not in profiles_after, (
+            assert p not in our_profiles_after, (
                 f"Instance profile {p} is still attached to role {role_name} "
                 f"after cluster deletion. This would cause DeleteConflict if "
                 f"the IAM controller tries to delete the role."
