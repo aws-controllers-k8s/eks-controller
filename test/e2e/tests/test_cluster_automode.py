@@ -101,8 +101,8 @@ def auto_mode_cluster(eks_client):
         if k8s.get_resource_exists(ref):
             k8s.delete_custom_resource(ref, 3, 10)
         wait_until_deleted(cluster_name)
-    except Exception:
-        pass
+    except Exception as e:
+        logging.error(f"Teardown cleanup failed for {cluster_name}: {e}")
 
 
 @service_marker
@@ -165,34 +165,33 @@ class TestAutoModeCluster:
         k8s.delete_custom_resource(ref, 3, 10)
         logging.info(f"Issued delete for Cluster CR {cluster_name}")
 
-        # Wait briefly for the controller to process the deletion
-        time.sleep(30)
+        # Poll until we observe the cluster in DELETING state and verify
+        # the finalizer is still present. For Auto Mode clusters deletion
+        # takes 10-15 min, so we will reliably catch DELETING.
+        observed_deleting = False
+        for _ in range(12):  # up to 2 minutes
+            try:
+                status = eks_client.describe_cluster(name=cluster_name)['cluster']['status']
+            except eks_client.exceptions.ResourceNotFoundException:
+                break  # deletion finished before we caught DELETING
+            if status == 'DELETING':
+                observed_deleting = True
+                cr_current = k8s.get_resource(ref)
+                assert cr_current is not None, (
+                    "Cluster CR was removed while AWS cluster is still DELETING! "
+                    "Finalizer was removed prematurely."
+                )
+                finalizers = cr_current.get('metadata', {}).get('finalizers', [])
+                assert len(finalizers) > 0, (
+                    "Cluster CR has no finalizers while cluster is DELETING!"
+                )
+                logging.info(f"PASS: Finalizer retained. Finalizers: {finalizers}")
+                break
+            time.sleep(10)
 
-        # Verify the cluster is in DELETING state in AWS
-        cluster_info = None
-        try:
-            resp = eks_client.describe_cluster(name=cluster_name)
-            cluster_info = resp['cluster']
-        except eks_client.exceptions.ResourceNotFoundException:
-            # Already gone — nothing to assert about finalizer retention
-            logging.info("Cluster already gone from AWS, skipping finalizer check")
-
-        if cluster_info is not None:
-            assert cluster_info['status'] == 'DELETING', (
-                f"Expected DELETING, got: {cluster_info['status']}"
-            )
-
-            # The CR must still exist in K8s (finalizer blocks removal)
-            cr_current = k8s.get_resource(ref)
-            assert cr_current is not None, (
-                "Cluster CR was removed while AWS cluster is still DELETING! "
-                "Finalizer was removed prematurely."
-            )
-            finalizers = cr_current.get('metadata', {}).get('finalizers', [])
-            assert len(finalizers) > 0, (
-                "Cluster CR has no finalizers while cluster is DELETING!"
-            )
-            logging.info(f"PASS: Finalizer retained. Finalizers: {finalizers}")
+        assert observed_deleting, (
+            "Never observed cluster in DELETING state with finalizer retained"
+        )
 
         # Wait for cluster to be fully deleted in AWS
         wait_until_deleted(cluster_name)
