@@ -63,7 +63,7 @@ def eks_client():
     return boto3.client('eks')
 
 
-@pytest.fixture
+@pytest.fixture(scope="class")
 def auto_mode_cluster(eks_client):
     cluster_name = random_suffix_name("auto-mode-cluster", 32)
 
@@ -93,12 +93,13 @@ def auto_mode_cluster(eks_client):
 
     yield (ref, cr)
 
-    # Teardown: issue delete and wait for full EKS-side deletion.
-    # Since PR #220 the controller retains the finalizer until
-    # DescribeCluster returns ResourceNotFoundException, so the CR
-    # won't disappear within a short window.
+    # Teardown: ensure cluster is cleaned up if a test fails midway.
+    # The finalizer-retention test handles its own deletion, but if
+    # test_create_auto_mode_cluster fails before deletion is issued,
+    # we still need to clean up the AWS resource.
     try:
-        k8s.delete_custom_resource(ref, 3, 10)
+        if k8s.get_resource_exists(ref):
+            k8s.delete_custom_resource(ref, 3, 10)
         wait_until_deleted(cluster_name)
     except Exception:
         pass
@@ -147,3 +148,63 @@ class TestAutoModeCluster:
         # Wait for cluster to become active after update
         wait_for_cluster_active(eks_client, cluster_name)
         time.sleep(CHECK_STATUS_WAIT_SECONDS)
+
+    def test_finalizer_retained_during_deletion(self, eks_client, auto_mode_cluster):
+        """Validates that the controller retains the finalizer while the
+        cluster is in DELETING state and only removes it once DescribeCluster
+        returns ResourceNotFoundException.
+
+        This prevents a race condition where the IAM controller deletes the
+        node role while EKS-managed instance profiles are still attached.
+        See: https://github.com/aws-controllers-k8s/iam-controller/pull/181
+        """
+        (ref, cr) = auto_mode_cluster
+        cluster_name = cr["spec"]["name"]
+
+        # Issue delete for the Cluster CR
+        k8s.delete_custom_resource(ref, 3, 10)
+        logging.info(f"Issued delete for Cluster CR {cluster_name}")
+
+        # Wait briefly for the controller to process the deletion
+        time.sleep(30)
+
+        # Verify the cluster is in DELETING state in AWS
+        cluster_info = None
+        try:
+            resp = eks_client.describe_cluster(name=cluster_name)
+            cluster_info = resp['cluster']
+        except eks_client.exceptions.ResourceNotFoundException:
+            # Already gone — nothing to assert about finalizer retention
+            logging.info("Cluster already gone from AWS, skipping finalizer check")
+
+        if cluster_info is not None:
+            assert cluster_info['status'] == 'DELETING', (
+                f"Expected DELETING, got: {cluster_info['status']}"
+            )
+
+            # The CR must still exist in K8s (finalizer blocks removal)
+            cr_current = k8s.get_resource(ref)
+            assert cr_current is not None, (
+                "Cluster CR was removed while AWS cluster is still DELETING! "
+                "Finalizer was removed prematurely."
+            )
+            finalizers = cr_current.get('metadata', {}).get('finalizers', [])
+            assert len(finalizers) > 0, (
+                "Cluster CR has no finalizers while cluster is DELETING!"
+            )
+            logging.info(f"PASS: Finalizer retained. Finalizers: {finalizers}")
+
+        # Wait for cluster to be fully deleted in AWS
+        wait_until_deleted(cluster_name)
+        logging.info(f"Cluster {cluster_name} is fully deleted in AWS")
+
+        # Verify the CR is eventually removed from K8s
+        for _ in range(20):  # up to ~5 minutes
+            if not k8s.get_resource_exists(ref):
+                break
+            time.sleep(15)
+
+        assert not k8s.get_resource_exists(ref), (
+            "Cluster CR still exists after AWS cluster is fully deleted. "
+            "Controller should remove the finalizer once cluster is gone."
+        )
