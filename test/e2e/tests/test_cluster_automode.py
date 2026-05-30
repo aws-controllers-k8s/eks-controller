@@ -34,7 +34,6 @@ from e2e.common.types import CLUSTER_RESOURCE_PLURAL
 from e2e.common.waiter import wait_until_deleted
 from e2e.replacement_values import REPLACEMENT_VALUES
 
-MODIFY_WAIT_AFTER_SECONDS = 240
 CHECK_STATUS_WAIT_SECONDS = 240
 
 
@@ -149,10 +148,10 @@ class TestAutoModeCluster:
         wait_for_cluster_active(eks_client, cluster_name)
         time.sleep(CHECK_STATUS_WAIT_SECONDS)
 
-    def test_finalizer_retained_during_deletion(self, eks_client, auto_mode_cluster):
+    def test_finalizer_retained_during_deletion(self, auto_mode_cluster):
         """Validates that the controller retains the finalizer while the
-        cluster is in DELETING state and only removes it once DescribeCluster
-        returns ResourceNotFoundException.
+        cluster CR is in DELETING state and only removes it once the
+        underlying AWS cluster is fully deleted.
 
         This prevents a race condition where the IAM controller deletes the
         node role while EKS-managed instance profiles are still attached.
@@ -165,32 +164,36 @@ class TestAutoModeCluster:
         k8s.delete_custom_resource(ref, 3, 10)
         logging.info(f"Issued delete for Cluster CR {cluster_name}")
 
-        # Poll until we observe the cluster in DELETING state and verify
-        # the finalizer is still present. For Auto Mode clusters deletion
-        # takes 10-15 min, so we will reliably catch DELETING.
+        # Poll the custom resource until its status reflects DELETING.
+        # This verifies the controller correctly updates CR status during
+        # deletion. For Auto Mode clusters deletion takes 10-15 min, so
+        # we will reliably catch DELETING.
         observed_deleting = False
-        for _ in range(12):  # up to 2 minutes
-            try:
-                status = eks_client.describe_cluster(name=cluster_name)['cluster']['status']
-            except eks_client.exceptions.ResourceNotFoundException:
-                break  # deletion finished before we caught DELETING
-            if status == 'DELETING':
-                observed_deleting = True
-                cr_current = k8s.get_resource(ref)
-                assert cr_current is not None, (
-                    "Cluster CR was removed while AWS cluster is still DELETING! "
-                    "Finalizer was removed prematurely."
+        for _ in range(24):  # up to 4 minutes
+            cr_current = k8s.get_resource(ref)
+            if cr_current is None:
+                pytest.fail(
+                    "CR was removed before reaching DELETING status — "
+                    "finalizer was released prematurely."
                 )
+            cr_status = cr_current.get('status', {}).get('status')
+            logging.debug(f"Polling CR status: {cr_status}")
+            if cr_status == 'DELETING':
+                observed_deleting = True
                 finalizers = cr_current.get('metadata', {}).get('finalizers', [])
                 assert len(finalizers) > 0, (
-                    "Cluster CR has no finalizers while cluster is DELETING!"
+                    "Cluster CR has no finalizers while CR status is DELETING!"
                 )
-                logging.info(f"PASS: Finalizer retained. Finalizers: {finalizers}")
+                logging.info(
+                    f"PASS: CR status is DELETING and finalizer retained. "
+                    f"Finalizers: {finalizers}"
+                )
                 break
             time.sleep(10)
 
         assert observed_deleting, (
-            "Never observed cluster in DELETING state with finalizer retained"
+            "Never observed CR in DELETING state — either the controller "
+            "removed the finalizer prematurely or never set DELETING status."
         )
 
         # Wait for cluster to be fully deleted in AWS
