@@ -34,7 +34,6 @@ from e2e.common.types import CLUSTER_RESOURCE_PLURAL
 from e2e.common.waiter import wait_until_deleted
 from e2e.replacement_values import REPLACEMENT_VALUES
 
-MODIFY_WAIT_AFTER_SECONDS = 240
 CHECK_STATUS_WAIT_SECONDS = 240
 
 
@@ -63,7 +62,7 @@ def eks_client():
     return boto3.client('eks')
 
 
-@pytest.fixture
+@pytest.fixture(scope="class")
 def auto_mode_cluster(eks_client):
     cluster_name = random_suffix_name("auto-mode-cluster", 32)
 
@@ -93,7 +92,16 @@ def auto_mode_cluster(eks_client):
 
     yield (ref, cr)
 
-    pass
+    # Teardown: ensure cluster is cleaned up if a test fails midway.
+    # The finalizer-retention test handles its own deletion, but if
+    # test_create_auto_mode_cluster fails before deletion is issued,
+    # we still need to clean up the AWS resource.
+    try:
+        if k8s.get_resource_exists(ref):
+            k8s.delete_custom_resource(ref, 3, 10)
+        wait_until_deleted(cluster_name)
+    except Exception as e:
+        logging.error(f"Teardown cleanup failed for {cluster_name}: {e}")
 
 
 @service_marker
@@ -140,7 +148,65 @@ class TestAutoModeCluster:
         wait_for_cluster_active(eks_client, cluster_name)
         time.sleep(CHECK_STATUS_WAIT_SECONDS)
 
-        # Clean up
-        _, deleted = k8s.delete_custom_resource(ref, 3, 10)
-        assert deleted
+    def test_finalizer_retained_during_deletion(self, auto_mode_cluster):
+        """Validates that the controller retains the finalizer while the
+        cluster CR is in DELETING state and only removes it once the
+        underlying AWS cluster is fully deleted.
+
+        This prevents a race condition where the IAM controller deletes the
+        node role while EKS-managed instance profiles are still attached.
+        See: https://github.com/aws-controllers-k8s/iam-controller/pull/181
+        """
+        (ref, cr) = auto_mode_cluster
+        cluster_name = cr["spec"]["name"]
+
+        # Issue delete for the Cluster CR
+        k8s.delete_custom_resource(ref, 3, 10)
+        logging.info(f"Issued delete for Cluster CR {cluster_name}")
+
+        # Poll the custom resource until its status reflects DELETING.
+        # This verifies the controller correctly updates CR status during
+        # deletion. For Auto Mode clusters deletion takes 10-15 min, so
+        # we will reliably catch DELETING.
+        observed_deleting = False
+        for _ in range(24):  # up to 4 minutes
+            cr_current = k8s.get_resource(ref)
+            if cr_current is None:
+                pytest.fail(
+                    "CR was removed before reaching DELETING status — "
+                    "finalizer was released prematurely."
+                )
+            cr_status = cr_current.get('status', {}).get('status')
+            logging.debug(f"Polling CR status: {cr_status}")
+            if cr_status == 'DELETING':
+                observed_deleting = True
+                finalizers = cr_current.get('metadata', {}).get('finalizers', [])
+                assert len(finalizers) > 0, (
+                    "Cluster CR has no finalizers while CR status is DELETING!"
+                )
+                logging.info(
+                    f"PASS: CR status is DELETING and finalizer retained. "
+                    f"Finalizers: {finalizers}"
+                )
+                break
+            time.sleep(10)
+
+        assert observed_deleting, (
+            "Never observed CR in DELETING state — either the controller "
+            "removed the finalizer prematurely or never set DELETING status."
+        )
+
+        # Wait for cluster to be fully deleted in AWS
         wait_until_deleted(cluster_name)
+        logging.info(f"Cluster {cluster_name} is fully deleted in AWS")
+
+        # Verify the CR is eventually removed from K8s
+        for _ in range(20):  # up to ~5 minutes
+            if not k8s.get_resource_exists(ref):
+                break
+            time.sleep(15)
+
+        assert not k8s.get_resource_exists(ref), (
+            "Cluster CR still exists after AWS cluster is fully deleted. "
+            "Controller should remove the finalizer once cluster is gone."
+        )
