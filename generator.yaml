@@ -589,6 +589,11 @@ resources:
         set:
         - method: Update
           ignore: from
+      RoleARN:
+        references:
+          service_name: iam
+          resource: Role
+          path: Status.ACKResourceMetadata.ARN
       Status:
         set:
         - method: Update
