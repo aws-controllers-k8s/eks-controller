@@ -61,9 +61,9 @@ type CapabilitySpec struct {
 	// needs permissions to access Git repositories and Secrets Manager. For KRO
 	// capabilities, the role needs permissions based on the resources you'll be
 	// orchestrating.
-	// +kubebuilder:validation:Required
-	RoleARN *string            `json:"roleARN"`
-	Tags    map[string]*string `json:"tags,omitempty"`
+	RoleARN *string                                  `json:"roleARN,omitempty"`
+	RoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"roleRef,omitempty"`
+	Tags    map[string]*string                       `json:"tags,omitempty"`
 	// The type of capability to create. Valid values are:
 	//
 	//   - ACK – Amazon Web Services Controllers for Kubernetes (ACK), which
