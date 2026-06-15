@@ -61,13 +61,6 @@ func newResourceDelta(
 			delta.Add("Spec.ClientRequestToken", a.ko.Spec.ClientRequestToken, b.ko.Spec.ClientRequestToken)
 		}
 	}
-	if ackcompare.HasNilDifference(a.ko.Spec.DeletionProtection, b.ko.Spec.DeletionProtection) {
-		delta.Add("Spec.DeletionProtection", a.ko.Spec.DeletionProtection, b.ko.Spec.DeletionProtection)
-	} else if a.ko.Spec.DeletionProtection != nil && b.ko.Spec.DeletionProtection != nil {
-		if *a.ko.Spec.DeletionProtection != *b.ko.Spec.DeletionProtection {
-			delta.Add("Spec.DeletionProtection", a.ko.Spec.DeletionProtection, b.ko.Spec.DeletionProtection)
-		}
-	}
 	if ackcompare.HasNilDifference(a.ko.Spec.ComputeConfig, b.ko.Spec.ComputeConfig) {
 		delta.Add("Spec.ComputeConfig", a.ko.Spec.ComputeConfig, b.ko.Spec.ComputeConfig)
 	} else if a.ko.Spec.ComputeConfig != nil && b.ko.Spec.ComputeConfig != nil {
@@ -91,6 +84,13 @@ func newResourceDelta(
 			if *a.ko.Spec.ComputeConfig.NodeRoleARN != *b.ko.Spec.ComputeConfig.NodeRoleARN {
 				delta.Add("Spec.ComputeConfig.NodeRoleARN", a.ko.Spec.ComputeConfig.NodeRoleARN, b.ko.Spec.ComputeConfig.NodeRoleARN)
 			}
+		}
+	}
+	if ackcompare.HasNilDifference(a.ko.Spec.DeletionProtection, b.ko.Spec.DeletionProtection) {
+		delta.Add("Spec.DeletionProtection", a.ko.Spec.DeletionProtection, b.ko.Spec.DeletionProtection)
+	} else if a.ko.Spec.DeletionProtection != nil && b.ko.Spec.DeletionProtection != nil {
+		if *a.ko.Spec.DeletionProtection != *b.ko.Spec.DeletionProtection {
+			delta.Add("Spec.DeletionProtection", a.ko.Spec.DeletionProtection, b.ko.Spec.DeletionProtection)
 		}
 	}
 	if len(a.ko.Spec.EncryptionConfig) != len(b.ko.Spec.EncryptionConfig) {

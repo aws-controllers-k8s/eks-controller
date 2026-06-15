@@ -104,9 +104,9 @@ spec:
                 type: object
               deletionProtection:
                 description: |-
-                  Set to true to enable deletion protection for the cluster. When true, the
-                  cluster cannot be deleted. When false, the cluster can be deleted normally.
-                  This setting only applies to clusters in an active state.
+                  Indicates whether to enable deletion protection for the cluster. When enabled,
+                  the cluster cannot be deleted unless deletion protection is first disabled.
+                  This helps prevent accidental cluster deletion. Default value is false.
                 type: boolean
               encryptionConfig:
                 description: The encryption configuration for the cluster.

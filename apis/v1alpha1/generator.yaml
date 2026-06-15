@@ -618,6 +618,4 @@ ignore:
   - CreateAddonInput.NamespaceConfig
   - CreateAddonOutput.Addon.NamespaceConfig
   - CreateClusterInput.ControlPlaneScalingConfig
-  - CreateClusterInput.DeletionProtection
   - CreateClusterOutput.Cluster.ControlPlaneScalingConfig
-  - CreateClusterOutput.Cluster.DeletionProtection
