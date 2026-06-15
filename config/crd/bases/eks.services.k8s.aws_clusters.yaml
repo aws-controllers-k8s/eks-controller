@@ -102,6 +102,12 @@ spec:
                   nodeRoleARN:
                     type: string
                 type: object
+              deletionProtection:
+                description: |-
+                  Set to true to enable deletion protection for the cluster. When true, the
+                  cluster cannot be deleted. When false, the cluster can be deleted normally.
+                  This setting only applies to clusters in an active state.
+                type: boolean
               encryptionConfig:
                 description: The encryption configuration for the cluster.
                 items:

@@ -1830,6 +1830,11 @@ func (in *ClusterSpec) DeepCopyInto(out *ClusterSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.DeletionProtection != nil {
+		in, out := &in.DeletionProtection, &out.DeletionProtection
+		*out = new(bool)
+		**out = **in
+	}
 	if in.ComputeConfig != nil {
 		in, out := &in.ComputeConfig, &out.ComputeConfig
 		*out = new(ComputeConfigRequest)

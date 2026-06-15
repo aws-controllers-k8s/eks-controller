@@ -164,6 +164,11 @@ func (rm *resourceManager) sdkFind(
 	} else {
 		ko.Status.CreatedAt = nil
 	}
+	if resp.Cluster.DeletionProtection != nil {
+		ko.Spec.DeletionProtection = resp.Cluster.DeletionProtection
+	} else {
+		ko.Spec.DeletionProtection = nil
+	}
 	if resp.Cluster.EncryptionConfig != nil {
 		f7 := []*svcapitypes.EncryptionConfig{}
 		for _, f7iter := range resp.Cluster.EncryptionConfig {
@@ -550,6 +555,11 @@ func (rm *resourceManager) sdkCreate(
 	} else {
 		ko.Status.CreatedAt = nil
 	}
+	if resp.Cluster.DeletionProtection != nil {
+		ko.Spec.DeletionProtection = resp.Cluster.DeletionProtection
+	} else {
+		ko.Spec.DeletionProtection = nil
+	}
 	if resp.Cluster.EncryptionConfig != nil {
 		f7 := []*svcapitypes.EncryptionConfig{}
 		for _, f7iter := range resp.Cluster.EncryptionConfig {
@@ -835,6 +845,9 @@ func (rm *resourceManager) newCreateRequestPayload(
 	}
 	if r.ko.Spec.ClientRequestToken != nil {
 		res.ClientRequestToken = r.ko.Spec.ClientRequestToken
+	}
+	if r.ko.Spec.DeletionProtection != nil {
+		res.DeletionProtection = r.ko.Spec.DeletionProtection
 	}
 	if r.ko.Spec.ComputeConfig != nil {
 		f3 := &svcsdktypes.ComputeConfigRequest{}

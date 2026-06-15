@@ -38,6 +38,10 @@ type ClusterSpec struct {
 	// A unique, case-sensitive identifier that you provide to ensurethe idempotency
 	// of the request.
 	ClientRequestToken *string `json:"clientRequestToken,omitempty"`
+	// Set to true to enable deletion protection for the cluster. When true, the
+	// cluster cannot be deleted. When false, the cluster can be deleted normally.
+	// This setting only applies to clusters in an active state.
+	DeletionProtection *bool `json:"deletionProtection,omitempty"`
 	// Enable or disable the compute capability of EKS Auto Mode when creating your
 	// EKS Auto Mode cluster. If the compute capability is enabled, EKS Auto Mode
 	// will create and delete EC2 Managed Instances in your Amazon Web Services
