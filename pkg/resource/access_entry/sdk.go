@@ -247,12 +247,12 @@ func (rm *resourceManager) sdkCreate(
 		ko.Spec.Username = nil
 	}
 
+	rm.setStatusDefaults(ko)
 	if desired.ko.Spec.AccessPolicies != nil {
 		ackcondition.SetSynced(&resource{ko}, corev1.ConditionFalse, nil, nil)
 		return &resource{ko}, nil
 	}
 
-	rm.setStatusDefaults(ko)
 	return &resource{ko}, nil
 }
 
