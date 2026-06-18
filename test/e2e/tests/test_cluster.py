@@ -326,10 +326,10 @@ class TestCluster:
         # EKS only allows upgrading one minor version at a time, so the
         # controller intentionally increments a single minor version per
         # reconcile (1.33 -> 1.34 -> 1.35). This means reaching the desired
-        # version requires TWO sequential control-plane upgrades, each of
-        # which can take 30+ minutes. We therefore poll until the cluster
-        # actually reports the target version rather than asserting after a
-        # single active cycle (which would catch the cluster mid-way at 1.34).
+        # version requires TWO sequential control-plane upgrades. We therefore
+        # poll until the cluster actually reports the target version rather than
+        # asserting after a single active cycle (which would catch the cluster
+        # mid-way at 1.34).
         updates = {
             "spec": {
                 "version": TESTS_DEFAULT_KUBERNETES_VERSION_1_35
@@ -340,18 +340,28 @@ class TestCluster:
 
         # Drive the cluster through each upgrade hop until it reaches 1.35.
         #
-        # We fail fast in two cases so a broken upgrade can't hang the test
-        # for the full window:
-        #   1. A single hop stalls with no version progress past the per-hop
-        #      ceiling.
-        #   2. EKS reports a FAILED VersionUpdate once the cluster has settled
-        #      back to ACTIVE without advancing (e.g. 1.34 -> 1.35 fails and
-        #      rolls back to ACTIVE at 1.34). We only consult the update history
-        #      when the cluster is ACTIVE and made no progress this cycle, so a
-        #      hop that is legitimately still in flight isn't misreported.
-        # The hop timer resets every time the cluster advances a minor version,
-        # so the legitimate two-hop path is given the time it needs.
-        HOP_TIMEOUT_SECONDS = 50 * 60  # generous per-hop ceiling
+        # We poll describe_cluster directly (rather than wait_for_cluster_active)
+        # so the per-hop budget below is the single authoritative bound: the
+        # shared waiter caps at 20 min, which is shorter than a single EKS minor
+        # upgrade can take, so relying on it here would fail healthy-but-slow
+        # hops before the budget applied.
+        #
+        # HOP_TIMEOUT_SECONDS is the max time allowed for one hop to complete.
+        # A small/empty EKS cluster minor upgrade typically finishes in
+        # ~10-25 min; 40 min is a padded ceiling so a slow-but-healthy upgrade
+        # doesn't flake. The timer resets every time the cluster advances a
+        # minor version, so the legitimate two-hop path gets the full budget per
+        # hop.
+        #
+        # We fail fast in two cases so a broken upgrade can't hang the test:
+        #   1. A hop stalls with no version progress past HOP_TIMEOUT_SECONDS.
+        #   2. EKS reports a FAILED VersionUpdate while the cluster is ACTIVE and
+        #      hasn't advanced (e.g. 1.34 -> 1.35 fails and rolls back to ACTIVE
+        #      at 1.34). The failed-update history is only consulted while ACTIVE
+        #      and not progressing, so a hop still in flight isn't misreported.
+        HOP_TIMEOUT_SECONDS = 40 * 60
+        POLL_INTERVAL_SECONDS = 30
+
         cluster_version = eks_client.describe_cluster(
             name=cluster_name,
         )["cluster"]["version"]
@@ -366,32 +376,32 @@ class TestCluster:
                     f"{HOP_TIMEOUT_SECONDS // 60} minutes."
                 )
 
-            # Block until the current hop finishes and the cluster is ACTIVE.
-            wait_for_cluster_active(eks_client, cluster_name)
-            new_version = eks_client.describe_cluster(
-                name=cluster_name,
-            )["cluster"]["version"]
+            aws_res = eks_client.describe_cluster(name=cluster_name)
+            status = aws_res["cluster"]["status"]
+            observed_version = aws_res["cluster"]["version"]
 
-            if new_version != cluster_version:
+            if status == "ACTIVE" and observed_version != cluster_version:
                 # Advanced to the next minor version; reset the hop timer and
                 # let the controller pick up the remaining delta.
-                cluster_version = new_version
+                cluster_version = observed_version
                 hop_deadline = time.time() + HOP_TIMEOUT_SECONDS
                 continue
 
-            # Cluster is ACTIVE but didn't advance. If EKS recorded a failed
-            # version upgrade, surface it now instead of waiting out the stall
-            # timeout.
-            failed = get_failed_version_update(eks_client, cluster_name)
-            if failed is not None:
-                pytest.fail(
-                    f"EKS version upgrade failed for cluster '{cluster_name}' "
-                    f"at version {cluster_version}: {failed.get('errors')}"
-                )
+            if status == "ACTIVE":
+                # Cluster is settled at the same version. If EKS recorded a
+                # failed version upgrade, surface it now instead of waiting out
+                # the stall timeout.
+                failed = get_failed_version_update(eks_client, cluster_name)
+                if failed is not None:
+                    pytest.fail(
+                        f"EKS version upgrade failed for cluster "
+                        f"'{cluster_name}' at version {cluster_version}: "
+                        f"{failed.get('errors')}"
+                    )
 
-            # No progress yet: give the controller time to detect the remaining
-            # version delta and kick off the next upgrade hop before re-checking.
-            time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+            # Either an upgrade is in flight (UPDATING) or we're waiting for the
+            # controller to kick off the next hop. Keep polling under the budget.
+            time.sleep(POLL_INTERVAL_SECONDS)
 
         # the cluster should be active again at the desired version 1.35
         assert cluster_version == TESTS_DEFAULT_KUBERNETES_VERSION_1_35
