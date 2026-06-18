@@ -54,6 +54,31 @@ def wait_for_cluster_active(eks_client, cluster_name):
     waiter.config.max_attempts = 240
     waiter.wait(name=cluster_name)
 
+def get_failed_version_update(eks_client, cluster_name):
+    """Return a FAILED VersionUpdate for the cluster, or None.
+
+    Scoping/ordering notes:
+    - The version test creates a dedicated cluster (function-scoped fixture,
+      unique random name) that no other test touches, so every update on this
+      cluster belongs to this test. We therefore don't need to identify a
+      specific updateId.
+    - EKS does not guarantee an ordering for updateIds, so we scan all of them
+      and match on type/status rather than assuming the newest is first.
+
+    A failed control-plane version upgrade leaves the cluster ACTIVE at its
+    previous version with the Update resource marked 'Failed'. Detecting this
+    lets the test fail fast (with the EKS error) instead of waiting out the
+    full upgrade timeout.
+    """
+    update_ids = eks_client.list_updates(name=cluster_name).get("updateIds", [])
+    for update_id in update_ids:
+        update = eks_client.describe_update(
+            name=cluster_name, updateId=update_id,
+        )["update"]
+        if update.get("type") == "VersionUpdate" and update.get("status") == "Failed":
+            return update
+    return None
+
 def get_and_assert_status(ref: k8s.CustomResourceReference, expected_status: str, expected_synced: bool):
     cr = k8s.get_resource(ref)
     assert cr is not None
@@ -314,17 +339,58 @@ class TestCluster:
         time.sleep(MODIFY_WAIT_AFTER_SECONDS)
 
         # Drive the cluster through each upgrade hop until it reaches 1.35.
-        cluster_version = None
-        deadline = time.time() + (90 * 60)  # up to 90 min for both hops
-        while time.time() < deadline:
+        #
+        # We fail fast in two cases so a broken upgrade can't hang the test
+        # for the full window:
+        #   1. A single hop stalls with no version progress past the per-hop
+        #      ceiling.
+        #   2. EKS reports a FAILED VersionUpdate once the cluster has settled
+        #      back to ACTIVE without advancing (e.g. 1.34 -> 1.35 fails and
+        #      rolls back to ACTIVE at 1.34). We only consult the update history
+        #      when the cluster is ACTIVE and made no progress this cycle, so a
+        #      hop that is legitimately still in flight isn't misreported.
+        # The hop timer resets every time the cluster advances a minor version,
+        # so the legitimate two-hop path is given the time it needs.
+        HOP_TIMEOUT_SECONDS = 50 * 60  # generous per-hop ceiling
+        cluster_version = eks_client.describe_cluster(
+            name=cluster_name,
+        )["cluster"]["version"]
+        hop_deadline = time.time() + HOP_TIMEOUT_SECONDS
+
+        while cluster_version != TESTS_DEFAULT_KUBERNETES_VERSION_1_35:
+            if time.time() > hop_deadline:
+                pytest.fail(
+                    f"Cluster '{cluster_name}' stalled at version "
+                    f"{cluster_version}; did not progress toward "
+                    f"{TESTS_DEFAULT_KUBERNETES_VERSION_1_35} within "
+                    f"{HOP_TIMEOUT_SECONDS // 60} minutes."
+                )
+
             # Block until the current hop finishes and the cluster is ACTIVE.
             wait_for_cluster_active(eks_client, cluster_name)
-            aws_res = eks_client.describe_cluster(name=cluster_name)
-            cluster_version = aws_res["cluster"]["version"]
-            if cluster_version == TESTS_DEFAULT_KUBERNETES_VERSION_1_35:
-                break
-            # Give the controller time to detect the remaining version delta
-            # and kick off the next upgrade hop before we re-check.
+            new_version = eks_client.describe_cluster(
+                name=cluster_name,
+            )["cluster"]["version"]
+
+            if new_version != cluster_version:
+                # Advanced to the next minor version; reset the hop timer and
+                # let the controller pick up the remaining delta.
+                cluster_version = new_version
+                hop_deadline = time.time() + HOP_TIMEOUT_SECONDS
+                continue
+
+            # Cluster is ACTIVE but didn't advance. If EKS recorded a failed
+            # version upgrade, surface it now instead of waiting out the stall
+            # timeout.
+            failed = get_failed_version_update(eks_client, cluster_name)
+            if failed is not None:
+                pytest.fail(
+                    f"EKS version upgrade failed for cluster '{cluster_name}' "
+                    f"at version {cluster_version}: {failed.get('errors')}"
+                )
+
+            # No progress yet: give the controller time to detect the remaining
+            # version delta and kick off the next upgrade hop before re-checking.
             time.sleep(MODIFY_WAIT_AFTER_SECONDS)
 
         # the cluster should be active again at the desired version 1.35
