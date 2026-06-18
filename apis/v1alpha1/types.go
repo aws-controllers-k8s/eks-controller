@@ -435,10 +435,11 @@ type Cluster_SDK struct {
 	// EKS Auto Mode cluster.
 	ComputeConfig *ComputeConfigResponse `json:"computeConfig,omitempty"`
 	// The full description of your connected cluster.
-	ConnectorConfig  *ConnectorConfigResponse `json:"connectorConfig,omitempty"`
-	CreatedAt        *metav1.Time             `json:"createdAt,omitempty"`
-	EncryptionConfig []*EncryptionConfig      `json:"encryptionConfig,omitempty"`
-	Endpoint         *string                  `json:"endpoint,omitempty"`
+	ConnectorConfig    *ConnectorConfigResponse `json:"connectorConfig,omitempty"`
+	CreatedAt          *metav1.Time             `json:"createdAt,omitempty"`
+	DeletionProtection *bool                    `json:"deletionProtection,omitempty"`
+	EncryptionConfig   []*EncryptionConfig      `json:"encryptionConfig,omitempty"`
+	Endpoint           *string                  `json:"endpoint,omitempty"`
 	// An object representing the health of your Amazon EKS cluster.
 	Health *ClusterHealth `json:"health,omitempty"`
 	ID     *string        `json:"id,omitempty"`

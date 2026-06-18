@@ -416,6 +416,21 @@ func (rm *resourceManager) customUpdate(
 		return returnClusterUpdating(updatedRes)
 	}
 
+	// Handle deletionProtection updates
+	if delta.DifferentAt("Spec.DeletionProtection") {
+		if err := rm.updateDeletionProtection(ctx, desired); err != nil {
+			awsErr, ok := extractAWSError(err)
+
+			// Check to see if we've raced an async update call and need to requeue
+			if ok && awsErr.Code == "ResourceInUseException" {
+				return nil, requeueAfterAsyncUpdate()
+			}
+
+			return nil, err
+		}
+		return returnClusterUpdating(updatedRes)
+	}
+
 	// Set default status values and return the updated resource
 	rm.setStatusDefaults(updatedRes.ko)
 	return updatedRes, nil
@@ -738,6 +753,28 @@ func (rm *resourceManager) updateZonalShiftConfig(
 		ZonalShiftConfig: &svcsdktypes.ZonalShiftConfigRequest{
 			Enabled: r.ko.Spec.ZonalShiftConfig.Enabled,
 		},
+	}
+
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (rm *resourceManager) updateDeletionProtection(
+	ctx context.Context,
+	r *resource,
+) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateDeletionProtection")
+	defer exit(err)
+
+	input := &svcsdk.UpdateClusterConfigInput{
+		Name:               r.ko.Spec.Name,
+		DeletionProtection: r.ko.Spec.DeletionProtection,
 	}
 
 	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
