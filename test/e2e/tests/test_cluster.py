@@ -296,7 +296,15 @@ class TestCluster:
 
         wait_for_cluster_active(eks_client, cluster_name)
 
-        # Bump two minor versions 1.30 -> 1.32
+        # Bump two minor versions: 1.33 -> 1.35.
+        #
+        # EKS only allows upgrading one minor version at a time, so the
+        # controller intentionally increments a single minor version per
+        # reconcile (1.33 -> 1.34 -> 1.35). This means reaching the desired
+        # version requires TWO sequential control-plane upgrades, each of
+        # which can take 30+ minutes. We therefore poll until the cluster
+        # actually reports the target version rather than asserting after a
+        # single active cycle (which would catch the cluster mid-way at 1.34).
         updates = {
             "spec": {
                 "version": TESTS_DEFAULT_KUBERNETES_VERSION_1_35
@@ -305,17 +313,26 @@ class TestCluster:
         k8s.patch_custom_resource(ref, updates)
         time.sleep(MODIFY_WAIT_AFTER_SECONDS)
 
-        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=20)
-        
-        # Wait for the updating to become active again
-        wait_for_cluster_active(eks_client, cluster_name)
+        # Drive the cluster through each upgrade hop until it reaches 1.35.
+        cluster_version = None
+        deadline = time.time() + (90 * 60)  # up to 90 min for both hops
+        while time.time() < deadline:
+            # Block until the current hop finishes and the cluster is ACTIVE.
+            wait_for_cluster_active(eks_client, cluster_name)
+            aws_res = eks_client.describe_cluster(name=cluster_name)
+            cluster_version = aws_res["cluster"]["version"]
+            if cluster_version == TESTS_DEFAULT_KUBERNETES_VERSION_1_35:
+                break
+            # Give the controller time to detect the remaining version delta
+            # and kick off the next upgrade hop before we re-check.
+            time.sleep(MODIFY_WAIT_AFTER_SECONDS)
 
-        # So we need to wait again for the CR to be updated.
-        time.sleep(CHECK_STATUS_WAIT_SECONDS)
-        
-        # the cluster should be active again at version 1.35
-        aws_res = eks_client.describe_cluster(name=cluster_name)
-        assert aws_res["cluster"]["version"] == TESTS_DEFAULT_KUBERNETES_VERSION_1_35
+        # the cluster should be active again at the desired version 1.35
+        assert cluster_version == TESTS_DEFAULT_KUBERNETES_VERSION_1_35
+
+        # Once the final version is reached, the controller should converge
+        # and mark the resource synced.
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=30)
 
         # Ensure status is updating properly and set as not synced
         get_and_assert_status(ref, 'ACTIVE', True)
