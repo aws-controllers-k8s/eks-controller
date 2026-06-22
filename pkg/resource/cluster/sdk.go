@@ -334,6 +334,7 @@ func (rm *resourceManager) sdkFind(
 	}
 	if resp.Cluster.ResourcesVpcConfig != nil {
 		f18 := &svcapitypes.VPCConfigRequest{}
+		f18.ControlPlaneEgressMode = aws.String(string(resp.Cluster.ResourcesVpcConfig.ControlPlaneEgressMode))
 		f18.EndpointPrivateAccess = &resp.Cluster.ResourcesVpcConfig.EndpointPrivateAccess
 		f18.EndpointPublicAccess = &resp.Cluster.ResourcesVpcConfig.EndpointPublicAccess
 		if resp.Cluster.ResourcesVpcConfig.PublicAccessCidrs != nil {
@@ -720,6 +721,7 @@ func (rm *resourceManager) sdkCreate(
 	}
 	if resp.Cluster.ResourcesVpcConfig != nil {
 		f18 := &svcapitypes.VPCConfigRequest{}
+		f18.ControlPlaneEgressMode = aws.String(string(resp.Cluster.ResourcesVpcConfig.ControlPlaneEgressMode))
 		f18.EndpointPrivateAccess = &resp.Cluster.ResourcesVpcConfig.EndpointPrivateAccess
 		f18.EndpointPublicAccess = &resp.Cluster.ResourcesVpcConfig.EndpointPublicAccess
 		if resp.Cluster.ResourcesVpcConfig.PublicAccessCidrs != nil {
@@ -956,6 +958,9 @@ func (rm *resourceManager) newCreateRequestPayload(
 	}
 	if r.ko.Spec.ResourcesVPCConfig != nil {
 		f10 := &svcsdktypes.VpcConfigRequest{}
+		if r.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode != nil {
+			f10.ControlPlaneEgressMode = svcsdktypes.ControlPlaneEgressModeType(*r.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode)
+		}
 		if r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess != nil {
 			f10.EndpointPrivateAccess = r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess
 		}
@@ -1247,6 +1252,9 @@ func (rm *resourceManager) newVpcConfigRequest(
 	res := &svcsdktypes.VpcConfigRequest{}
 
 	if r.ko.Spec.ResourcesVPCConfig != nil {
+		if r.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode != nil {
+			res.ControlPlaneEgressMode = svcsdktypes.ControlPlaneEgressModeType(*r.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode)
+		}
 		if r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess != nil {
 			res.EndpointPrivateAccess = r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess
 		}
