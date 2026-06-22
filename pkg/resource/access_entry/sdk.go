@@ -249,8 +249,8 @@ func (rm *resourceManager) sdkCreate(
 
 	rm.setStatusDefaults(ko)
 	if desired.ko.Spec.AccessPolicies != nil {
-		ackcondition.SetSynced(&resource{ko}, corev1.ConditionFalse, nil, nil)
-		return &resource{ko}, nil
+		msg := "Access policy update pending; resource will be requeued in 30 seconds"
+		ackcondition.SetSynced(&resource{ko}, corev1.ConditionFalse, &msg, nil)
 	}
 
 	return &resource{ko}, nil
