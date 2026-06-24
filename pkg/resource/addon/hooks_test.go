@@ -41,10 +41,10 @@ func TestEqualPodIdentityAssociation(t *testing.T) {
 			"non-empty slices",
 			args{
 				[]*v1alpha1.AddonPodIdentityAssociations{
-					{ptr("rolearn"), ptr("serviceaccount")},
+					{RoleARN: ptr("rolearn"), ServiceAccount: ptr("serviceaccount")},
 				},
 				[]*v1alpha1.AddonPodIdentityAssociations{
-					{ptr("rolearn"), ptr("serviceaccount")},
+					{RoleARN: ptr("rolearn"), ServiceAccount: ptr("serviceaccount")},
 				},
 			},
 			true,
@@ -53,14 +53,14 @@ func TestEqualPodIdentityAssociation(t *testing.T) {
 			"3 elements",
 			args{
 				[]*v1alpha1.AddonPodIdentityAssociations{
-					{ptr("rolearn"), ptr("serviceaccount")},
-					{ptr("rolearn2"), ptr("serviceaccount2")},
-					{ptr("rolearn3"), ptr("serviceaccount3")},
+					{RoleARN: ptr("rolearn"), ServiceAccount: ptr("serviceaccount")},
+					{RoleARN: ptr("rolearn2"), ServiceAccount: ptr("serviceaccount2")},
+					{RoleARN: ptr("rolearn3"), ServiceAccount: ptr("serviceaccount3")},
 				},
 				[]*v1alpha1.AddonPodIdentityAssociations{
-					{ptr("rolearn"), ptr("serviceaccount")},
-					{ptr("rolearn2"), ptr("serviceaccount2")},
-					{ptr("rolearn3"), ptr("serviceaccount3")},
+					{RoleARN: ptr("rolearn"), ServiceAccount: ptr("serviceaccount")},
+					{RoleARN: ptr("rolearn2"), ServiceAccount: ptr("serviceaccount2")},
+					{RoleARN: ptr("rolearn3"), ServiceAccount: ptr("serviceaccount3")},
 				},
 			},
 			true,
@@ -69,14 +69,14 @@ func TestEqualPodIdentityAssociation(t *testing.T) {
 			"3 elements, different order",
 			args{
 				[]*v1alpha1.AddonPodIdentityAssociations{
-					{ptr("rolearn"), ptr("serviceaccount")},
-					{ptr("rolearn2"), ptr("serviceaccount2")},
-					{ptr("rolearn3"), ptr("serviceaccount3")},
+					{RoleARN: ptr("rolearn"), ServiceAccount: ptr("serviceaccount")},
+					{RoleARN: ptr("rolearn2"), ServiceAccount: ptr("serviceaccount2")},
+					{RoleARN: ptr("rolearn3"), ServiceAccount: ptr("serviceaccount3")},
 				},
 				[]*v1alpha1.AddonPodIdentityAssociations{
-					{ptr("rolearn3"), ptr("serviceaccount3")},
-					{ptr("rolearn2"), ptr("serviceaccount2")},
-					{ptr("rolearn"), ptr("serviceaccount")},
+					{RoleARN: ptr("rolearn3"), ServiceAccount: ptr("serviceaccount3")},
+					{RoleARN: ptr("rolearn2"), ServiceAccount: ptr("serviceaccount2")},
+					{RoleARN: ptr("rolearn"), ServiceAccount: ptr("serviceaccount")},
 				},
 			},
 			true,
@@ -85,13 +85,13 @@ func TestEqualPodIdentityAssociation(t *testing.T) {
 			"different sizes",
 			args{
 				[]*v1alpha1.AddonPodIdentityAssociations{
-					{ptr("rolearn"), ptr("serviceaccount")},
-					{ptr("rolearn2"), ptr("serviceaccount2")},
-					{ptr("rolearn3"), ptr("serviceaccount3")},
+					{RoleARN: ptr("rolearn"), ServiceAccount: ptr("serviceaccount")},
+					{RoleARN: ptr("rolearn2"), ServiceAccount: ptr("serviceaccount2")},
+					{RoleARN: ptr("rolearn3"), ServiceAccount: ptr("serviceaccount3")},
 				},
 				[]*v1alpha1.AddonPodIdentityAssociations{
-					{ptr("rolearn3"), ptr("serviceaccount3")},
-					{ptr("rolearn2"), ptr("serviceaccount2")},
+					{RoleARN: ptr("rolearn3"), ServiceAccount: ptr("serviceaccount3")},
+					{RoleARN: ptr("rolearn2"), ServiceAccount: ptr("serviceaccount2")},
 				},
 			},
 			false,
@@ -100,14 +100,14 @@ func TestEqualPodIdentityAssociation(t *testing.T) {
 			"same size, different elements",
 			args{
 				[]*v1alpha1.AddonPodIdentityAssociations{
-					{ptr("rolearn"), ptr("serviceaccount")},
-					{ptr("rolearn2"), ptr("serviceaccount2")},
-					{ptr("rolearn3"), ptr("serviceaccount3")},
+					{RoleARN: ptr("rolearn"), ServiceAccount: ptr("serviceaccount")},
+					{RoleARN: ptr("rolearn2"), ServiceAccount: ptr("serviceaccount2")},
+					{RoleARN: ptr("rolearn3"), ServiceAccount: ptr("serviceaccount3")},
 				},
 				[]*v1alpha1.AddonPodIdentityAssociations{
-					{ptr("rolearn3"), ptr("serviceaccount3")},
-					{ptr("rolearn2"), ptr("serviceaccount2")},
-					{ptr("rolearn4"), ptr("serviceaccount4")},
+					{RoleARN: ptr("rolearn3"), ServiceAccount: ptr("serviceaccount3")},
+					{RoleARN: ptr("rolearn2"), ServiceAccount: ptr("serviceaccount2")},
+					{RoleARN: ptr("rolearn4"), ServiceAccount: ptr("serviceaccount4")},
 				},
 			},
 			false,
@@ -167,7 +167,7 @@ func TestFormatPodIdentityAssociation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := formatPodIdentityAssociation(&v1alpha1.AddonPodIdentityAssociations{tt.args.roleARN, tt.args.serviceAccount}); got != tt.want {
+			if got := formatPodIdentityAssociation(&v1alpha1.AddonPodIdentityAssociations{RoleARN: tt.args.roleARN, ServiceAccount: tt.args.serviceAccount}); got != tt.want {
 				t.Errorf("FormatPodIdentityAssociation() = %v, want %v", got, tt.want)
 			}
 		})

@@ -35,6 +35,9 @@ import (
 // +kubebuilder:rbac:groups=iam.services.k8s.aws,resources=roles,verbs=get;list
 // +kubebuilder:rbac:groups=iam.services.k8s.aws,resources=roles/status,verbs=get;list
 
+// +kubebuilder:rbac:groups=iam.services.k8s.aws,resources=roles,verbs=get;list
+// +kubebuilder:rbac:groups=iam.services.k8s.aws,resources=roles/status,verbs=get;list
+
 // ClearResolvedReferences removes any reference values that were made
 // concrete in the spec. It returns a copy of the input AWSResource which
 // contains the original *Ref values, but none of their respective concrete
@@ -44,6 +47,12 @@ func (rm *resourceManager) ClearResolvedReferences(res acktypes.AWSResource) ack
 
 	if ko.Spec.ClusterRef != nil {
 		ko.Spec.ClusterName = nil
+	}
+
+	for f0idx, f0iter := range ko.Spec.PodIdentityAssociations {
+		if f0iter.RoleRef != nil {
+			ko.Spec.PodIdentityAssociations[f0idx].RoleARN = nil
+		}
 	}
 
 	if ko.Spec.ServiceAccountRoleRef != nil {
@@ -75,6 +84,12 @@ func (rm *resourceManager) ResolveReferences(
 		resourceHasReferences = resourceHasReferences || fieldHasReferences
 	}
 
+	if fieldHasReferences, err := rm.resolveReferenceForPodIdentityAssociations_RoleARN(ctx, apiReader, ko); err != nil {
+		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
+	} else {
+		resourceHasReferences = resourceHasReferences || fieldHasReferences
+	}
+
 	if fieldHasReferences, err := rm.resolveReferenceForServiceAccountRoleARN(ctx, apiReader, ko); err != nil {
 		return &resource{ko}, (resourceHasReferences || fieldHasReferences), err
 	} else {
@@ -93,6 +108,12 @@ func validateReferenceFields(ko *svcapitypes.Addon) error {
 	}
 	if ko.Spec.ClusterRef == nil && ko.Spec.ClusterName == nil {
 		return ackerr.ResourceReferenceOrIDRequiredFor("ClusterName", "ClusterRef")
+	}
+
+	for _, f0iter := range ko.Spec.PodIdentityAssociations {
+		if f0iter.RoleRef != nil && f0iter.RoleARN != nil {
+			return ackerr.ResourceReferenceAndIDNotSupportedFor("PodIdentityAssociations.RoleARN", "PodIdentityAssociations.RoleRef")
+		}
 	}
 
 	if ko.Spec.ServiceAccountRoleRef != nil && ko.Spec.ServiceAccountRoleARN != nil {
@@ -192,38 +213,40 @@ func getReferencedResourceState_Cluster(
 	return nil
 }
 
-// resolveReferenceForServiceAccountRoleARN reads the resource referenced
-// from ServiceAccountRoleRef field and sets the ServiceAccountRoleARN
+// resolveReferenceForPodIdentityAssociations_RoleARN reads the resource referenced
+// from PodIdentityAssociations.RoleRef field and sets the PodIdentityAssociations.RoleARN
 // from referenced resource. Returns a boolean indicating whether a reference
 // contains references, or an error
-func (rm *resourceManager) resolveReferenceForServiceAccountRoleARN(
+func (rm *resourceManager) resolveReferenceForPodIdentityAssociations_RoleARN(
 	ctx context.Context,
 	apiReader client.Reader,
 	ko *svcapitypes.Addon,
 ) (hasReferences bool, err error) {
-	if ko.Spec.ServiceAccountRoleRef != nil && ko.Spec.ServiceAccountRoleRef.From != nil {
-		hasReferences = true
-		arr := ko.Spec.ServiceAccountRoleRef.From
-		if arr.Name == nil || *arr.Name == "" {
-			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: ServiceAccountRoleRef")
+	for f0idx, f0iter := range ko.Spec.PodIdentityAssociations {
+		if f0iter.RoleRef != nil && f0iter.RoleRef.From != nil {
+			hasReferences = true
+			arr := f0iter.RoleRef.From
+			if arr.Name == nil || *arr.Name == "" {
+				return hasReferences, fmt.Errorf("provided resource reference is nil or empty: PodIdentityAssociations.RoleRef")
+			}
+			namespace, err := ackrt.ResolveCrossNamespaceReference(
+				ctx,
+				rm.cfg.EnableCrossNamespace,
+				&ko.Status.Conditions,
+				ackrt.CrossNamespaceRefKindResource,
+				ko.ObjectMeta.GetNamespace(),
+				arr.Namespace,
+				*arr.Name,
+			)
+			if err != nil {
+				return hasReferences, err
+			}
+			obj := &iamapitypes.Role{}
+			if err := getReferencedResourceState_Role(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
+				return hasReferences, err
+			}
+			ko.Spec.PodIdentityAssociations[f0idx].RoleARN = (*string)(obj.Status.ACKResourceMetadata.ARN)
 		}
-		namespace, err := ackrt.ResolveCrossNamespaceReference(
-			ctx,
-			rm.cfg.EnableCrossNamespace,
-			&ko.Status.Conditions,
-			ackrt.CrossNamespaceRefKindResource,
-			ko.ObjectMeta.GetNamespace(),
-			arr.Namespace,
-			*arr.Name,
-		)
-		if err != nil {
-			return hasReferences, err
-		}
-		obj := &iamapitypes.Role{}
-		if err := getReferencedResourceState_Role(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
-			return hasReferences, err
-		}
-		ko.Spec.ServiceAccountRoleARN = (*string)(obj.Status.ACKResourceMetadata.ARN)
 	}
 
 	return hasReferences, nil
@@ -281,4 +304,41 @@ func getReferencedResourceState_Role(
 			"Status.ACKResourceMetadata.ARN")
 	}
 	return nil
+}
+
+// resolveReferenceForServiceAccountRoleARN reads the resource referenced
+// from ServiceAccountRoleRef field and sets the ServiceAccountRoleARN
+// from referenced resource. Returns a boolean indicating whether a reference
+// contains references, or an error
+func (rm *resourceManager) resolveReferenceForServiceAccountRoleARN(
+	ctx context.Context,
+	apiReader client.Reader,
+	ko *svcapitypes.Addon,
+) (hasReferences bool, err error) {
+	if ko.Spec.ServiceAccountRoleRef != nil && ko.Spec.ServiceAccountRoleRef.From != nil {
+		hasReferences = true
+		arr := ko.Spec.ServiceAccountRoleRef.From
+		if arr.Name == nil || *arr.Name == "" {
+			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: ServiceAccountRoleRef")
+		}
+		namespace, err := ackrt.ResolveCrossNamespaceReference(
+			ctx,
+			rm.cfg.EnableCrossNamespace,
+			&ko.Status.Conditions,
+			ackrt.CrossNamespaceRefKindResource,
+			ko.ObjectMeta.GetNamespace(),
+			arr.Namespace,
+			*arr.Name,
+		)
+		if err != nil {
+			return hasReferences, err
+		}
+		obj := &iamapitypes.Role{}
+		if err := getReferencedResourceState_Role(ctx, apiReader, obj, *arr.Name, namespace); err != nil {
+			return hasReferences, err
+		}
+		ko.Spec.ServiceAccountRoleARN = (*string)(obj.Status.ACKResourceMetadata.ARN)
+	}
+
+	return hasReferences, nil
 }

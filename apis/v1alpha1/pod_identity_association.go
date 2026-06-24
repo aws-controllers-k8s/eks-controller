@@ -122,7 +122,8 @@ type PodIdentityAssociationSpec struct {
 	// IAM role fields, EKS will perform role chaining to ensure your application
 	// gets the required permissions. This means Role A will assume Role B, allowing
 	// your Pods to securely access resources like S3 buckets in the target account.
-	TargetRoleARN *string `json:"targetRoleARN,omitempty"`
+	TargetRoleARN *string                                  `json:"targetRoleARN,omitempty"`
+	TargetRoleRef *ackv1alpha1.AWSResourceReferenceWrapper `json:"targetRoleRef,omitempty"`
 }
 
 // PodIdentityAssociationStatus defines the observed state of PodIdentityAssociation

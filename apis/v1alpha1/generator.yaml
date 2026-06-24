@@ -38,6 +38,11 @@ resources:
           service_name: iam
           resource: Role
           path: Status.ACKResourceMetadata.ARN
+      PodIdentityAssociations.RoleARN:
+        references:
+          service_name: iam
+          resource: Role
+          path: Status.ACKResourceMetadata.ARN
       PodIdentityAssociations:
         set:
         - ignore: true
@@ -461,6 +466,11 @@ resources:
           path: Spec.Name
         is_primary_key: true
       RoleARN:
+        references:
+          service_name: iam
+          resource: Role
+          path: Status.ACKResourceMetadata.ARN
+      TargetRoleARN:
         references:
           service_name: iam
           resource: Role
