@@ -135,8 +135,10 @@ type AddonIssue struct {
 // EKS Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
 // in the Amazon EKS User Guide.
 type AddonPodIdentityAssociations struct {
-	RoleARN        *string `json:"roleARN,omitempty"`
-	ServiceAccount *string `json:"serviceAccount,omitempty"`
+	RoleARN *string `json:"roleARN,omitempty"`
+	// Reference field for RoleARN
+	RoleRef        *ackv1alpha1.AWSResourceReferenceWrapper `json:"roleRef,omitempty"`
+	ServiceAccount *string                                  `json:"serviceAccount,omitempty"`
 }
 
 // Information about how to configure IAM for an add-on.
