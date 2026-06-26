@@ -297,6 +297,18 @@ func (rm *resourceManager) customUpdate(
 		return returnClusterUpdating(updatedRes)
 	}
 
+	// Handle control plane egress mode updates
+	if delta.DifferentAt("Spec.ResourcesVPCConfig.ControlPlaneEgressMode") {
+		if err := rm.updateControlPlaneEgressMode(ctx, desired); err != nil {
+			awsErr, ok := extractAWSError(err)
+			if ok && awsErr.Code == "ResourceInUseException" {
+				return nil, requeueAfterAsyncUpdate()
+			}
+			return nil, err
+		}
+		return returnClusterUpdating(updatedRes)
+	}
+
 	// Handle access configuration updates
 	if delta.DifferentAt("Spec.AccessConfig") {
 		if err := rm.updateAccessConfig(ctx, desired); err != nil {
@@ -760,4 +772,20 @@ func extractAWSError(err error) (awsErr *smithy.GenericAPIError, ok bool) {
 		}, true
 	}
 	return nil, false
+}
+
+func (rm *resourceManager) updateControlPlaneEgressMode(
+	ctx context.Context,
+	desired *resource,
+) error {
+	input := &svcsdk.UpdateClusterConfigInput{
+		Name: desired.ko.Spec.Name,
+		ResourcesVpcConfig: &svcsdktypes.VpcConfigRequest{
+			ControlPlaneEgressMode: svcsdktypes.ControlPlaneEgressModeType(
+				*desired.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode,
+			),
+		},
+	}
+	_, err := rm.sdkapi.UpdateClusterConfig(ctx, input)
+	return err
 }
