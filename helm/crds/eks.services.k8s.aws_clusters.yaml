@@ -303,6 +303,8 @@ spec:
                   can specify up to five security groups. However, we recommend that you use
                   a dedicated security group for your cluster control plane.
                 properties:
+                  controlPlaneEgressMode:
+                    type: string
                   endpointPrivateAccess:
                     type: boolean
                   endpointPublicAccess:
