@@ -525,6 +525,8 @@ resources:
     hooks:
       delta_pre_compare:
         code: customPreCompare(delta, a, b)
+      sdk_create_post_set_output:
+        template_path: hooks/access_entry/sdk_create_post_set_output.go.tpl
       sdk_read_one_post_set_output:
         template_path: hooks/access_entry/sdk_read_one_post_set_output.go.tpl
       sdk_update_pre_build_request:
