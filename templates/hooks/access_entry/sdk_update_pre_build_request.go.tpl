@@ -1,10 +1,5 @@
-	// Carry the latest observed status (including conditions) onto a copy of
-	// desired so the returned resource reflects the observed state rather than
-	// the stale create-time "Access policy update pending" ResourceSynced=False
-	// condition. AccessPolicies are applied via AssociateAccessPolicy side-effect
-	// calls (not UpdateAccessEntry); returning bare `desired` here leaves that
-	// stale condition in place and the resource stays Synced=False until the next
-	// full resync (up to 10h). See aws-controllers-k8s/community#2967.
+	// Carry the latest observed status so the update path doesn't return the
+	// stale create-time ResourceSynced=False condition (community#2967).
 	updatedDesired := rm.concreteResource(desired.DeepCopy())
 	updatedDesired.SetStatus(latest)
 	if delta.DifferentAt("Spec.AccessPolicies") {
