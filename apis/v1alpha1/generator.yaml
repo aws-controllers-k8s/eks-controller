@@ -193,6 +193,10 @@ resources:
       BootstrapSelfManagedAddons:
         compare:
           is_ignored: true
+      DeletionProtection:
+        late_initialize: {}
+        compare:
+          pre_delete_include: true
     exceptions:
       errors:
         404:
@@ -632,6 +636,4 @@ ignore:
   - CreateAddonInput.NamespaceConfig
   - CreateAddonOutput.Addon.NamespaceConfig
   - CreateClusterInput.ControlPlaneScalingConfig
-  - CreateClusterInput.DeletionProtection
   - CreateClusterOutput.Cluster.ControlPlaneScalingConfig
-  - CreateClusterOutput.Cluster.DeletionProtection
