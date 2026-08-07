@@ -166,6 +166,42 @@ def simple_cluster_version_minus_2(eks_client):
         pass
 
 @pytest.fixture
+def control_plane_scaling_cluster(eks_client):
+    cluster_name = random_suffix_name("cps-cluster", 32)
+
+    replacements = REPLACEMENT_VALUES.copy()
+    replacements["CLUSTER_NAME"] = cluster_name
+    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_35
+    replacements["CONTROL_PLANE_SCALING_TIER"] = "standard"
+
+    resource_data = load_eks_resource(
+        "cluster_control_plane_scaling",
+        additional_replacements=replacements,
+    )
+    logging.debug(resource_data)
+
+    # Create the k8s resource
+    ref = k8s.CustomResourceReference(
+        CRD_GROUP, CRD_VERSION, CLUSTER_RESOURCE_PLURAL,
+        cluster_name, namespace="default",
+    )
+    k8s.create_custom_resource(ref, resource_data)
+    cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=15)
+
+    assert cr is not None
+    assert k8s.get_resource_exists(ref)
+
+    yield (ref, cr)
+
+    # Try to delete, if doesn't already exist
+    try:
+        _, deleted = k8s.delete_custom_resource(ref, 3, 10)
+        assert deleted
+        wait_until_deleted(cluster_name)
+    except:
+        pass
+
+@pytest.fixture
 def adoption_cluster(eks_client):
     adopted_cluster = get_bootstrap_resources().AdoptionCluster
     cluster_name = adopted_cluster.name
@@ -522,3 +558,43 @@ class TestCluster:
         aws_res = eks_client.describe_cluster(name=cluster_name)
         assert aws_res
         assert aws_res["cluster"]["upgradePolicy"]["supportType"] == support_type
+
+    def test_update_cluster_control_plane_scaling_config(self, eks_client, control_plane_scaling_cluster):
+        (ref, cr) = control_plane_scaling_cluster
+
+        cluster_name = cr["spec"]["name"]
+
+        try:
+            aws_res = eks_client.describe_cluster(name=cluster_name)
+            assert aws_res is not None
+        except eks_client.exceptions.ResourceNotFoundException:
+            pytest.fail(f"Could not find cluster '{cluster_name}' in EKS")
+
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        # Verify the cluster was created with the expected tier
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        assert aws_res["cluster"]["controlPlaneScalingConfig"]["tier"] == "standard"
+
+        # Update the control plane scaling config tier
+        updates = {
+            "spec": {
+                "controlPlaneScalingConfig": {
+                    "tier": "tier-xl"
+                }
+            }
+        }
+
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        # Wait for the updating to become active again
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=5)
+
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        # Verify via describe_cluster that the tier has been updated
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        assert aws_res["cluster"]["controlPlaneScalingConfig"]["tier"] == "tier-xl"

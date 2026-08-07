@@ -86,6 +86,17 @@ func newResourceDelta(
 			}
 		}
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.ControlPlaneScalingConfig, b.ko.Spec.ControlPlaneScalingConfig) {
+		delta.Add("Spec.ControlPlaneScalingConfig", a.ko.Spec.ControlPlaneScalingConfig, b.ko.Spec.ControlPlaneScalingConfig)
+	} else if a.ko.Spec.ControlPlaneScalingConfig != nil && b.ko.Spec.ControlPlaneScalingConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.ControlPlaneScalingConfig.Tier, b.ko.Spec.ControlPlaneScalingConfig.Tier) {
+			delta.Add("Spec.ControlPlaneScalingConfig.Tier", a.ko.Spec.ControlPlaneScalingConfig.Tier, b.ko.Spec.ControlPlaneScalingConfig.Tier)
+		} else if a.ko.Spec.ControlPlaneScalingConfig.Tier != nil && b.ko.Spec.ControlPlaneScalingConfig.Tier != nil {
+			if *a.ko.Spec.ControlPlaneScalingConfig.Tier != *b.ko.Spec.ControlPlaneScalingConfig.Tier {
+				delta.Add("Spec.ControlPlaneScalingConfig.Tier", a.ko.Spec.ControlPlaneScalingConfig.Tier, b.ko.Spec.ControlPlaneScalingConfig.Tier)
+			}
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.DeletionProtection, b.ko.Spec.DeletionProtection) {
 		delta.Add("Spec.DeletionProtection", a.ko.Spec.DeletionProtection, b.ko.Spec.DeletionProtection)
 	} else if a.ko.Spec.DeletionProtection != nil && b.ko.Spec.DeletionProtection != nil {

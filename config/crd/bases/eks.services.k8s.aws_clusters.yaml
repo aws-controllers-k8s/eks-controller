@@ -102,6 +102,14 @@ spec:
                   nodeRoleARN:
                     type: string
                 type: object
+              controlPlaneScalingConfig:
+                description: |-
+                  The control plane scaling tier configuration. For more information, see EKS
+                  Provisioned Control Plane in the Amazon EKS User Guide.
+                properties:
+                  tier:
+                    type: string
+                type: object
               deletionProtection:
                 description: |-
                   Indicates whether to enable deletion protection for the cluster. When enabled,

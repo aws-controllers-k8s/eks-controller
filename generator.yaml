@@ -197,6 +197,8 @@ resources:
         late_initialize: {}
         compare:
           pre_delete_include: true
+      ControlPlaneScalingConfig.Tier:
+        late_initialize: {}
     exceptions:
       errors:
         404:
@@ -635,5 +637,3 @@ ignore:
   - CreateCapabilityInput.ClientRequestToken
   - CreateAddonInput.NamespaceConfig
   - CreateAddonOutput.Addon.NamespaceConfig
-  - CreateClusterInput.ControlPlaneScalingConfig
-  - CreateClusterOutput.Cluster.ControlPlaneScalingConfig
