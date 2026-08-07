@@ -184,6 +184,9 @@ func (rm *resourceManager) clusterInUse(ctx context.Context, r *resource) (bool,
 	return (nodes != nil && len(nodes.Nodegroups) > 0), nil
 }
 
+// customPreCompare ensures that default values of nil-able types are
+// appropriately replaced with empty maps or structs depending on the default
+// output of the SDK.
 func customPreCompare(
 	a *resource,
 	b *resource,
@@ -771,6 +774,12 @@ func (rm *resourceManager) updateDeletionProtection(
 	rlog := ackrtlog.FromContext(ctx)
 	exit := rlog.Trace("rm.updateDeletionProtection")
 	defer exit(err)
+
+	// Sending a nil DeletionProtection produces an UpdateClusterConfig request
+	// carrying no update type, which EKS rejects with InvalidParameterException
+	if r.ko.Spec.DeletionProtection == nil {
+		return nil
+	}
 
 	input := &svcsdk.UpdateClusterConfigInput{
 		Name:               r.ko.Spec.Name,
