@@ -1403,6 +1403,11 @@ func (in *CapabilitySpec) DeepCopyInto(out *CapabilitySpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.ClusterRef != nil {
+		in, out := &in.ClusterRef, &out.ClusterRef
+		*out = new(corev1alpha1.AWSResourceReferenceWrapper)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Configuration != nil {
 		in, out := &in.Configuration, &out.Configuration
 		*out = new(CapabilityConfigurationRequest)

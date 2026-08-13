@@ -622,6 +622,9 @@ resources:
         is_immutable: true
       ClusterName:
         is_immutable: true
+        references:
+          resource: Cluster
+          path: Spec.Name
 ignore:
   resource_names:
   - EksAnywhereSubscription

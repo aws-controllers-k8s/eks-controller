@@ -49,6 +49,9 @@ func newResourceDelta(
 			delta.Add("Spec.ClusterName", a.ko.Spec.ClusterName, b.ko.Spec.ClusterName)
 		}
 	}
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef) {
+		delta.Add("Spec.ClusterRef", a.ko.Spec.ClusterRef, b.ko.Spec.ClusterRef)
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.Configuration, b.ko.Spec.Configuration) {
 		delta.Add("Spec.Configuration", a.ko.Spec.Configuration, b.ko.Spec.Configuration)
 	} else if a.ko.Spec.Configuration != nil && b.ko.Spec.Configuration != nil {
