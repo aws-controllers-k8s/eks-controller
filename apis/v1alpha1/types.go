@@ -17,14 +17,12 @@ package v1alpha1
 
 import (
 	ackv1alpha1 "github.com/aws-controllers-k8s/runtime/apis/core/v1alpha1"
-	"github.com/aws/aws-sdk-go/aws"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Hack to avoid import errors during build...
 var (
 	_ = &metav1.Time{}
-	_ = &aws.JSONValue{}
 	_ = ackv1alpha1.AWSAccountID("")
 )
 
@@ -304,6 +302,13 @@ type BlockStorage struct {
 	Enabled *bool `json:"enabled,omitempty"`
 }
 
+// Contains information about the latest cancellation of an update to an Amazon
+// EKS cluster.
+type Cancellation struct {
+	Reason *string `json:"reason,omitempty"`
+	Status *string `json:"status,omitempty"`
+}
+
 // Configuration settings for a capability. The structure of this object varies
 // depending on the capability type.
 type CapabilityConfigurationRequest struct {
@@ -566,6 +571,14 @@ type ControlPlaneScalingConfig struct {
 	Tier *string `json:"tier,omitempty"`
 }
 
+// Information about a provisioned control plane scaling tier.
+type ControlPlaneScalingTierInfo struct {
+	APIRequestConcurrency      *int64  `json:"apiRequestConcurrency,omitempty"`
+	ClusterDatabaseSizeGb      *int64  `json:"clusterDatabaseSizeGb,omitempty"`
+	PodSchedulingRatePerSecond *int64  `json:"podSchedulingRatePerSecond,omitempty"`
+	TierName                   *string `json:"tierName,omitempty"`
+}
+
 // The access configuration information for the cluster.
 type CreateAccessConfigRequest struct {
 	AuthenticationMode                      *string `json:"authenticationMode,omitempty"`
@@ -579,6 +592,17 @@ type DeprecationDetail struct {
 	StartServingReplacementVersion *string `json:"startServingReplacementVersion,omitempty"`
 	StopServingVersion             *string `json:"stopServingVersion,omitempty"`
 	Usage                          *string `json:"usage,omitempty"`
+}
+
+// Constraints for a duration parameter.
+type DurationConstraints struct {
+	Max *string `json:"max,omitempty"`
+	Min *string `json:"min,omitempty"`
+}
+
+// A duration parameter configuration with default value and constraints.
+type DurationParameterConfig struct {
+	DefaultValue *string `json:"defaultValue,omitempty"`
 }
 
 // An EKS Anywhere subscription authorizing the customer to support for licensed
@@ -702,6 +726,18 @@ type FargateProfile_SDK struct {
 	Tags map[string]*string `json:"tags,omitempty"`
 }
 
+// The horizontal pod autoscaler controller configuration for the Kubernetes
+// controller manager.
+type HorizontalPodAutoscalerControllerConfigRequest struct {
+	HorizontalPodAutoscalerSyncPeriod *string `json:"horizontalPodAutoscalerSyncPeriod,omitempty"`
+}
+
+// The horizontal pod autoscaler controller configuration for the Kubernetes
+// controller manager.
+type HorizontalPodAutoscalerControllerConfigResponse struct {
+	HorizontalPodAutoscalerSyncPeriod *string `json:"horizontalPodAutoscalerSyncPeriod,omitempty"`
+}
+
 // An object representing an identity provider.
 type Identity struct {
 	// An object representing the OpenID Connect (https://openid.net/connect/) (OIDC)
@@ -760,11 +796,27 @@ type InsightsFilter struct {
 	KubernetesVersions []*string `json:"kubernetesVersions,omitempty"`
 }
 
+// An integer range constraint specifying minimum and maximum allowed values.
+type IntegerRangeConstraint struct {
+	Max *int64 `json:"max,omitempty"`
+	Min *int64 `json:"min,omitempty"`
+}
+
 // An object representing an issue with an Amazon EKS resource.
 type Issue struct {
 	Code        *string   `json:"code,omitempty"`
 	Message     *string   `json:"message,omitempty"`
 	ResourceIDs []*string `json:"resourceIDs,omitempty"`
+}
+
+// The configuration for the Kubernetes API server on an Amazon EKS cluster.
+type KubeAPIServerConfigRequest struct {
+	EventTTL *string `json:"eventTTL,omitempty"`
+}
+
+// The Kubernetes API server configuration for an Amazon EKS cluster.
+type KubeAPIServerConfigResponse struct {
+	EventTTL *string `json:"eventTTL,omitempty"`
 }
 
 // The Kubernetes network configuration for the cluster.
@@ -1207,6 +1259,11 @@ type RemotePodNetwork struct {
 	CIDRs []*string `json:"cidrs,omitempty"`
 }
 
+// The rollback configuration for the cluster version rollback.
+type RollbackConfig struct {
+	TimeoutMinutes *int64 `json:"timeoutMinutes,omitempty"`
+}
+
 // An IAM Identity CenterIAM; Identity Center identity (user or group) that
 // can be assigned permissions in a capability.
 type SsoIdentity struct {
@@ -1248,12 +1305,15 @@ type Taint struct {
 
 // An object representing an asynchronous update.
 type Update struct {
-	CreatedAt *metav1.Time   `json:"createdAt,omitempty"`
-	Errors    []*ErrorDetail `json:"errors,omitempty"`
-	ID        *string        `json:"id,omitempty"`
-	Params    []*UpdateParam `json:"params,omitempty"`
-	Status    *string        `json:"status,omitempty"`
-	Type      *string        `json:"type_,omitempty"`
+	// Contains information about the latest cancellation of an update to an Amazon
+	// EKS cluster.
+	Cancellation *Cancellation  `json:"cancellation,omitempty"`
+	CreatedAt    *metav1.Time   `json:"createdAt,omitempty"`
+	Errors       []*ErrorDetail `json:"errors,omitempty"`
+	ID           *string        `json:"id,omitempty"`
+	Params       []*UpdateParam `json:"params,omitempty"`
+	Status       *string        `json:"status,omitempty"`
+	Type         *string        `json:"type_,omitempty"`
 }
 
 // The access configuration information for the cluster.
@@ -1346,6 +1406,18 @@ type VPCConfigResponse struct {
 	SecurityGroupIDs       []*string `json:"securityGroupIDs,omitempty"`
 	SubnetIDs              []*string `json:"subnetIDs,omitempty"`
 	VPCID                  *string   `json:"vpcID,omitempty"`
+}
+
+// The configuration for an Amazon EC2 Auto Scaling warm pool attached to an
+// Amazon EKS managed node group. Warm pools maintain pre-initialized EC2 instances
+// alongside your Auto Scaling group that have already completed the bootup
+// initialization process and can be kept in a Stopped, Running, or Hibernated
+// state.
+type WarmPoolConfig struct {
+	Enabled                  *bool  `json:"enabled,omitempty"`
+	MaxGroupPreparedCapacity *int64 `json:"maxGroupPreparedCapacity,omitempty"`
+	MinSize                  *int64 `json:"minSize,omitempty"`
+	ReuseOnScaleIn           *bool  `json:"reuseOnScaleIn,omitempty"`
 }
 
 // The configuration for zonal shift for the cluster.

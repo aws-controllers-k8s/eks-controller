@@ -94,6 +94,14 @@ const (
 	AuthenticationMode_CONFIG_MAP         AuthenticationMode = "CONFIG_MAP"
 )
 
+type CancellationStatus string
+
+const (
+	CancellationStatus_Failed     CancellationStatus = "Failed"
+	CancellationStatus_InProgress CancellationStatus = "InProgress"
+	CancellationStatus_Successful CancellationStatus = "Successful"
+)
+
 type CapabilityDeletePropagationPolicy string
 
 const (
@@ -138,8 +146,9 @@ const (
 type Category string
 
 const (
-	Category_MISCONFIGURATION  Category = "MISCONFIGURATION"
-	Category_UPGRADE_READINESS Category = "UPGRADE_READINESS"
+	Category_MISCONFIGURATION   Category = "MISCONFIGURATION"
+	Category_ROLLBACK_READINESS Category = "ROLLBACK_READINESS"
+	Category_UPGRADE_READINESS  Category = "UPGRADE_READINESS"
 )
 
 type ClusterIssueCode string
@@ -205,6 +214,14 @@ const (
 	ConnectorConfigProvider_OTHER        ConnectorConfigProvider = "OTHER"
 	ConnectorConfigProvider_RANCHER      ConnectorConfigProvider = "RANCHER"
 	ConnectorConfigProvider_TANZU        ConnectorConfigProvider = "TANZU"
+)
+
+type ControlPlaneEgressModeType string
+
+const (
+	ControlPlaneEgressModeType_AWS_MANAGED       ControlPlaneEgressModeType = "AWS_MANAGED"
+	ControlPlaneEgressModeType_CUSTOMER_ISOLATED ControlPlaneEgressModeType = "CUSTOMER_ISOLATED"
+	ControlPlaneEgressModeType_CUSTOMER_ROUTED   ControlPlaneEgressModeType = "CUSTOMER_ROUTED"
 )
 
 type EKSAnywhereSubscriptionLicenseType string
@@ -371,6 +388,7 @@ const (
 	ProvisionedControlPlaneTier_standard ProvisionedControlPlaneTier = "standard"
 	ProvisionedControlPlaneTier_tier_2xl ProvisionedControlPlaneTier = "tier-2xl"
 	ProvisionedControlPlaneTier_tier_4xl ProvisionedControlPlaneTier = "tier-4xl"
+	ProvisionedControlPlaneTier_tier_8xl ProvisionedControlPlaneTier = "tier-8xl"
 	ProvisionedControlPlaneTier_tier_xl  ProvisionedControlPlaneTier = "tier-xl"
 )
 
@@ -388,6 +406,20 @@ const (
 	ResolveConflicts_NONE      ResolveConflicts = "NONE"
 	ResolveConflicts_OVERWRITE ResolveConflicts = "OVERWRITE"
 	ResolveConflicts_PRESERVE  ResolveConflicts = "PRESERVE"
+)
+
+type ScoringStrategyType string
+
+const (
+	ScoringStrategyType_LeastAllocated ScoringStrategyType = "LeastAllocated"
+	ScoringStrategyType_MostAllocated  ScoringStrategyType = "MostAllocated"
+)
+
+type SpreadLevel string
+
+const (
+	SpreadLevel_host SpreadLevel = "host"
+	SpreadLevel_rack SpreadLevel = "rack"
 )
 
 type SsoIdentityType string
@@ -415,46 +447,60 @@ const (
 type UpdateParamType string
 
 const (
-	UpdateParamType_AddonVersion             UpdateParamType = "AddonVersion"
-	UpdateParamType_AuthenticationMode       UpdateParamType = "AuthenticationMode"
-	UpdateParamType_ClusterLogging           UpdateParamType = "ClusterLogging"
-	UpdateParamType_ComputeConfig            UpdateParamType = "ComputeConfig"
-	UpdateParamType_ConfigurationValues      UpdateParamType = "ConfigurationValues"
-	UpdateParamType_DeletionProtection       UpdateParamType = "DeletionProtection"
-	UpdateParamType_DesiredSize              UpdateParamType = "DesiredSize"
-	UpdateParamType_EncryptionConfig         UpdateParamType = "EncryptionConfig"
-	UpdateParamType_EndpointPrivateAccess    UpdateParamType = "EndpointPrivateAccess"
-	UpdateParamType_EndpointPublicAccess     UpdateParamType = "EndpointPublicAccess"
-	UpdateParamType_IdentityProviderConfig   UpdateParamType = "IdentityProviderConfig"
-	UpdateParamType_KubernetesNetworkConfig  UpdateParamType = "KubernetesNetworkConfig"
-	UpdateParamType_LabelsToAdd              UpdateParamType = "LabelsToAdd"
-	UpdateParamType_LabelsToRemove           UpdateParamType = "LabelsToRemove"
-	UpdateParamType_LaunchTemplateName       UpdateParamType = "LaunchTemplateName"
-	UpdateParamType_LaunchTemplateVersion    UpdateParamType = "LaunchTemplateVersion"
-	UpdateParamType_MaxSize                  UpdateParamType = "MaxSize"
-	UpdateParamType_MaxUnavailable           UpdateParamType = "MaxUnavailable"
-	UpdateParamType_MaxUnavailablePercentage UpdateParamType = "MaxUnavailablePercentage"
-	UpdateParamType_MinSize                  UpdateParamType = "MinSize"
-	UpdateParamType_NodeRepairConfig         UpdateParamType = "NodeRepairConfig"
-	UpdateParamType_NodeRepairEnabled        UpdateParamType = "NodeRepairEnabled"
-	UpdateParamType_PlatformVersion          UpdateParamType = "PlatformVersion"
-	UpdateParamType_PodIdentityAssociations  UpdateParamType = "PodIdentityAssociations"
-	UpdateParamType_PreviousTier             UpdateParamType = "PreviousTier"
-	UpdateParamType_PublicAccessCidrs        UpdateParamType = "PublicAccessCidrs"
-	UpdateParamType_ReleaseVersion           UpdateParamType = "ReleaseVersion"
-	UpdateParamType_RemoteNetworkConfig      UpdateParamType = "RemoteNetworkConfig"
-	UpdateParamType_ResolveConflicts         UpdateParamType = "ResolveConflicts"
-	UpdateParamType_SecurityGroups           UpdateParamType = "SecurityGroups"
-	UpdateParamType_ServiceAccountRoleArn    UpdateParamType = "ServiceAccountRoleArn"
-	UpdateParamType_StorageConfig            UpdateParamType = "StorageConfig"
-	UpdateParamType_Subnets                  UpdateParamType = "Subnets"
-	UpdateParamType_TaintsToAdd              UpdateParamType = "TaintsToAdd"
-	UpdateParamType_TaintsToRemove           UpdateParamType = "TaintsToRemove"
-	UpdateParamType_UpdateStrategy           UpdateParamType = "UpdateStrategy"
-	UpdateParamType_UpdatedTier              UpdateParamType = "UpdatedTier"
-	UpdateParamType_UpgradePolicy            UpdateParamType = "UpgradePolicy"
-	UpdateParamType_Version                  UpdateParamType = "Version"
-	UpdateParamType_ZonalShiftConfig         UpdateParamType = "ZonalShiftConfig"
+	UpdateParamType_AddonVersion                     UpdateParamType = "AddonVersion"
+	UpdateParamType_AuthenticationMode               UpdateParamType = "AuthenticationMode"
+	UpdateParamType_ClusterLogging                   UpdateParamType = "ClusterLogging"
+	UpdateParamType_ComputeConfig                    UpdateParamType = "ComputeConfig"
+	UpdateParamType_ConfigurationValues              UpdateParamType = "ConfigurationValues"
+	UpdateParamType_ControlPlaneEgressMode           UpdateParamType = "ControlPlaneEgressMode"
+	UpdateParamType_DeletionProtection               UpdateParamType = "DeletionProtection"
+	UpdateParamType_DesiredSize                      UpdateParamType = "DesiredSize"
+	UpdateParamType_EncryptionConfig                 UpdateParamType = "EncryptionConfig"
+	UpdateParamType_EndpointPrivateAccess            UpdateParamType = "EndpointPrivateAccess"
+	UpdateParamType_EndpointPublicAccess             UpdateParamType = "EndpointPublicAccess"
+	UpdateParamType_IdentityProviderConfig           UpdateParamType = "IdentityProviderConfig"
+	UpdateParamType_KubeApiServerConfig              UpdateParamType = "KubeApiServerConfig"
+	UpdateParamType_KubeControllerManagerConfig      UpdateParamType = "KubeControllerManagerConfig"
+	UpdateParamType_KubeSchedulerConfig              UpdateParamType = "KubeSchedulerConfig"
+	UpdateParamType_KubernetesNetworkConfig          UpdateParamType = "KubernetesNetworkConfig"
+	UpdateParamType_LabelsToAdd                      UpdateParamType = "LabelsToAdd"
+	UpdateParamType_LabelsToRemove                   UpdateParamType = "LabelsToRemove"
+	UpdateParamType_LaunchTemplateName               UpdateParamType = "LaunchTemplateName"
+	UpdateParamType_LaunchTemplateVersion            UpdateParamType = "LaunchTemplateVersion"
+	UpdateParamType_MaxSize                          UpdateParamType = "MaxSize"
+	UpdateParamType_MaxUnavailable                   UpdateParamType = "MaxUnavailable"
+	UpdateParamType_MaxUnavailablePercentage         UpdateParamType = "MaxUnavailablePercentage"
+	UpdateParamType_MinSize                          UpdateParamType = "MinSize"
+	UpdateParamType_NetworkAccess                    UpdateParamType = "NetworkAccess"
+	UpdateParamType_NodeRepairConfig                 UpdateParamType = "NodeRepairConfig"
+	UpdateParamType_NodeRepairEnabled                UpdateParamType = "NodeRepairEnabled"
+	UpdateParamType_PlatformVersion                  UpdateParamType = "PlatformVersion"
+	UpdateParamType_PodIdentityAssociations          UpdateParamType = "PodIdentityAssociations"
+	UpdateParamType_PreviousTier                     UpdateParamType = "PreviousTier"
+	UpdateParamType_PublicAccessCidrs                UpdateParamType = "PublicAccessCidrs"
+	UpdateParamType_ReleaseVersion                   UpdateParamType = "ReleaseVersion"
+	UpdateParamType_RemoteNetworkConfig              UpdateParamType = "RemoteNetworkConfig"
+	UpdateParamType_ResolveConflicts                 UpdateParamType = "ResolveConflicts"
+	UpdateParamType_RoleArn                          UpdateParamType = "RoleArn"
+	UpdateParamType_RoleMappingsToAddOrUpdate        UpdateParamType = "RoleMappingsToAddOrUpdate"
+	UpdateParamType_RoleMappingsToRemove             UpdateParamType = "RoleMappingsToRemove"
+	UpdateParamType_SecurityGroups                   UpdateParamType = "SecurityGroups"
+	UpdateParamType_ServiceAccountRoleArn            UpdateParamType = "ServiceAccountRoleArn"
+	UpdateParamType_StorageConfig                    UpdateParamType = "StorageConfig"
+	UpdateParamType_Subnets                          UpdateParamType = "Subnets"
+	UpdateParamType_TaintsToAdd                      UpdateParamType = "TaintsToAdd"
+	UpdateParamType_TaintsToRemove                   UpdateParamType = "TaintsToRemove"
+	UpdateParamType_UpdateStrategy                   UpdateParamType = "UpdateStrategy"
+	UpdateParamType_UpdatedTier                      UpdateParamType = "UpdatedTier"
+	UpdateParamType_UpgradePolicy                    UpdateParamType = "UpgradePolicy"
+	UpdateParamType_VendedLogs                       UpdateParamType = "VendedLogs"
+	UpdateParamType_Version                          UpdateParamType = "Version"
+	UpdateParamType_WarmPoolEnabled                  UpdateParamType = "WarmPoolEnabled"
+	UpdateParamType_WarmPoolMaxGroupPreparedCapacity UpdateParamType = "WarmPoolMaxGroupPreparedCapacity"
+	UpdateParamType_WarmPoolMinSize                  UpdateParamType = "WarmPoolMinSize"
+	UpdateParamType_WarmPoolReuseOnScaleIn           UpdateParamType = "WarmPoolReuseOnScaleIn"
+	UpdateParamType_WarmPoolState                    UpdateParamType = "WarmPoolState"
+	UpdateParamType_ZonalShiftConfig                 UpdateParamType = "ZonalShiftConfig"
 )
 
 type UpdateStatus string
@@ -474,7 +520,10 @@ const (
 	UpdateType_AssociateEncryptionConfig          UpdateType = "AssociateEncryptionConfig"
 	UpdateType_AssociateIdentityProviderConfig    UpdateType = "AssociateIdentityProviderConfig"
 	UpdateType_AutoModeUpdate                     UpdateType = "AutoModeUpdate"
+	UpdateType_CapabilityUpdate                   UpdateType = "CapabilityUpdate"
 	UpdateType_ConfigUpdate                       UpdateType = "ConfigUpdate"
+	UpdateType_ControlPlaneComponentConfigUpdate  UpdateType = "ControlPlaneComponentConfigUpdate"
+	UpdateType_ControlPlaneEgressUpdate           UpdateType = "ControlPlaneEgressUpdate"
 	UpdateType_ControlPlaneScalingConfigUpdate    UpdateType = "ControlPlaneScalingConfigUpdate"
 	UpdateType_DeletionProtectionUpdate           UpdateType = "DeletionProtectionUpdate"
 	UpdateType_DisassociateIdentityProviderConfig UpdateType = "DisassociateIdentityProviderConfig"
@@ -483,6 +532,7 @@ const (
 	UpdateType_RemoteNetworkConfigUpdate          UpdateType = "RemoteNetworkConfigUpdate"
 	UpdateType_UpgradePolicyUpdate                UpdateType = "UpgradePolicyUpdate"
 	UpdateType_VendedLogsUpdate                   UpdateType = "VendedLogsUpdate"
+	UpdateType_VersionRollback                    UpdateType = "VersionRollback"
 	UpdateType_VersionUpdate                      UpdateType = "VersionUpdate"
 	UpdateType_VpcConfigUpdate                    UpdateType = "VpcConfigUpdate"
 	UpdateType_ZonalShiftConfigUpdate             UpdateType = "ZonalShiftConfigUpdate"
@@ -494,4 +544,12 @@ const (
 	VersionStatus_EXTENDED_SUPPORT VersionStatus = "EXTENDED_SUPPORT"
 	VersionStatus_STANDARD_SUPPORT VersionStatus = "STANDARD_SUPPORT"
 	VersionStatus_UNSUPPORTED      VersionStatus = "UNSUPPORTED"
+)
+
+type WarmPoolState string
+
+const (
+	WarmPoolState_HIBERNATED WarmPoolState = "HIBERNATED"
+	WarmPoolState_RUNNING    WarmPoolState = "RUNNING"
+	WarmPoolState_STOPPED    WarmPoolState = "STOPPED"
 )
