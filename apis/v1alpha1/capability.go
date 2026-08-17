@@ -28,8 +28,8 @@ type CapabilitySpec struct {
 
 	// The name of the Amazon EKS cluster where you want to create the capability.
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable once set"
-	// +kubebuilder:validation:Required
-	ClusterName *string `json:"clusterName"`
+	ClusterName *string                                  `json:"clusterName,omitempty"`
+	ClusterRef  *ackv1alpha1.AWSResourceReferenceWrapper `json:"clusterRef,omitempty"`
 	// The configuration settings for the capability. The structure of this object
 	// varies depending on the capability type. For Argo CD capabilities, you can
 	// configure IAM Identity CenterIAM; Identity Center integration, RBAC role

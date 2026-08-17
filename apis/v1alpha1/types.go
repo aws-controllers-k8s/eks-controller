@@ -135,8 +135,10 @@ type AddonIssue struct {
 // EKS Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/add-ons-iam.html)
 // in the Amazon EKS User Guide.
 type AddonPodIdentityAssociations struct {
-	RoleARN        *string `json:"roleARN,omitempty"`
-	ServiceAccount *string `json:"serviceAccount,omitempty"`
+	RoleARN *string `json:"roleARN,omitempty"`
+	// Reference field for RoleARN
+	RoleRef        *ackv1alpha1.AWSResourceReferenceWrapper `json:"roleRef,omitempty"`
+	ServiceAccount *string                                  `json:"serviceAccount,omitempty"`
 }
 
 // Information about how to configure IAM for an add-on.
@@ -435,10 +437,14 @@ type Cluster_SDK struct {
 	// EKS Auto Mode cluster.
 	ComputeConfig *ComputeConfigResponse `json:"computeConfig,omitempty"`
 	// The full description of your connected cluster.
-	ConnectorConfig  *ConnectorConfigResponse `json:"connectorConfig,omitempty"`
-	CreatedAt        *metav1.Time             `json:"createdAt,omitempty"`
-	EncryptionConfig []*EncryptionConfig      `json:"encryptionConfig,omitempty"`
-	Endpoint         *string                  `json:"endpoint,omitempty"`
+	ConnectorConfig *ConnectorConfigResponse `json:"connectorConfig,omitempty"`
+	// The control plane scaling tier configuration. For more information, see EKS
+	// Provisioned Control Plane in the Amazon EKS User Guide.
+	ControlPlaneScalingConfig *ControlPlaneScalingConfig `json:"controlPlaneScalingConfig,omitempty"`
+	CreatedAt                 *metav1.Time               `json:"createdAt,omitempty"`
+	DeletionProtection        *bool                      `json:"deletionProtection,omitempty"`
+	EncryptionConfig          []*EncryptionConfig        `json:"encryptionConfig,omitempty"`
+	Endpoint                  *string                    `json:"endpoint,omitempty"`
 	// An object representing the health of your Amazon EKS cluster.
 	Health *ClusterHealth `json:"health,omitempty"`
 	ID     *string        `json:"id,omitempty"`
@@ -552,6 +558,12 @@ type ControlPlanePlacementRequest struct {
 // in the Amazon EKS User Guide.
 type ControlPlanePlacementResponse struct {
 	GroupName *string `json:"groupName,omitempty"`
+}
+
+// The control plane scaling tier configuration. For more information, see EKS
+// Provisioned Control Plane in the Amazon EKS User Guide.
+type ControlPlaneScalingConfig struct {
+	Tier *string `json:"tier,omitempty"`
 }
 
 // The access configuration information for the cluster.

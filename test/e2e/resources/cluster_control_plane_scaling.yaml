@@ -1,0 +1,18 @@
+apiVersion: eks.services.k8s.aws/v1alpha1
+kind: Cluster
+metadata:
+  name: $CLUSTER_NAME
+spec:
+  name: $CLUSTER_NAME
+  roleARN: $CLUSTER_ROLE
+  accessConfig:
+    authenticationMode: $AUTHENTICATION_MODE
+  version: "$K8S_VERSION"
+  resourcesVPCConfig:
+    endpointPrivateAccess: true
+    endpointPublicAccess: true
+    subnetIDs:
+      - "$PUBLIC_SUBNET_1"
+      - "$PUBLIC_SUBNET_2"
+  controlPlaneScalingConfig:
+    tier: "$CONTROL_PLANE_SCALING_TIER"

@@ -248,6 +248,11 @@ func (rm *resourceManager) sdkCreate(
 	}
 
 	rm.setStatusDefaults(ko)
+	if desired.ko.Spec.AccessPolicies != nil {
+		msg := "Access policy update pending; resource will be requeued in 30 seconds"
+		ackcondition.SetSynced(&resource{ko}, corev1.ConditionFalse, &msg, nil)
+	}
+
 	return &resource{ko}, nil
 }
 
@@ -294,6 +299,10 @@ func (rm *resourceManager) sdkUpdate(
 	defer func() {
 		exit(err)
 	}()
+	// Carry the latest observed status so the update path doesn't return the
+	// stale create-time ResourceSynced=False condition (community#2967).
+	updatedDesired := rm.concreteResource(desired.DeepCopy())
+	updatedDesired.SetStatus(latest)
 	if delta.DifferentAt("Spec.AccessPolicies") {
 		err := rm.syncAccessPolicies(ctx, desired, latest)
 		if err != nil {
@@ -311,8 +320,9 @@ func (rm *resourceManager) sdkUpdate(
 		}
 	}
 	if !delta.DifferentExcept("Spec.AccessPolicies", "Spec.Tags") {
-		return desired, nil
+		return updatedDesired, nil
 	}
+
 	input, err := rm.newUpdateRequestPayload(ctx, desired, delta)
 	if err != nil {
 		return nil, err

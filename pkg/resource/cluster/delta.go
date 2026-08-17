@@ -86,6 +86,24 @@ func newResourceDelta(
 			}
 		}
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.ControlPlaneScalingConfig, b.ko.Spec.ControlPlaneScalingConfig) {
+		delta.Add("Spec.ControlPlaneScalingConfig", a.ko.Spec.ControlPlaneScalingConfig, b.ko.Spec.ControlPlaneScalingConfig)
+	} else if a.ko.Spec.ControlPlaneScalingConfig != nil && b.ko.Spec.ControlPlaneScalingConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.ControlPlaneScalingConfig.Tier, b.ko.Spec.ControlPlaneScalingConfig.Tier) {
+			delta.Add("Spec.ControlPlaneScalingConfig.Tier", a.ko.Spec.ControlPlaneScalingConfig.Tier, b.ko.Spec.ControlPlaneScalingConfig.Tier)
+		} else if a.ko.Spec.ControlPlaneScalingConfig.Tier != nil && b.ko.Spec.ControlPlaneScalingConfig.Tier != nil {
+			if *a.ko.Spec.ControlPlaneScalingConfig.Tier != *b.ko.Spec.ControlPlaneScalingConfig.Tier {
+				delta.Add("Spec.ControlPlaneScalingConfig.Tier", a.ko.Spec.ControlPlaneScalingConfig.Tier, b.ko.Spec.ControlPlaneScalingConfig.Tier)
+			}
+		}
+	}
+	if ackcompare.HasNilDifference(a.ko.Spec.DeletionProtection, b.ko.Spec.DeletionProtection) {
+		delta.Add("Spec.DeletionProtection", a.ko.Spec.DeletionProtection, b.ko.Spec.DeletionProtection)
+	} else if a.ko.Spec.DeletionProtection != nil && b.ko.Spec.DeletionProtection != nil {
+		if *a.ko.Spec.DeletionProtection != *b.ko.Spec.DeletionProtection {
+			delta.Add("Spec.DeletionProtection", a.ko.Spec.DeletionProtection, b.ko.Spec.DeletionProtection)
+		}
+	}
 	if len(a.ko.Spec.EncryptionConfig) != len(b.ko.Spec.EncryptionConfig) {
 		delta.Add("Spec.EncryptionConfig", a.ko.Spec.EncryptionConfig, b.ko.Spec.EncryptionConfig)
 	} else if len(a.ko.Spec.EncryptionConfig) > 0 {
@@ -287,4 +305,35 @@ func newResourceDelta(
 	}
 
 	return delta
+}
+
+// newResourceDeltaForPreDelete returns a new `ackcompare.Delta` that includes
+// only fields configured for pre-delete comparison, and a merged resource that
+// is a deep copy of b (observed) with only those differing fields overwritten
+// from a (desired). Used for pre-delete sync.
+func newResourceDeltaForPreDelete(
+	a *resource,
+	b *resource,
+) (*ackcompare.Delta, *resource) {
+	delta := ackcompare.NewDelta()
+	if (a == nil && b != nil) ||
+		(a != nil && b == nil) {
+		delta.Add("", a, b)
+		return delta, nil
+	}
+
+	if ackcompare.HasNilDifference(a.ko.Spec.DeletionProtection, b.ko.Spec.DeletionProtection) {
+		delta.Add("Spec.DeletionProtection", a.ko.Spec.DeletionProtection, b.ko.Spec.DeletionProtection)
+	} else if a.ko.Spec.DeletionProtection != nil && b.ko.Spec.DeletionProtection != nil {
+		if *a.ko.Spec.DeletionProtection != *b.ko.Spec.DeletionProtection {
+			delta.Add("Spec.DeletionProtection", a.ko.Spec.DeletionProtection, b.ko.Spec.DeletionProtection)
+		}
+	}
+
+	// Build merged resource: start from observed (b) and overlay only the
+	// pre-delete fields from desired (a).
+	merged := b.DeepCopy().(*resource)
+	merged.ko.Spec.DeletionProtection = a.ko.Spec.DeletionProtection
+
+	return delta, merged
 }

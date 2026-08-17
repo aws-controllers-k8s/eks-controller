@@ -109,6 +109,9 @@ func newResourceDelta(
 			delta.Add("Spec.TargetRoleARN", a.ko.Spec.TargetRoleARN, b.ko.Spec.TargetRoleARN)
 		}
 	}
+	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.TargetRoleRef, b.ko.Spec.TargetRoleRef) {
+		delta.Add("Spec.TargetRoleRef", a.ko.Spec.TargetRoleRef, b.ko.Spec.TargetRoleRef)
+	}
 
 	return delta
 }

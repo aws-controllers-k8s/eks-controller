@@ -191,6 +191,9 @@ func customPreCompare(
 	if a.ko.Spec.UpgradePolicy == nil && b.ko.Spec.UpgradePolicy != nil {
 		a.ko.Spec.UpgradePolicy = b.ko.Spec.UpgradePolicy.DeepCopy()
 	}
+	if a.ko.Spec.ControlPlaneScalingConfig == nil && b.ko.Spec.ControlPlaneScalingConfig != nil {
+		a.ko.Spec.ControlPlaneScalingConfig = b.ko.Spec.ControlPlaneScalingConfig.DeepCopy()
+	}
 }
 
 func (rm *resourceManager) customUpdate(
@@ -416,6 +419,36 @@ func (rm *resourceManager) customUpdate(
 	// Handle zonalShiftConfig updates
 	if delta.DifferentAt("Spec.ZonalShiftConfig") {
 		if err := rm.updateZonalShiftConfig(ctx, desired); err != nil {
+			awsErr, ok := extractAWSError(err)
+
+			// Check to see if we've raced an async update call and need to requeue
+			if ok && awsErr.Code == "ResourceInUseException" {
+				return nil, requeueAfterAsyncUpdate()
+			}
+
+			return nil, err
+		}
+		return returnClusterUpdating(updatedRes)
+	}
+
+	// Handle controlPlaneScalingConfig updates
+	if delta.DifferentAt("Spec.ControlPlaneScalingConfig") {
+		if err := rm.updateControlPlaneScalingConfig(ctx, desired); err != nil {
+			awsErr, ok := extractAWSError(err)
+
+			// Check to see if we've raced an async update call and need to requeue
+			if ok && awsErr.Code == "ResourceInUseException" {
+				return nil, requeueAfterAsyncUpdate()
+			}
+
+			return nil, err
+		}
+		return returnClusterUpdating(updatedRes)
+	}
+
+	// Handle deletionProtection updates
+	if delta.DifferentAt("Spec.DeletionProtection") {
+		if err := rm.updateDeletionProtection(ctx, desired); err != nil {
 			awsErr, ok := extractAWSError(err)
 
 			// Check to see if we've raced an async update call and need to requeue
@@ -750,6 +783,55 @@ func (rm *resourceManager) updateZonalShiftConfig(
 		ZonalShiftConfig: &svcsdktypes.ZonalShiftConfigRequest{
 			Enabled: r.ko.Spec.ZonalShiftConfig.Enabled,
 		},
+	}
+
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// updateControlPlaneScalingConfig updates the control plane scaling tier of
+// the cluster.
+func (rm *resourceManager) updateControlPlaneScalingConfig(
+	ctx context.Context,
+	r *resource,
+) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateControlPlaneScalingConfig")
+	defer exit(err)
+
+	input := &svcsdk.UpdateClusterConfigInput{
+		Name:                      r.ko.Spec.Name,
+		ControlPlaneScalingConfig: &svcsdktypes.ControlPlaneScalingConfig{},
+	}
+	if r.ko.Spec.ControlPlaneScalingConfig.Tier != nil {
+		input.ControlPlaneScalingConfig.Tier = svcsdktypes.ProvisionedControlPlaneTier(*r.ko.Spec.ControlPlaneScalingConfig.Tier)
+	}
+
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (rm *resourceManager) updateDeletionProtection(
+	ctx context.Context,
+	r *resource,
+) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateDeletionProtection")
+	defer exit(err)
+
+	input := &svcsdk.UpdateClusterConfigInput{
+		Name:               r.ko.Spec.Name,
+		DeletionProtection: r.ko.Spec.DeletionProtection,
 	}
 
 	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)

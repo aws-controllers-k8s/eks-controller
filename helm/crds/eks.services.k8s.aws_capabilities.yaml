@@ -50,6 +50,23 @@ spec:
                 x-kubernetes-validations:
                 - message: Value is immutable once set
                   rule: self == oldSelf
+              clusterRef:
+                description: "AWSResourceReferenceWrapper provides a wrapper around
+                  *AWSResourceReference\ntype to provide more user friendly syntax
+                  for references using 'from' field\nEx:\nAPIIDRef:\n\n\tfrom:\n\t
+                  \ name: my-api"
+                properties:
+                  from:
+                    description: |-
+                      AWSResourceReference provides all the values necessary to reference another
+                      k8s resource for finding the identifier(Id/ARN/Name)
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                    type: object
+                type: object
               configuration:
                 description: |-
                   The configuration settings for the capability. The structure of this object
@@ -182,7 +199,6 @@ spec:
                 - message: Value is immutable once set
                   rule: self == oldSelf
             required:
-            - clusterName
             - deletePropagationPolicy
             - name
             - type
