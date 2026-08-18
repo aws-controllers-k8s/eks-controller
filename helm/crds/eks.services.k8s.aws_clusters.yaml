@@ -148,6 +148,72 @@ spec:
                       type: array
                   type: object
                 type: array
+              kubeAPIServerConfig:
+                description: The Kubernetes API server configuration for the new cluster.
+                properties:
+                  eventTTL:
+                    type: string
+                  serviceNodePortRange:
+                    description: The port range for Kubernetes NodePort services.
+                    properties:
+                      maxPort:
+                        format: int64
+                        type: integer
+                      minPort:
+                        format: int64
+                        type: integer
+                    type: object
+                type: object
+              kubeControllerManagerConfig:
+                description: The Kubernetes controller manager configuration for the
+                  new cluster.
+                properties:
+                  horizontalPodAutoscalerControllerConfig:
+                    description: |-
+                      The horizontal pod autoscaler controller configuration for the Kubernetes
+                      controller manager.
+                    properties:
+                      horizontalPodAutoscalerSyncPeriod:
+                        type: string
+                    type: object
+                type: object
+              kubeSchedulerConfig:
+                description: The Kubernetes scheduler configuration for the new cluster.
+                properties:
+                  nodeResourcesFit:
+                    description: The NodeResourcesFit plugin configuration for the
+                      Kubernetes scheduler.
+                    properties:
+                      scoringStrategy:
+                        description: The scoring strategy configuration for the NodeResourcesFit
+                          scheduler plugin.
+                        properties:
+                          resources:
+                            description: A list of resource weights for the scoring
+                              strategy.
+                            items:
+                              description: A resource weight entry for the scheduler
+                                scoring strategy.
+                              properties:
+                                name:
+                                  description: The name of a resource used in the
+                                    scheduler scoring strategy.
+                                  type: string
+                                weight:
+                                  description: |-
+                                    The weight value for a resource in the scheduler scoring strategy. Must be
+                                    between 1 and 100.
+                                  format: int64
+                                  type: integer
+                              type: object
+                            type: array
+                          type:
+                            description: The scoring strategy type for the NodeResourcesFit
+                              scheduler plugin.
+                            type: string
+                        type: object
+                    type: object
+                type: object
               kubernetesNetworkConfig:
                 description: The Kubernetes network configuration for the cluster.
                 properties:

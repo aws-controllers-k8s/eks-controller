@@ -202,6 +202,77 @@ def control_plane_scaling_cluster(eks_client):
         pass
 
 @pytest.fixture
+def component_config_cluster(eks_client):
+    cluster_name = random_suffix_name("cc-cluster", 32)
+
+    replacements = REPLACEMENT_VALUES.copy()
+    replacements["CLUSTER_NAME"] = cluster_name
+    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_35
+    replacements["EVENT_TTL"] = "30m"
+    replacements["HPA_SYNC_PERIOD"] = "10s"
+
+    resource_data = load_eks_resource(
+        "cluster_component_config",
+        additional_replacements=replacements,
+    )
+    logging.debug(resource_data)
+
+    # Create the k8s resource
+    ref = k8s.CustomResourceReference(
+        CRD_GROUP, CRD_VERSION, CLUSTER_RESOURCE_PLURAL,
+        cluster_name, namespace="default",
+    )
+    k8s.create_custom_resource(ref, resource_data)
+    cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=15)
+
+    assert cr is not None
+    assert k8s.get_resource_exists(ref)
+
+    yield (ref, cr)
+
+    # Try to delete, if doesn't already exist
+    try:
+        _, deleted = k8s.delete_custom_resource(ref, 3, 10)
+        assert deleted
+        wait_until_deleted(cluster_name)
+    except:
+        pass
+
+@pytest.fixture
+def partial_component_config_cluster(eks_client):
+    cluster_name = random_suffix_name("cc-partial", 32)
+
+    replacements = REPLACEMENT_VALUES.copy()
+    replacements["CLUSTER_NAME"] = cluster_name
+    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_35
+    replacements["EVENT_TTL"] = "45m"
+
+    resource_data = load_eks_resource(
+        "cluster_component_config_partial",
+        additional_replacements=replacements,
+    )
+    logging.debug(resource_data)
+
+    ref = k8s.CustomResourceReference(
+        CRD_GROUP, CRD_VERSION, CLUSTER_RESOURCE_PLURAL,
+        cluster_name, namespace="default",
+    )
+    k8s.create_custom_resource(ref, resource_data)
+    cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=15)
+
+    assert cr is not None
+    assert k8s.get_resource_exists(ref)
+
+    yield (ref, cr)
+
+    try:
+        _, deleted = k8s.delete_custom_resource(ref, 3, 10)
+        assert deleted
+        wait_until_deleted(cluster_name)
+    except:
+        pass
+
+@pytest.fixture
 def adoption_cluster(eks_client):
     adopted_cluster = get_bootstrap_resources().AdoptionCluster
     cluster_name = adopted_cluster.name
@@ -598,3 +669,139 @@ class TestCluster:
         # Verify via describe_cluster that the tier has been updated
         aws_res = eks_client.describe_cluster(name=cluster_name)
         assert aws_res["cluster"]["controlPlaneScalingConfig"]["tier"] == "tier-xl"
+
+    def test_create_update_cluster_component_config(self, eks_client, component_config_cluster):
+        (ref, cr) = component_config_cluster
+
+        cluster_name = cr["spec"]["name"]
+
+        try:
+            aws_res = eks_client.describe_cluster(name=cluster_name)
+            assert aws_res is not None
+        except eks_client.exceptions.ResourceNotFoundException:
+            pytest.fail(f"Could not find cluster '{cluster_name}' in EKS")
+
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        # Verify the control plane component configs were applied at create time.
+        # NOTE: boto3/describe_cluster returns the API wire names, which differ
+        # from the ACK spec names: kubeApiServerConfig (lowercase "pi") vs the
+        # ACK spec's kubeAPIServerConfig.
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        cluster = aws_res["cluster"]
+        assert cluster["kubeApiServerConfig"]["eventTtl"] == "30m"
+        assert cluster["kubeApiServerConfig"]["serviceNodePortRange"]["minPort"] == 30000
+        assert cluster["kubeApiServerConfig"]["serviceNodePortRange"]["maxPort"] == 32000
+        assert cluster["kubeControllerManagerConfig"]["horizontalPodAutoscalerControllerConfig"]["horizontalPodAutoscalerSyncPeriod"] == "10s"
+        assert cluster["kubeSchedulerConfig"]["nodeResourcesFit"]["scoringStrategy"]["type"] == "LeastAllocated"
+
+        # Update the component configs. The controller batches every changed
+        # component config into a single UpdateClusterConfig call
+        # (updateComponentConfig).
+        updates = {
+            "spec": {
+                "kubeAPIServerConfig": {
+                    "eventTTL": "1h",
+                    "serviceNodePortRange": {
+                        "minPort": 30000,
+                        "maxPort": 32000,
+                    },
+                },
+                "kubeControllerManagerConfig": {
+                    "horizontalPodAutoscalerControllerConfig": {
+                        "horizontalPodAutoscalerSyncPeriod": "15s",
+                    }
+                },
+            }
+        }
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        # Wait for the updating to become active again
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=30)
+
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        cluster = aws_res["cluster"]
+        assert cluster["kubeApiServerConfig"]["eventTtl"] == "1h"
+        assert cluster["kubeControllerManagerConfig"]["horizontalPodAutoscalerControllerConfig"]["horizontalPodAutoscalerSyncPeriod"] == "15s"
+
+    def test_cluster_component_config_late_initialize(self, eks_client, simple_cluster):
+        # This cluster is created WITHOUT any control plane component config in
+        # its spec. The EKS backend injects tier-based defaults for these configs
+        # and returns them on the read (DescribeCluster) path. late_initialize on
+        # KubeAPIServerConfig / KubeSchedulerConfig / KubeControllerManagerConfig
+        # must copy those backend defaults into the spec so the controller does
+        # NOT treat them as drift and reconcile forever.
+        #
+        # This test validates a load-bearing assumption of the late_initialize
+        # design: the generated incompleteLateInitialization() treats a nil
+        # component config as "late-init not complete" and requeues. If EKS ever
+        # returns these configs as null (e.g. unset, or tier-gated), late-init
+        # would never complete and the resource would never reach Synced=True.
+        # A hang here (rather than a value mismatch) points at that assumption.
+        (ref, cr) = simple_cluster
+
+        cluster_name = cr["spec"]["name"]
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        # The resource must converge to Synced=True even though the spec set no
+        # component configs (late-init populated them from the backend defaults).
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=30)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        # The spec should now carry the late-initialized backend defaults.
+        cr = k8s.get_resource(ref)
+        assert cr["spec"].get("kubeAPIServerConfig") is not None
+        assert cr["spec"].get("kubeSchedulerConfig") is not None
+        assert cr["spec"].get("kubeControllerManagerConfig") is not None
+
+        # Confirm there is no perpetual drift: the resource stays Synced across a
+        # settle window. A thrashing late-init would flip Synced back to False.
+        time.sleep(CHECK_STATUS_WAIT_SECONDS)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+    def test_cluster_component_config_partial_late_initialize(self, eks_client, partial_component_config_cluster):
+        # This cluster sets ONLY kubeAPIServerConfig.eventTTL. The EKS backend
+        # fills tier defaults for every omitted field and returns the complete
+        # effective config on read. A top-level late_initialize alone would not
+        # help here: kubeAPIServerConfig is non-nil (eventTTL is set), so the
+        # controller would treat the server-defaulted sibling serviceNodePortRange
+        # -- and the entirely-omitted kubeSchedulerConfig / kubeControllerManagerConfig
+        # -- as drift and reconcile forever. The per-field (nested) late_initialize
+        # must adopt those backend defaults so the resource settles at Synced=True.
+        (ref, cr) = partial_component_config_cluster
+
+        cluster_name = cr["spec"]["name"]
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        # Must converge despite the partial spec.
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=30)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        cr = k8s.get_resource(ref)
+        spec = cr["spec"]
+
+        # The user-provided value is preserved (late-init only fills nil fields).
+        assert spec["kubeAPIServerConfig"]["eventTTL"] == "45m"
+
+        # The nested sibling that was omitted is late-initialized from the backend
+        # default -- this is the case a top-level late_initialize would miss.
+        snpr = spec["kubeAPIServerConfig"].get("serviceNodePortRange")
+        assert snpr is not None
+        assert snpr.get("minPort") is not None
+        assert snpr.get("maxPort") is not None
+
+        # The entirely-omitted sibling configs are late-initialized too.
+        assert spec.get("kubeSchedulerConfig") is not None
+        assert spec.get("kubeControllerManagerConfig") is not None
+
+        # No perpetual drift: stays Synced across a settle window. If nested
+        # late-init were missing, serviceNodePortRange would keep diffing and flip
+        # Synced back to False here.
+        time.sleep(CHECK_STATUS_WAIT_SECONDS)
+        get_and_assert_status(ref, 'ACTIVE', True)
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=3)

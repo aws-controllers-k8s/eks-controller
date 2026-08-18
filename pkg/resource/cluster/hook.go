@@ -434,6 +434,25 @@ func (rm *resourceManager) customUpdate(
 		return returnClusterUpdating(updatedRes)
 	}
 
+	// Handle Kubernetes control plane component config updates. These three
+	// configs (kube-apiserver, kube-scheduler, kube-controller-manager) are a
+	// single logical unit sent in one UpdateClusterConfig call.
+	if delta.DifferentAt("Spec.KubeAPIServerConfig") ||
+		delta.DifferentAt("Spec.KubeSchedulerConfig") ||
+		delta.DifferentAt("Spec.KubeControllerManagerConfig") {
+		if err := rm.updateComponentConfig(ctx, desired, delta); err != nil {
+			awsErr, ok := extractAWSError(err)
+
+			// Check to see if we've raced an async update call and need to requeue
+			if ok && awsErr.Code == "ResourceInUseException" {
+				return nil, requeueAfterAsyncUpdate()
+			}
+
+			return nil, err
+		}
+		return returnClusterUpdating(updatedRes)
+	}
+
 	// Handle deletionProtection updates
 	if delta.DifferentAt("Spec.DeletionProtection") {
 		if err := rm.updateDeletionProtection(ctx, desired); err != nil {
@@ -798,6 +817,48 @@ func (rm *resourceManager) updateControlPlaneScalingConfig(
 	}
 	if r.ko.Spec.ControlPlaneScalingConfig.Tier != nil {
 		input.ControlPlaneScalingConfig.Tier = svcsdktypes.ProvisionedControlPlaneTier(*r.ko.Spec.ControlPlaneScalingConfig.Tier)
+	}
+
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// updateComponentConfig updates the Kubernetes control plane component configs
+// (kube-apiserver, kube-scheduler, kube-controller-manager) of the cluster. It
+// only sends the configs that actually changed, per the delta. The ACK spec ->
+// SDK conversion is delegated to the generated newCreateRequestPayload so the
+// nested field handling (int32 bounds, scoring strategy) stays in sync with the
+// model as it evolves.
+func (rm *resourceManager) updateComponentConfig(
+	ctx context.Context,
+	r *resource,
+	delta *ackcompare.Delta,
+) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateComponentConfig")
+	defer exit(err)
+
+	createPayload, err := rm.newCreateRequestPayload(ctx, r)
+	if err != nil {
+		return err
+	}
+
+	input := &svcsdk.UpdateClusterConfigInput{
+		Name: r.ko.Spec.Name,
+	}
+	if delta.DifferentAt("Spec.KubeAPIServerConfig") {
+		input.KubeApiServerConfig = createPayload.KubeApiServerConfig
+	}
+	if delta.DifferentAt("Spec.KubeSchedulerConfig") {
+		input.KubeSchedulerConfig = createPayload.KubeSchedulerConfig
+	}
+	if delta.DifferentAt("Spec.KubeControllerManagerConfig") {
+		input.KubeControllerManagerConfig = createPayload.KubeControllerManagerConfig
 	}
 
 	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)

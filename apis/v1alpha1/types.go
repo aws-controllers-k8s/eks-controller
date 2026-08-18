@@ -402,8 +402,9 @@ type Certificate struct {
 
 // Details about clients using the deprecated resources.
 type ClientStat struct {
-	LastRequestTime *metav1.Time `json:"lastRequestTime,omitempty"`
-	UserAgent       *string      `json:"userAgent,omitempty"`
+	LastRequestTime            *metav1.Time `json:"lastRequestTime,omitempty"`
+	NumberOfRequestsLast30Days *int64       `json:"numberOfRequestsLast30Days,omitempty"`
+	UserAgent                  *string      `json:"userAgent,omitempty"`
 }
 
 // An object representing the health of your Amazon EKS cluster.
@@ -455,6 +456,12 @@ type Cluster_SDK struct {
 	ID     *string        `json:"id,omitempty"`
 	// An object representing an identity provider.
 	Identity *Identity `json:"identity,omitempty"`
+	// The Kubernetes API server configuration for an Amazon EKS cluster.
+	KubeAPIServerConfig *KubeAPIServerConfigResponse `json:"kubeAPIServerConfig,omitempty"`
+	// The Kubernetes controller manager configuration for an Amazon EKS cluster.
+	KubeControllerManagerConfig *KubeControllerManagerConfigResponse `json:"kubeControllerManagerConfig,omitempty"`
+	// The Kubernetes scheduler configuration for an Amazon EKS cluster.
+	KubeSchedulerConfig *KubeSchedulerConfigResponse `json:"kubeSchedulerConfig,omitempty"`
 	// The Kubernetes network configuration for the cluster. The response contains
 	// a value for serviceIpv6Cidr or serviceIpv4Cidr, but not both.
 	KubernetesNetworkConfig *KubernetesNetworkConfigResponse `json:"kubernetesNetworkConfig,omitempty"`
@@ -608,14 +615,15 @@ type DurationParameterConfig struct {
 // An EKS Anywhere subscription authorizing the customer to support for licensed
 // clusters and access to EKS Anywhere Curated Packages.
 type EKSAnywhereSubscription struct {
-	ARN            *string      `json:"arn,omitempty"`
-	AutoRenew      *bool        `json:"autoRenew,omitempty"`
-	CreatedAt      *metav1.Time `json:"createdAt,omitempty"`
-	EffectiveDate  *metav1.Time `json:"effectiveDate,omitempty"`
-	ExpirationDate *metav1.Time `json:"expirationDate,omitempty"`
-	ID             *string      `json:"id,omitempty"`
-	LicenseARNs    []*string    `json:"licenseARNs,omitempty"`
-	Status         *string      `json:"status,omitempty"`
+	ARN             *string      `json:"arn,omitempty"`
+	AutoRenew       *bool        `json:"autoRenew,omitempty"`
+	CreatedAt       *metav1.Time `json:"createdAt,omitempty"`
+	EffectiveDate   *metav1.Time `json:"effectiveDate,omitempty"`
+	ExpirationDate  *metav1.Time `json:"expirationDate,omitempty"`
+	ID              *string      `json:"id,omitempty"`
+	LicenseARNs     []*string    `json:"licenseARNs,omitempty"`
+	LicenseQuantity *int64       `json:"licenseQuantity,omitempty"`
+	Status          *string      `json:"status,omitempty"`
 	// The metadata that you apply to a resource to help you categorize and organize
 	// them. Each tag consists of a key and an optional value. You define them.
 	//
@@ -642,6 +650,14 @@ type EKSAnywhereSubscription struct {
 	//    Services use. You cannot edit or delete tag keys or values with this prefix.
 	//    Tags with this prefix do not count against your tags per resource limit.
 	Tags map[string]*string `json:"tags,omitempty"`
+}
+
+// An object representing the term duration and term unit type of your subscription.
+// This determines the term length of your subscription. Valid values are MONTHS
+// for term unit and 12 or 36 for term duration, indicating a 12 month or 36
+// month subscription.
+type EKSAnywhereSubscriptionTerm struct {
+	Duration *int64 `json:"duration,omitempty"`
 }
 
 // Indicates the current configuration of the load balancing capability on your
@@ -812,11 +828,42 @@ type Issue struct {
 // The configuration for the Kubernetes API server on an Amazon EKS cluster.
 type KubeAPIServerConfigRequest struct {
 	EventTTL *string `json:"eventTTL,omitempty"`
+	// The port range for Kubernetes NodePort services.
+	ServiceNodePortRange *ServiceNodePortRange `json:"serviceNodePortRange,omitempty"`
 }
 
 // The Kubernetes API server configuration for an Amazon EKS cluster.
 type KubeAPIServerConfigResponse struct {
 	EventTTL *string `json:"eventTTL,omitempty"`
+	// The port range for Kubernetes NodePort services.
+	ServiceNodePortRange *ServiceNodePortRange `json:"serviceNodePortRange,omitempty"`
+}
+
+// The configuration for the Kubernetes controller manager on an Amazon EKS
+// cluster.
+type KubeControllerManagerConfigRequest struct {
+	// The horizontal pod autoscaler controller configuration for the Kubernetes
+	// controller manager.
+	HorizontalPodAutoscalerControllerConfig *HorizontalPodAutoscalerControllerConfigRequest `json:"horizontalPodAutoscalerControllerConfig,omitempty"`
+}
+
+// The Kubernetes controller manager configuration for an Amazon EKS cluster.
+type KubeControllerManagerConfigResponse struct {
+	// The horizontal pod autoscaler controller configuration for the Kubernetes
+	// controller manager.
+	HorizontalPodAutoscalerControllerConfig *HorizontalPodAutoscalerControllerConfigResponse `json:"horizontalPodAutoscalerControllerConfig,omitempty"`
+}
+
+// The configuration for the Kubernetes scheduler on an Amazon EKS cluster.
+type KubeSchedulerConfigRequest struct {
+	// The NodeResourcesFit plugin configuration for the Kubernetes scheduler.
+	NodeResourcesFit *NodeResourcesFitConfig `json:"nodeResourcesFit,omitempty"`
+}
+
+// The Kubernetes scheduler configuration for an Amazon EKS cluster.
+type KubeSchedulerConfigResponse struct {
+	// The NodeResourcesFit plugin configuration for the Kubernetes scheduler.
+	NodeResourcesFit *NodeResourcesFitConfig `json:"nodeResourcesFit,omitempty"`
 }
 
 // The Kubernetes network configuration for the cluster.
@@ -904,6 +951,12 @@ type NodeRepairConfigOverrides struct {
 	MinRepairWaitTimeMins   *int64  `json:"minRepairWaitTimeMins,omitempty"`
 	NodeMonitoringCondition *string `json:"nodeMonitoringCondition,omitempty"`
 	NodeUnhealthyReason     *string `json:"nodeUnhealthyReason,omitempty"`
+}
+
+// The NodeResourcesFit plugin configuration for the Kubernetes scheduler.
+type NodeResourcesFitConfig struct {
+	// The scoring strategy configuration for the NodeResourcesFit scheduler plugin.
+	ScoringStrategy *ScoringStrategy `json:"scoringStrategy,omitempty"`
 }
 
 // An object representing the health status of the node group.
@@ -1172,6 +1225,12 @@ type PodIdentityAssociation_SDK struct {
 	TargetRoleARN *string            `json:"targetRoleARN,omitempty"`
 }
 
+// A port range parameter configuration with default value and constraints.
+type PortRangeParameterConfig struct {
+	// The port range for Kubernetes NodePort services.
+	DefaultValue *ServiceNodePortRange `json:"defaultValue,omitempty"`
+}
+
 // Identifies the Key Management Service (KMS) key used to encrypt the secrets.
 type Provider struct {
 	KeyARN *string `json:"keyARN,omitempty"`
@@ -1259,9 +1318,38 @@ type RemotePodNetwork struct {
 	CIDRs []*string `json:"cidrs,omitempty"`
 }
 
+// A resource weight entry for the scheduler scoring strategy.
+type ResourceWeight struct {
+	// The name of a resource used in the scheduler scoring strategy.
+	Name *string `json:"name,omitempty"`
+	// The weight value for a resource in the scheduler scoring strategy. Must be
+	// between 1 and 100.
+	Weight *int64 `json:"weight,omitempty"`
+}
+
 // The rollback configuration for the cluster version rollback.
 type RollbackConfig struct {
 	TimeoutMinutes *int64 `json:"timeoutMinutes,omitempty"`
+}
+
+// The scoring strategy configuration for the NodeResourcesFit scheduler plugin.
+type ScoringStrategy struct {
+	// A list of resource weights for the scoring strategy.
+	Resources []*ResourceWeight `json:"resources,omitempty"`
+	// The scoring strategy type for the NodeResourcesFit scheduler plugin.
+	Type *string `json:"type,omitempty"`
+}
+
+// The scoring strategy configuration with default value and constraints.
+type ScoringStrategyConfig struct {
+	// The scoring strategy configuration for the NodeResourcesFit scheduler plugin.
+	DefaultValue *ScoringStrategy `json:"defaultValue,omitempty"`
+}
+
+// The port range for Kubernetes NodePort services.
+type ServiceNodePortRange struct {
+	MaxPort *int64 `json:"maxPort,omitempty"`
+	MinPort *int64 `json:"minPort,omitempty"`
 }
 
 // An IAM Identity CenterIAM; Identity Center identity (user or group) that
