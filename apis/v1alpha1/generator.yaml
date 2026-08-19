@@ -640,3 +640,43 @@ ignore:
   - CreateCapabilityInput.ClientRequestToken
   - CreateAddonInput.NamespaceConfig
   - CreateAddonOutput.Addon.NamespaceConfig
+  # Control-plane component configs are exposed by the v1.91.0 SDK model, but the
+  # controller does not yet reconcile them (no customUpdate routing + no
+  # late-init), so leaving them exposed would let users set fields that silently
+  # no-op on update and read back as perpetual drift. Ignore them until the
+  # follow-up change adds controller-side create/update/late-init handling.
+  - CreateClusterInput.KubeApiServerConfig
+  - CreateClusterInput.KubeControllerManagerConfig
+  - CreateClusterInput.KubeSchedulerConfig
+  - CreateClusterOutput.Cluster.KubeApiServerConfig
+  - CreateClusterOutput.Cluster.KubeControllerManagerConfig
+  - CreateClusterOutput.Cluster.KubeSchedulerConfig
+  - DescribeClusterOutput.Cluster.KubeApiServerConfig
+  - DescribeClusterOutput.Cluster.KubeControllerManagerConfig
+  - DescribeClusterOutput.Cluster.KubeSchedulerConfig
+  # ControlPlaneEgressMode (new in the v1.91.0 model) is returned by EKS on read
+  # (e.g. "AWS_MANAGED") and gets folded into the ResourcesVpcConfig update
+  # request. EKS rejects an UpdateClusterConfig that carries an endpoint-access
+  # change together with controlPlaneEgressMode ("Only one type of update can be
+  # allowed"), breaking the existing VPC endpoint-access update. Ignore it until
+  # the controller reconciles it as its own update type.
+  - CreateClusterInput.ResourcesVpcConfig.ControlPlaneEgressMode
+  - CreateClusterOutput.Cluster.ResourcesVpcConfig.ControlPlaneEgressMode
+  - DescribeClusterOutput.Cluster.ResourcesVpcConfig.ControlPlaneEgressMode
+  # The v1.91.0 SDK model also adds unrelated new fields to the Cluster
+  # (Outpost/local-cluster etcd placement) and Nodegroup (managed-nodegroup warm
+  # pools) shapes. These are separate EKS capabilities that need their own
+  # create/update/read reconciliation and e2e coverage. Keep this SDK bump purely
+  # mechanical by ignoring them until a dedicated change wires each one up.
+  - CreateClusterInput.OutpostConfig.EtcdInstanceType
+  - CreateClusterInput.OutpostConfig.EtcdPlacement
+  - CreateClusterInput.OutpostConfig.ControlPlanePlacement.SpreadLevel
+  - CreateClusterOutput.Cluster.OutpostConfig.EtcdInstanceType
+  - CreateClusterOutput.Cluster.OutpostConfig.EtcdPlacement
+  - CreateClusterOutput.Cluster.OutpostConfig.ControlPlanePlacement.SpreadLevel
+  - DescribeClusterOutput.Cluster.OutpostConfig.EtcdInstanceType
+  - DescribeClusterOutput.Cluster.OutpostConfig.EtcdPlacement
+  - DescribeClusterOutput.Cluster.OutpostConfig.ControlPlanePlacement.SpreadLevel
+  - CreateNodegroupInput.WarmPoolConfig
+  - CreateNodegroupOutput.Nodegroup.WarmPoolConfig
+  - DescribeNodegroupOutput.Nodegroup.WarmPoolConfig
