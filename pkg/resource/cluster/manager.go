@@ -50,7 +50,7 @@ var (
 // +kubebuilder:rbac:groups=eks.services.k8s.aws,resources=clusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=eks.services.k8s.aws,resources=clusters/status,verbs=get;update;patch
 
-var lateInitializeFieldNames = []string{"Tier", "DeletionProtection"}
+var lateInitializeFieldNames = []string{"Tier", "DeletionProtection", "KubeAPIServerConfig", "KubeApiServerConfig.EventTTL", "KubeApiServerConfig.ServiceNodePortRange", "KubeApiServerConfig.ServiceNodePortRange.MaxPort", "KubeApiServerConfig.ServiceNodePortRange.MinPort", "KubeControllerManagerConfig", "HorizontalPodAutoscalerControllerConfig", "HorizontalPodAutoscalerSyncPeriod", "KubeSchedulerConfig", "NodeResourcesFit", "ScoringStrategy", "Resources", "Type"}
 
 // resourceManager is responsible for providing a consistent way to perform
 // CRUD operations in a backend AWS service API for Book custom resources.
@@ -278,6 +278,81 @@ func (rm *resourceManager) lateInitializeFromReadOneOutput(
 	}
 	if observedKo.Spec.DeletionProtection != nil && latestKo.Spec.DeletionProtection == nil {
 		latestKo.Spec.DeletionProtection = observedKo.Spec.DeletionProtection
+	}
+	if observedKo.Spec.KubeAPIServerConfig != nil && latestKo.Spec.KubeAPIServerConfig == nil {
+		latestKo.Spec.KubeAPIServerConfig = observedKo.Spec.KubeAPIServerConfig
+	}
+	if observedKo.Spec.KubeAPIServerConfig != nil && latestKo.Spec.KubeAPIServerConfig != nil {
+		if observedKo.Spec.KubeAPIServerConfig.EventTTL != nil && latestKo.Spec.KubeAPIServerConfig.EventTTL == nil {
+			latestKo.Spec.KubeAPIServerConfig.EventTTL = observedKo.Spec.KubeAPIServerConfig.EventTTL
+		}
+	}
+	if observedKo.Spec.KubeAPIServerConfig != nil && latestKo.Spec.KubeAPIServerConfig != nil {
+		if observedKo.Spec.KubeAPIServerConfig.ServiceNodePortRange != nil && latestKo.Spec.KubeAPIServerConfig.ServiceNodePortRange == nil {
+			latestKo.Spec.KubeAPIServerConfig.ServiceNodePortRange = observedKo.Spec.KubeAPIServerConfig.ServiceNodePortRange
+		}
+	}
+	if observedKo.Spec.KubeAPIServerConfig != nil && latestKo.Spec.KubeAPIServerConfig != nil {
+		if observedKo.Spec.KubeAPIServerConfig.ServiceNodePortRange != nil && latestKo.Spec.KubeAPIServerConfig.ServiceNodePortRange != nil {
+			if observedKo.Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort != nil && latestKo.Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort == nil {
+				latestKo.Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort = observedKo.Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort
+			}
+		}
+	}
+	if observedKo.Spec.KubeAPIServerConfig != nil && latestKo.Spec.KubeAPIServerConfig != nil {
+		if observedKo.Spec.KubeAPIServerConfig.ServiceNodePortRange != nil && latestKo.Spec.KubeAPIServerConfig.ServiceNodePortRange != nil {
+			if observedKo.Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort != nil && latestKo.Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort == nil {
+				latestKo.Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort = observedKo.Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort
+			}
+		}
+	}
+	if observedKo.Spec.KubeControllerManagerConfig != nil && latestKo.Spec.KubeControllerManagerConfig == nil {
+		latestKo.Spec.KubeControllerManagerConfig = observedKo.Spec.KubeControllerManagerConfig
+	}
+	if observedKo.Spec.KubeControllerManagerConfig != nil && latestKo.Spec.KubeControllerManagerConfig != nil {
+		if observedKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig != nil && latestKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig == nil {
+			latestKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig = observedKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig
+		}
+	}
+	if observedKo.Spec.KubeControllerManagerConfig != nil && latestKo.Spec.KubeControllerManagerConfig != nil {
+		if observedKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig != nil && latestKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig != nil {
+			if observedKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod != nil && latestKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod == nil {
+				latestKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod = observedKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod
+			}
+		}
+	}
+	if observedKo.Spec.KubeSchedulerConfig != nil && latestKo.Spec.KubeSchedulerConfig == nil {
+		latestKo.Spec.KubeSchedulerConfig = observedKo.Spec.KubeSchedulerConfig
+	}
+	if observedKo.Spec.KubeSchedulerConfig != nil && latestKo.Spec.KubeSchedulerConfig != nil {
+		if observedKo.Spec.KubeSchedulerConfig.NodeResourcesFit != nil && latestKo.Spec.KubeSchedulerConfig.NodeResourcesFit == nil {
+			latestKo.Spec.KubeSchedulerConfig.NodeResourcesFit = observedKo.Spec.KubeSchedulerConfig.NodeResourcesFit
+		}
+	}
+	if observedKo.Spec.KubeSchedulerConfig != nil && latestKo.Spec.KubeSchedulerConfig != nil {
+		if observedKo.Spec.KubeSchedulerConfig.NodeResourcesFit != nil && latestKo.Spec.KubeSchedulerConfig.NodeResourcesFit != nil {
+			if observedKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy != nil && latestKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy == nil {
+				latestKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy = observedKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy
+			}
+		}
+	}
+	if observedKo.Spec.KubeSchedulerConfig != nil && latestKo.Spec.KubeSchedulerConfig != nil {
+		if observedKo.Spec.KubeSchedulerConfig.NodeResourcesFit != nil && latestKo.Spec.KubeSchedulerConfig.NodeResourcesFit != nil {
+			if observedKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy != nil && latestKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy != nil {
+				if observedKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources != nil && latestKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources == nil {
+					latestKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources = observedKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources
+				}
+			}
+		}
+	}
+	if observedKo.Spec.KubeSchedulerConfig != nil && latestKo.Spec.KubeSchedulerConfig != nil {
+		if observedKo.Spec.KubeSchedulerConfig.NodeResourcesFit != nil && latestKo.Spec.KubeSchedulerConfig.NodeResourcesFit != nil {
+			if observedKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy != nil && latestKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy != nil {
+				if observedKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type != nil && latestKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type == nil {
+					latestKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type = observedKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type
+				}
+			}
+		}
 	}
 	return &resource{latestKo}
 }

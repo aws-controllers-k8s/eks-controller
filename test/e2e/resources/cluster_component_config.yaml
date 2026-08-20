@@ -1,0 +1,38 @@
+apiVersion: eks.services.k8s.aws/v1alpha1
+kind: Cluster
+metadata:
+  name: $CLUSTER_NAME
+spec:
+  name: $CLUSTER_NAME
+  roleARN: $CLUSTER_ROLE
+  accessConfig:
+    authenticationMode: $AUTHENTICATION_MODE
+  version: "$K8S_VERSION"
+  resourcesVPCConfig:
+    endpointPrivateAccess: true
+    endpointPublicAccess: true
+    subnetIDs:
+      - "$PUBLIC_SUBNET_1"
+      - "$PUBLIC_SUBNET_2"
+  # horizontalPodAutoscalerSyncPeriod (and other component-config tuning) is
+  # only supported on a non-standard Provisioned Control Plane scaling tier;
+  # tier-xl enables it.
+  controlPlaneScalingConfig:
+    tier: "tier-xl"
+  kubeAPIServerConfig:
+    eventTTL: "$EVENT_TTL"
+    serviceNodePortRange:
+      minPort: 30000
+      maxPort: 32000
+  kubeControllerManagerConfig:
+    horizontalPodAutoscalerControllerConfig:
+      horizontalPodAutoscalerSyncPeriod: "$HPA_SYNC_PERIOD"
+  kubeSchedulerConfig:
+    nodeResourcesFit:
+      scoringStrategy:
+        type: "LeastAllocated"
+        resources:
+          - name: "cpu"
+            weight: 1
+          - name: "memory"
+            weight: 1

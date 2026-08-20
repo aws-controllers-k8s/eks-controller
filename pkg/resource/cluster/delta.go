@@ -111,6 +111,76 @@ func newResourceDelta(
 			delta.Add("Spec.EncryptionConfig", a.ko.Spec.EncryptionConfig, b.ko.Spec.EncryptionConfig)
 		}
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.KubeAPIServerConfig, b.ko.Spec.KubeAPIServerConfig) {
+		delta.Add("Spec.KubeAPIServerConfig", a.ko.Spec.KubeAPIServerConfig, b.ko.Spec.KubeAPIServerConfig)
+	} else if a.ko.Spec.KubeAPIServerConfig != nil && b.ko.Spec.KubeAPIServerConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.KubeAPIServerConfig.EventTTL, b.ko.Spec.KubeAPIServerConfig.EventTTL) {
+			delta.Add("Spec.KubeAPIServerConfig.EventTTL", a.ko.Spec.KubeAPIServerConfig.EventTTL, b.ko.Spec.KubeAPIServerConfig.EventTTL)
+		} else if a.ko.Spec.KubeAPIServerConfig.EventTTL != nil && b.ko.Spec.KubeAPIServerConfig.EventTTL != nil {
+			if *a.ko.Spec.KubeAPIServerConfig.EventTTL != *b.ko.Spec.KubeAPIServerConfig.EventTTL {
+				delta.Add("Spec.KubeAPIServerConfig.EventTTL", a.ko.Spec.KubeAPIServerConfig.EventTTL, b.ko.Spec.KubeAPIServerConfig.EventTTL)
+			}
+		}
+		if ackcompare.HasNilDifference(a.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange, b.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange) {
+			delta.Add("Spec.KubeAPIServerConfig.ServiceNodePortRange", a.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange, b.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange)
+		} else if a.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange != nil && b.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange != nil {
+			if ackcompare.HasNilDifference(a.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort, b.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort) {
+				delta.Add("Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort", a.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort, b.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort)
+			} else if a.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort != nil && b.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort != nil {
+				if *a.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort != *b.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort {
+					delta.Add("Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort", a.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort, b.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MaxPort)
+				}
+			}
+			if ackcompare.HasNilDifference(a.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort, b.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort) {
+				delta.Add("Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort", a.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort, b.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort)
+			} else if a.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort != nil && b.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort != nil {
+				if *a.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort != *b.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort {
+					delta.Add("Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort", a.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort, b.ko.Spec.KubeAPIServerConfig.ServiceNodePortRange.MinPort)
+				}
+			}
+		}
+	}
+	if ackcompare.HasNilDifference(a.ko.Spec.KubeControllerManagerConfig, b.ko.Spec.KubeControllerManagerConfig) {
+		delta.Add("Spec.KubeControllerManagerConfig", a.ko.Spec.KubeControllerManagerConfig, b.ko.Spec.KubeControllerManagerConfig)
+	} else if a.ko.Spec.KubeControllerManagerConfig != nil && b.ko.Spec.KubeControllerManagerConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig, b.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig) {
+			delta.Add("Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig", a.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig, b.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig)
+		} else if a.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig != nil && b.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig != nil {
+			if ackcompare.HasNilDifference(a.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod, b.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod) {
+				delta.Add("Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod", a.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod, b.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod)
+			} else if a.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod != nil && b.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod != nil {
+				if *a.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod != *b.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod {
+					delta.Add("Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod", a.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod, b.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod)
+				}
+			}
+		}
+	}
+	if ackcompare.HasNilDifference(a.ko.Spec.KubeSchedulerConfig, b.ko.Spec.KubeSchedulerConfig) {
+		delta.Add("Spec.KubeSchedulerConfig", a.ko.Spec.KubeSchedulerConfig, b.ko.Spec.KubeSchedulerConfig)
+	} else if a.ko.Spec.KubeSchedulerConfig != nil && b.ko.Spec.KubeSchedulerConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit, b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit) {
+			delta.Add("Spec.KubeSchedulerConfig.NodeResourcesFit", a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit, b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit)
+		} else if a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit != nil && b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit != nil {
+			if ackcompare.HasNilDifference(a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy, b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy) {
+				delta.Add("Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy", a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy, b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy)
+			} else if a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy != nil && b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy != nil {
+				if len(a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources) != len(b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources) {
+					delta.Add("Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources", a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources, b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources)
+				} else if len(a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources) > 0 {
+					if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources, b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources) {
+						delta.Add("Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources", a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources, b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources)
+					}
+				}
+				if ackcompare.HasNilDifference(a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type, b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type) {
+					delta.Add("Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type", a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type, b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type)
+				} else if a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type != nil && b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type != nil {
+					if *a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type != *b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type {
+						delta.Add("Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type", a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type, b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type)
+					}
+				}
+			}
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.KubernetesNetworkConfig, b.ko.Spec.KubernetesNetworkConfig) {
 		delta.Add("Spec.KubernetesNetworkConfig", a.ko.Spec.KubernetesNetworkConfig, b.ko.Spec.KubernetesNetworkConfig)
 	} else if a.ko.Spec.KubernetesNetworkConfig != nil && b.ko.Spec.KubernetesNetworkConfig != nil {

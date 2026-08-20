@@ -199,6 +199,56 @@ resources:
           pre_delete_include: true
       ControlPlaneScalingConfig.Tier:
         late_initialize: {}
+      # Control plane component config fields. The backend injects tier defaults
+      # into these on the read path, so late_initialize prevents the controller
+      # from treating those defaults as drift and reconciling forever. Each
+      # nested field is declared explicitly (with skip_incomplete_check) so that
+      # a partial spec (e.g. only eventTTL set) still adopts the server defaults
+      # for its sibling fields instead of drifting -- a top-level late_initialize
+      # alone only covers the whole-config-nil case.
+      KubeApiServerConfig:
+        late_initialize:
+          skip_incomplete_check: {}
+      KubeApiServerConfig.EventTTL:
+        late_initialize:
+          skip_incomplete_check: {}
+      KubeApiServerConfig.ServiceNodePortRange:
+        late_initialize:
+          skip_incomplete_check: {}
+      KubeApiServerConfig.ServiceNodePortRange.MinPort:
+        late_initialize:
+          skip_incomplete_check: {}
+      KubeApiServerConfig.ServiceNodePortRange.MaxPort:
+        late_initialize:
+          skip_incomplete_check: {}
+      KubeSchedulerConfig:
+        late_initialize:
+          skip_incomplete_check: {}
+      KubeSchedulerConfig.NodeResourcesFit:
+        late_initialize:
+          skip_incomplete_check: {}
+      KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy:
+        late_initialize:
+          skip_incomplete_check: {}
+      KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type:
+        # Emit as `type` rather than the default `type_` (the namer appends an
+        # underscore for the Go-reserved word). This is a user-facing spec field,
+        # so keep it idiomatic and consistent with the AWS API.
+        go_tag: json:"type,omitempty"
+        late_initialize:
+          skip_incomplete_check: {}
+      KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Resources:
+        late_initialize:
+          skip_incomplete_check: {}
+      KubeControllerManagerConfig:
+        late_initialize:
+          skip_incomplete_check: {}
+      KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig:
+        late_initialize:
+          skip_incomplete_check: {}
+      KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod:
+        late_initialize:
+          skip_incomplete_check: {}
     exceptions:
       errors:
         404:
@@ -640,20 +690,6 @@ ignore:
   - CreateCapabilityInput.ClientRequestToken
   - CreateAddonInput.NamespaceConfig
   - CreateAddonOutput.Addon.NamespaceConfig
-  # Control-plane component configs are exposed by the v1.91.0 SDK model, but the
-  # controller does not yet reconcile them (no customUpdate routing + no
-  # late-init), so leaving them exposed would let users set fields that silently
-  # no-op on update and read back as perpetual drift. Ignore them until the
-  # follow-up change adds controller-side create/update/late-init handling.
-  - CreateClusterInput.KubeApiServerConfig
-  - CreateClusterInput.KubeControllerManagerConfig
-  - CreateClusterInput.KubeSchedulerConfig
-  - CreateClusterOutput.Cluster.KubeApiServerConfig
-  - CreateClusterOutput.Cluster.KubeControllerManagerConfig
-  - CreateClusterOutput.Cluster.KubeSchedulerConfig
-  - DescribeClusterOutput.Cluster.KubeApiServerConfig
-  - DescribeClusterOutput.Cluster.KubeControllerManagerConfig
-  - DescribeClusterOutput.Cluster.KubeSchedulerConfig
   # ControlPlaneEgressMode (new in the v1.91.0 model) is returned by EKS on read
   # (e.g. "AWS_MANAGED") and gets folded into the ResourcesVpcConfig update
   # request. EKS rejects an UpdateClusterConfig that carries an endpoint-access

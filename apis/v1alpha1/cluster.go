@@ -52,6 +52,12 @@ type ClusterSpec struct {
 	DeletionProtection *bool `json:"deletionProtection,omitempty"`
 	// The encryption configuration for the cluster.
 	EncryptionConfig []*EncryptionConfig `json:"encryptionConfig,omitempty"`
+	// The Kubernetes API server configuration for the new cluster.
+	KubeAPIServerConfig *KubeAPIServerConfigRequest `json:"kubeAPIServerConfig,omitempty"`
+	// The Kubernetes controller manager configuration for the new cluster.
+	KubeControllerManagerConfig *KubeControllerManagerConfigRequest `json:"kubeControllerManagerConfig,omitempty"`
+	// The Kubernetes scheduler configuration for the new cluster.
+	KubeSchedulerConfig *KubeSchedulerConfigRequest `json:"kubeSchedulerConfig,omitempty"`
 	// The Kubernetes network configuration for the cluster.
 	KubernetesNetworkConfig *KubernetesNetworkConfigRequest `json:"kubernetesNetworkConfig,omitempty"`
 	// Enable or disable exporting the Kubernetes control plane logs for your cluster
