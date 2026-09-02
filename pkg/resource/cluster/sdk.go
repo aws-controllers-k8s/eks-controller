@@ -411,6 +411,9 @@ func (rm *resourceManager) sdkFind(
 	}
 	if resp.Cluster.ResourcesVpcConfig != nil {
 		f23 := &svcapitypes.VPCConfigRequest{}
+		if resp.Cluster.ResourcesVpcConfig.ControlPlaneEgressMode != "" {
+			f23.ControlPlaneEgressMode = aws.String(string(resp.Cluster.ResourcesVpcConfig.ControlPlaneEgressMode))
+		}
 		f23.EndpointPrivateAccess = &resp.Cluster.ResourcesVpcConfig.EndpointPrivateAccess
 		f23.EndpointPublicAccess = &resp.Cluster.ResourcesVpcConfig.EndpointPublicAccess
 		if resp.Cluster.ResourcesVpcConfig.PublicAccessCidrs != nil {
@@ -873,6 +876,9 @@ func (rm *resourceManager) sdkCreate(
 	}
 	if resp.Cluster.ResourcesVpcConfig != nil {
 		f23 := &svcapitypes.VPCConfigRequest{}
+		if resp.Cluster.ResourcesVpcConfig.ControlPlaneEgressMode != "" {
+			f23.ControlPlaneEgressMode = aws.String(string(resp.Cluster.ResourcesVpcConfig.ControlPlaneEgressMode))
+		}
 		f23.EndpointPrivateAccess = &resp.Cluster.ResourcesVpcConfig.EndpointPrivateAccess
 		f23.EndpointPublicAccess = &resp.Cluster.ResourcesVpcConfig.EndpointPublicAccess
 		if resp.Cluster.ResourcesVpcConfig.PublicAccessCidrs != nil {
@@ -1191,6 +1197,9 @@ func (rm *resourceManager) newCreateRequestPayload(
 	}
 	if r.ko.Spec.ResourcesVPCConfig != nil {
 		f15 := &svcsdktypes.VpcConfigRequest{}
+		if r.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode != nil {
+			f15.ControlPlaneEgressMode = svcsdktypes.ControlPlaneEgressModeType(*r.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode)
+		}
 		if r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess != nil {
 			f15.EndpointPrivateAccess = r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess
 		}
@@ -1482,6 +1491,9 @@ func (rm *resourceManager) newVpcConfigRequest(
 	res := &svcsdktypes.VpcConfigRequest{}
 
 	if r.ko.Spec.ResourcesVPCConfig != nil {
+		if r.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode != nil {
+			res.ControlPlaneEgressMode = svcsdktypes.ControlPlaneEgressModeType(*r.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode)
+		}
 		if r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess != nil {
 			res.EndpointPrivateAccess = r.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess
 		}

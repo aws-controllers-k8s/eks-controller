@@ -79,6 +79,26 @@ def get_failed_version_update(eks_client, cluster_name):
             return update
     return None
 
+def aws_control_plane_egress_mode(eks_client, cluster_name):
+    """Returns the controlPlaneEgressMode EKS reports for the cluster, or None
+    when the installed botocore is too old to model the member.
+
+    botocore silently drops response members it does not know about, so on an
+    older release the key is simply absent rather than raising. Returning None
+    lets a test keep its CR-side assertions and skip only the AWS-side
+    comparison, instead of failing for an unrelated reason.
+    """
+    vpc_config = eks_client.describe_cluster(
+        name=cluster_name)["cluster"]["resourcesVpcConfig"]
+    mode = vpc_config.get("controlPlaneEgressMode")
+    if mode is None:
+        logging.warning(
+            "installed botocore does not report "
+            "resourcesVpcConfig.controlPlaneEgressMode; skipping the AWS-side "
+            "assertion. Upgrade botocore for full dual verification."
+        )
+    return mode
+
 def get_and_assert_status(ref: k8s.CustomResourceReference, expected_status: str, expected_synced: bool):
     cr = k8s.get_resource(ref)
     assert cr is not None
@@ -176,6 +196,44 @@ def control_plane_scaling_cluster(eks_client):
 
     resource_data = load_eks_resource(
         "cluster_control_plane_scaling",
+        additional_replacements=replacements,
+    )
+    logging.debug(resource_data)
+
+    # Create the k8s resource
+    ref = k8s.CustomResourceReference(
+        CRD_GROUP, CRD_VERSION, CLUSTER_RESOURCE_PLURAL,
+        cluster_name, namespace="default",
+    )
+    k8s.create_custom_resource(ref, resource_data)
+    cr = k8s.wait_resource_consumed_by_controller(ref, wait_periods=15)
+
+    assert cr is not None
+    assert k8s.get_resource_exists(ref)
+
+    yield (ref, cr)
+
+    # Try to delete, if doesn't already exist
+    try:
+        _, deleted = k8s.delete_custom_resource(ref, 3, 10)
+        assert deleted
+        wait_until_deleted(cluster_name)
+    except:
+        pass
+
+@pytest.fixture
+def control_plane_egress_mode_cluster(eks_client):
+    cluster_name = random_suffix_name("cpem-cluster", 32)
+
+    replacements = REPLACEMENT_VALUES.copy()
+    replacements["CLUSTER_NAME"] = cluster_name
+    replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_35
+    # Non-default on purpose: AWS_MANAGED at create time is indistinguishable
+    # from the server default, so it would not prove the field was transmitted.
+    replacements["CONTROL_PLANE_EGRESS_MODE"] = "CUSTOMER_ROUTED"
+
+    resource_data = load_eks_resource(
+        "cluster_control_plane_egress_mode",
         additional_replacements=replacements,
     )
     logging.debug(resource_data)
@@ -805,3 +863,156 @@ class TestCluster:
         time.sleep(CHECK_STATUS_WAIT_SECONDS)
         get_and_assert_status(ref, 'ACTIVE', True)
         assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=3)
+
+    def test_cluster_control_plane_egress_mode(self, eks_client, simple_cluster):
+        (ref, cr) = simple_cluster
+
+        cluster_name = cr["spec"]["name"]
+        wait_for_cluster_active(eks_client, cluster_name)
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=30)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        # cluster_simple omits controlPlaneEgressMode. EKS defaults it to
+        # AWS_MANAGED and returns it on read, so late_initialize must adopt that
+        # value into the spec. Without it the controller sees the returned
+        # default as drift against a nil spec value and never converges.
+        cr = k8s.get_resource(ref)
+        assert cr["spec"]["resourcesVPCConfig"]["controlPlaneEgressMode"] == "AWS_MANAGED"
+
+        aws_mode = aws_control_plane_egress_mode(eks_client, cluster_name)
+        if aws_mode is not None:
+            assert aws_mode == "AWS_MANAGED"
+
+        # No perpetual drift: stays Synced across a settle window.
+        time.sleep(CHECK_STATUS_WAIT_SECONDS)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        # Clearing the field leaves desired nil while the observed state still
+        # holds a value, which fires the delta with nothing to send. That must
+        # not be treated as a revert (the cluster is AWS_MANAGED already) and
+        # must not be dereferenced; late-init simply re-adopts the default.
+        k8s.patch_custom_resource(
+            ref,
+            {"spec": {"resourcesVPCConfig": {"controlPlaneEgressMode": None}}},
+        )
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=10)
+        get_and_assert_status(ref, 'ACTIVE', True)
+        terminal = k8s.get_resource_condition(ref, "ACK.Terminal")
+        assert terminal is None or str(terminal.get('status')) != str(True)
+        cr = k8s.get_resource(ref)
+        assert cr["spec"]["resourcesVPCConfig"]["controlPlaneEgressMode"] == "AWS_MANAGED"
+
+        # Regression guard for the reason this field was originally ignored in
+        # generator.yaml: EKS allows only one type of update per
+        # UpdateClusterConfig call, so an endpoint-access change must not carry
+        # controlPlaneEgressMode along. If it does, EKS rejects the call with
+        # "Only one type of update can be allowed" and endpoint-access updates
+        # break for every cluster that has an egress mode set.
+        k8s.patch_custom_resource(
+            ref,
+            {"spec": {"resourcesVPCConfig": {"endpointPrivateAccess": False}}},
+        )
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=30)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        assert aws_res["cluster"]["resourcesVpcConfig"]["endpointPrivateAccess"] is False
+        # The egress mode is untouched by an endpoint-access update.
+        aws_mode = aws_control_plane_egress_mode(eks_client, cluster_name)
+        if aws_mode is not None:
+            assert aws_mode == "AWS_MANAGED"
+
+        # AWS_MANAGED -> CUSTOMER_ROUTED is the supported direction and is
+        # reconciled as its own update type.
+        endpoint_access_keys = (
+            "endpointPrivateAccess", "endpointPublicAccess", "publicAccessCidrs")
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        endpoint_access_before = {
+            key: aws_res["cluster"]["resourcesVpcConfig"][key]
+            for key in endpoint_access_keys
+        }
+
+        k8s.patch_custom_resource(
+            ref,
+            {"spec": {"resourcesVPCConfig": {"controlPlaneEgressMode": "CUSTOMER_ROUTED"}}},
+        )
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=30)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        aws_mode = aws_control_plane_egress_mode(eks_client, cluster_name)
+        if aws_mode is not None:
+            assert aws_mode == "CUSTOMER_ROUTED"
+
+        # The egress-mode update must not disturb the endpoint access settings,
+        # whatever the preceding steps left them as.
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        endpoint_access_after = {
+            key: aws_res["cluster"]["resourcesVpcConfig"][key]
+            for key in endpoint_access_keys
+        }
+        assert endpoint_access_after == endpoint_access_before
+
+        # EKS does not support returning to AWS_MANAGED once a cluster is
+        # CUSTOMER_ROUTED. The controller does not encode that rule; it sends the
+        # update and surfaces whatever EKS says. The refusal arrives as
+        # InvalidParameterException, which is not in the resource's
+        # terminal_codes, so it is reported as recoverable and retried. What
+        # matters here is that the rejection is visible on the CR and that the
+        # cluster is left alone.
+        #
+        # If InvalidParameterException is ever added to terminal_codes, this
+        # becomes an ACK.Terminal assertion instead.
+        k8s.patch_custom_resource(
+            ref,
+            {"spec": {"resourcesVPCConfig": {"controlPlaneEgressMode": "AWS_MANAGED"}}},
+        )
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        assert k8s.wait_on_condition(ref, "ACK.Recoverable", "True", wait_periods=10)
+
+        recoverable_condition = "ACK.Recoverable"
+        cond = k8s.get_resource_condition(ref, recoverable_condition)
+        if cond is None:
+            msg = (f"Failed to find {recoverable_condition} condition in "
+                f"resource {ref}")
+            pytest.fail(msg)
+        # The condition carries the service's own message. Match only the stable
+        # parts of it; the request ID and prefix vary per call.
+        message = str(cond.get('message'))
+        assert "ControlPlaneEgressMode" in message
+        assert "not supported" in message
+
+        # The rejected revert left the cluster untouched.
+        aws_mode = aws_control_plane_egress_mode(eks_client, cluster_name)
+        if aws_mode is not None:
+            assert aws_mode == "CUSTOMER_ROUTED"
+
+    def test_create_cluster_control_plane_egress_mode(self, eks_client, control_plane_egress_mode_cluster):
+        (ref, cr) = control_plane_egress_mode_cluster
+
+        cluster_name = cr["spec"]["name"]
+        wait_for_cluster_active(eks_client, cluster_name)
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=30)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        # The value has to survive the create path rather than being applied by a
+        # follow-up update, so the cluster must come up CUSTOMER_ROUTED.
+        cr = k8s.get_resource(ref)
+        assert cr["spec"]["resourcesVPCConfig"]["controlPlaneEgressMode"] == "CUSTOMER_ROUTED"
+
+        aws_mode = aws_control_plane_egress_mode(eks_client, cluster_name)
+        if aws_mode is not None:
+            assert aws_mode == "CUSTOMER_ROUTED"
+
+        # A user-supplied value must not be re-reconciled into an update.
+        time.sleep(CHECK_STATUS_WAIT_SECONDS)
+        get_and_assert_status(ref, 'ACTIVE', True)
+        assert eks_client.list_updates(name=cluster_name)["updateIds"] == []

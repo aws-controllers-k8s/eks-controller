@@ -278,6 +278,13 @@ func newResourceDelta(
 	if ackcompare.HasNilDifference(a.ko.Spec.ResourcesVPCConfig, b.ko.Spec.ResourcesVPCConfig) {
 		delta.Add("Spec.ResourcesVPCConfig", a.ko.Spec.ResourcesVPCConfig, b.ko.Spec.ResourcesVPCConfig)
 	} else if a.ko.Spec.ResourcesVPCConfig != nil && b.ko.Spec.ResourcesVPCConfig != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode, b.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode) {
+			delta.Add("Spec.ResourcesVPCConfig.ControlPlaneEgressMode", a.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode, b.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode)
+		} else if a.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode != nil && b.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode != nil {
+			if *a.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode != *b.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode {
+				delta.Add("Spec.ResourcesVPCConfig.ControlPlaneEgressMode", a.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode, b.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode)
+			}
+		}
 		if ackcompare.HasNilDifference(a.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess, b.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess) {
 			delta.Add("Spec.ResourcesVPCConfig.EndpointPrivateAccess", a.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess, b.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess)
 		} else if a.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess != nil && b.ko.Spec.ResourcesVPCConfig.EndpointPrivateAccess != nil {

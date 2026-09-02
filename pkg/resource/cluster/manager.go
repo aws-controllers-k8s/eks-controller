@@ -50,7 +50,7 @@ var (
 // +kubebuilder:rbac:groups=eks.services.k8s.aws,resources=clusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=eks.services.k8s.aws,resources=clusters/status,verbs=get;update;patch
 
-var lateInitializeFieldNames = []string{"Tier", "DeletionProtection", "KubeAPIServerConfig", "KubeApiServerConfig.EventTTL", "KubeApiServerConfig.ServiceNodePortRange", "KubeApiServerConfig.ServiceNodePortRange.MaxPort", "KubeApiServerConfig.ServiceNodePortRange.MinPort", "KubeControllerManagerConfig", "HorizontalPodAutoscalerControllerConfig", "HorizontalPodAutoscalerSyncPeriod", "KubeSchedulerConfig", "NodeResourcesFit", "ScoringStrategy", "Resources", "Type"}
+var lateInitializeFieldNames = []string{"Tier", "DeletionProtection", "KubeAPIServerConfig", "KubeApiServerConfig.EventTTL", "KubeApiServerConfig.ServiceNodePortRange", "KubeApiServerConfig.ServiceNodePortRange.MaxPort", "KubeApiServerConfig.ServiceNodePortRange.MinPort", "KubeControllerManagerConfig", "HorizontalPodAutoscalerControllerConfig", "HorizontalPodAutoscalerSyncPeriod", "KubeSchedulerConfig", "NodeResourcesFit", "ScoringStrategy", "Resources", "Type", "ResourcesVpcConfig.ControlPlaneEgressMode"}
 
 // resourceManager is responsible for providing a consistent way to perform
 // CRUD operations in a backend AWS service API for Book custom resources.
@@ -260,6 +260,11 @@ func (rm *resourceManager) incompleteLateInitialization(
 	if ko.Spec.DeletionProtection == nil {
 		return true
 	}
+	if ko.Spec.ResourcesVPCConfig != nil {
+		if ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode == nil {
+			return true
+		}
+	}
 	return false
 }
 
@@ -352,6 +357,11 @@ func (rm *resourceManager) lateInitializeFromReadOneOutput(
 					latestKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type = observedKo.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type
 				}
 			}
+		}
+	}
+	if observedKo.Spec.ResourcesVPCConfig != nil && latestKo.Spec.ResourcesVPCConfig != nil {
+		if observedKo.Spec.ResourcesVPCConfig.ControlPlaneEgressMode != nil && latestKo.Spec.ResourcesVPCConfig.ControlPlaneEgressMode == nil {
+			latestKo.Spec.ResourcesVPCConfig.ControlPlaneEgressMode = observedKo.Spec.ResourcesVPCConfig.ControlPlaneEgressMode
 		}
 	}
 	return &resource{latestKo}

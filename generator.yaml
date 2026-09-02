@@ -199,6 +199,8 @@ resources:
           pre_delete_include: true
       ControlPlaneScalingConfig.Tier:
         late_initialize: {}
+      ResourcesVpcConfig.ControlPlaneEgressMode:
+        late_initialize: {}
       # Control plane component config fields. The backend injects tier defaults
       # into these on the read path, so late_initialize prevents the controller
       # from treating those defaults as drift and reconciling forever. Each
@@ -690,15 +692,6 @@ ignore:
   - CreateCapabilityInput.ClientRequestToken
   - CreateAddonInput.NamespaceConfig
   - CreateAddonOutput.Addon.NamespaceConfig
-  # ControlPlaneEgressMode (new in the v1.91.0 model) is returned by EKS on read
-  # (e.g. "AWS_MANAGED") and gets folded into the ResourcesVpcConfig update
-  # request. EKS rejects an UpdateClusterConfig that carries an endpoint-access
-  # change together with controlPlaneEgressMode ("Only one type of update can be
-  # allowed"), breaking the existing VPC endpoint-access update. Ignore it until
-  # the controller reconciles it as its own update type.
-  - CreateClusterInput.ResourcesVpcConfig.ControlPlaneEgressMode
-  - CreateClusterOutput.Cluster.ResourcesVpcConfig.ControlPlaneEgressMode
-  - DescribeClusterOutput.Cluster.ResourcesVpcConfig.ControlPlaneEgressMode
   # The v1.91.0 SDK model also adds unrelated new fields to the Cluster
   # (Outpost/local-cluster etcd placement) and Nodegroup (managed-nodegroup warm
   # pools) shapes. These are separate EKS capabilities that need their own
