@@ -1474,10 +1474,11 @@ type UpgradePolicyResponse struct {
 
 // An object representing the VPC configuration to use for an Amazon EKS cluster.
 type VPCConfigRequest struct {
-	EndpointPrivateAccess *bool     `json:"endpointPrivateAccess,omitempty"`
-	EndpointPublicAccess  *bool     `json:"endpointPublicAccess,omitempty"`
-	PublicAccessCIDRs     []*string `json:"publicAccessCIDRs,omitempty"`
-	SecurityGroupIDs      []*string `json:"securityGroupIDs,omitempty"`
+	ControlPlaneEgressMode *string   `json:"controlPlaneEgressMode,omitempty"`
+	EndpointPrivateAccess  *bool     `json:"endpointPrivateAccess,omitempty"`
+	EndpointPublicAccess   *bool     `json:"endpointPublicAccess,omitempty"`
+	PublicAccessCIDRs      []*string `json:"publicAccessCIDRs,omitempty"`
+	SecurityGroupIDs       []*string `json:"securityGroupIDs,omitempty"`
 	// Reference field for SecurityGroupIDs
 	SecurityGroupRefs []*ackv1alpha1.AWSResourceReferenceWrapper `json:"securityGroupRefs,omitempty"`
 	SubnetIDs         []*string                                  `json:"subnetIDs,omitempty"`
@@ -1488,6 +1489,7 @@ type VPCConfigRequest struct {
 // An object representing an Amazon EKS cluster VPC configuration response.
 type VPCConfigResponse struct {
 	ClusterSecurityGroupID *string   `json:"clusterSecurityGroupID,omitempty"`
+	ControlPlaneEgressMode *string   `json:"controlPlaneEgressMode,omitempty"`
 	EndpointPrivateAccess  *bool     `json:"endpointPrivateAccess,omitempty"`
 	EndpointPublicAccess   *bool     `json:"endpointPublicAccess,omitempty"`
 	PublicAccessCIDRs      []*string `json:"publicAccessCIDRs,omitempty"`
