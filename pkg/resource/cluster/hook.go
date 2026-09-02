@@ -300,6 +300,19 @@ func (rm *resourceManager) customUpdate(
 		return returnClusterUpdating(updatedRes)
 	}
 
+	if delta.DifferentAt("Spec.ResourcesVPCConfig.ControlPlaneEgressMode") &&
+		desired.ko.Spec.ResourcesVPCConfig != nil &&
+		desired.ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode != nil {
+		if err := rm.updateControlPlaneEgressMode(ctx, desired); err != nil {
+			awsErr, ok := extractAWSError(err)
+			if ok && awsErr.Code == "ResourceInUseException" {
+				return nil, requeueAfterAsyncUpdate()
+			}
+			return nil, err
+		}
+		return returnClusterUpdating(updatedRes)
+	}
+
 	// Handle access configuration updates
 	if delta.DifferentAt("Spec.AccessConfig") {
 		if err := rm.updateAccessConfig(ctx, desired); err != nil {
@@ -611,6 +624,7 @@ func (rm *resourceManager) updateConfigResourcesVPCConfigPublicAndPrivateAccess(
 	// publicAccessCidrs
 	input.ResourcesVpcConfig.SubnetIds = nil
 	input.ResourcesVpcConfig.SecurityGroupIds = nil
+	input.ResourcesVpcConfig.ControlPlaneEgressMode = ""
 
 	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
@@ -637,6 +651,7 @@ func (rm *resourceManager) updateConfigResourcesVPCConfigSubnetsAndSecurityGroup
 	input.ResourcesVpcConfig.EndpointPublicAccess = nil
 	input.ResourcesVpcConfig.EndpointPrivateAccess = nil
 	input.ResourcesVpcConfig.PublicAccessCidrs = nil
+	input.ResourcesVpcConfig.ControlPlaneEgressMode = ""
 
 	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
 	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
@@ -903,4 +918,31 @@ func extractAWSError(err error) (awsErr *smithy.GenericAPIError, ok bool) {
 		}, true
 	}
 	return nil, false
+}
+
+func (rm *resourceManager) updateControlPlaneEgressMode(
+	ctx context.Context,
+	r *resource,
+) (err error) {
+	rlog := ackrtlog.FromContext(ctx)
+	exit := rlog.Trace("rm.updateControlPlaneEgressMode")
+	defer exit(err)
+	input := &svcsdk.UpdateClusterConfigInput{
+		Name:               r.ko.Spec.Name,
+		ResourcesVpcConfig: rm.newVpcConfigRequest(r),
+	}
+
+	input.ResourcesVpcConfig.SubnetIds = nil
+	input.ResourcesVpcConfig.SecurityGroupIds = nil
+	input.ResourcesVpcConfig.EndpointPublicAccess = nil
+	input.ResourcesVpcConfig.EndpointPrivateAccess = nil
+	input.ResourcesVpcConfig.PublicAccessCidrs = nil
+
+	_, err = rm.sdkapi.UpdateClusterConfig(ctx, input)
+	rm.metrics.RecordAPICall("UPDATE", "UpdateClusterConfig", err)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
