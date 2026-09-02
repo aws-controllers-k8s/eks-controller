@@ -895,6 +895,9 @@ type KubeControllerManagerConfigRequest struct {
 	// The horizontal pod autoscaler controller configuration for the Kubernetes
 	// controller manager.
 	HorizontalPodAutoscalerControllerConfig *HorizontalPodAutoscalerControllerConfigRequest `json:"horizontalPodAutoscalerControllerConfig,omitempty"`
+	// The pod garbage collection controller configuration for the Kubernetes controller
+	// manager.
+	PodGcControllerConfig *PodGcControllerConfigRequest `json:"podGcControllerConfig,omitempty"`
 }
 
 // The Kubernetes controller manager configuration for an Amazon EKS cluster.
@@ -902,6 +905,9 @@ type KubeControllerManagerConfigResponse struct {
 	// The horizontal pod autoscaler controller configuration for the Kubernetes
 	// controller manager.
 	HorizontalPodAutoscalerControllerConfig *HorizontalPodAutoscalerControllerConfigResponse `json:"horizontalPodAutoscalerControllerConfig,omitempty"`
+	// The pod garbage collection controller configuration for the Kubernetes controller
+	// manager.
+	PodGcControllerConfig *PodGcControllerConfigResponse `json:"podGcControllerConfig,omitempty"`
 }
 
 // The configuration for the Kubernetes scheduler on an Amazon EKS cluster.
@@ -1207,6 +1213,22 @@ type OutpostConfigResponse struct {
 	// in the Amazon EKS User Guide.
 	ControlPlanePlacement *ControlPlanePlacementResponse `json:"controlPlanePlacement,omitempty"`
 	OutpostARNs           []*string                      `json:"outpostARNs,omitempty"`
+}
+
+// The pod garbage collection controller configuration for the Kubernetes controller
+// manager.
+type PodGcControllerConfigRequest struct {
+	// The threshold for the number of terminated pods before garbage collection
+	// starts.
+	TerminatedPodGcThreshold *int64 `json:"terminatedPodGcThreshold,omitempty"`
+}
+
+// The pod garbage collection controller configuration for the Kubernetes controller
+// manager.
+type PodGcControllerConfigResponse struct {
+	// The threshold for the number of terminated pods before garbage collection
+	// starts.
+	TerminatedPodGcThreshold *int64 `json:"terminatedPodGcThreshold,omitempty"`
 }
 
 // The summarized description of the association.

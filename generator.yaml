@@ -251,6 +251,12 @@ resources:
       KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod:
         late_initialize:
           skip_incomplete_check: {}
+      KubeControllerManagerConfig.PodGcControllerConfig:
+        late_initialize:
+          skip_incomplete_check: {}
+      KubeControllerManagerConfig.PodGcControllerConfig.TerminatedPodGcThreshold:
+        late_initialize:
+          skip_incomplete_check: {}
     exceptions:
       errors:
         404:
@@ -714,13 +720,6 @@ ignore:
   - CreateNodegroupInput.WarmPoolConfig
   - CreateNodegroupOutput.Nodegroup.WarmPoolConfig
   - DescribeNodegroupOutput.Nodegroup.WarmPoolConfig
-  # The v1.95.1 SDK model adds PodGcControllerConfig (terminatedPodGcThreshold)
-  # under the already-exposed KubeControllerManagerConfig. Ignore it here to keep
-  # this SDK bump mechanical; a dedicated change un-ignores it and adds
-  # late-initialize + e2e coverage.
-  - CreateClusterInput.KubeControllerManagerConfig.PodGcControllerConfig
-  - CreateClusterOutput.Cluster.KubeControllerManagerConfig.PodGcControllerConfig
-  - DescribeClusterOutput.Cluster.KubeControllerManagerConfig.PodGcControllerConfig
   # v1.95.1 adds Certificate.Active (ActiveCertificateAuthority) on the read-only
   # Cluster.certificateAuthority field - part of the same CertificateAuthority
   # feature. Ignore it here to keep the bump mechanical.

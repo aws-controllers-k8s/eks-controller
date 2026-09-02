@@ -268,6 +268,7 @@ def component_config_cluster(eks_client):
     replacements["K8S_VERSION"] = TESTS_DEFAULT_KUBERNETES_VERSION_1_35
     replacements["EVENT_TTL"] = "30m"
     replacements["HPA_SYNC_PERIOD"] = "10s"
+    replacements["TERMINATED_POD_GC_THRESHOLD"] = "12500"
 
     resource_data = load_eks_resource(
         "cluster_component_config",
@@ -751,6 +752,7 @@ class TestCluster:
         assert cluster["kubeApiServerConfig"]["serviceNodePortRange"]["minPort"] == 30000
         assert cluster["kubeApiServerConfig"]["serviceNodePortRange"]["maxPort"] == 32000
         assert cluster["kubeControllerManagerConfig"]["horizontalPodAutoscalerControllerConfig"]["horizontalPodAutoscalerSyncPeriod"] == "10s"
+        assert cluster["kubeControllerManagerConfig"]["podGcControllerConfig"]["terminatedPodGcThreshold"] == 12500
         assert cluster["kubeSchedulerConfig"]["nodeResourcesFit"]["scoringStrategy"]["type"] == "LeastAllocated"
 
         # Update the component configs. The controller batches every changed
@@ -768,7 +770,10 @@ class TestCluster:
                 "kubeControllerManagerConfig": {
                     "horizontalPodAutoscalerControllerConfig": {
                         "horizontalPodAutoscalerSyncPeriod": "15s",
-                    }
+                    },
+                    "podGcControllerConfig": {
+                        "terminatedPodGcThreshold": 12000,
+                    },
                 },
             }
         }
@@ -786,6 +791,7 @@ class TestCluster:
         cluster = aws_res["cluster"]
         assert cluster["kubeApiServerConfig"]["eventTtl"] == "1h"
         assert cluster["kubeControllerManagerConfig"]["horizontalPodAutoscalerControllerConfig"]["horizontalPodAutoscalerSyncPeriod"] == "15s"
+        assert cluster["kubeControllerManagerConfig"]["podGcControllerConfig"]["terminatedPodGcThreshold"] == 12000
 
     def test_cluster_component_config_late_initialize(self, eks_client, simple_cluster):
         # This cluster is created WITHOUT any control plane component config in

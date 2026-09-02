@@ -50,7 +50,7 @@ var (
 // +kubebuilder:rbac:groups=eks.services.k8s.aws,resources=clusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=eks.services.k8s.aws,resources=clusters/status,verbs=get;update;patch
 
-var lateInitializeFieldNames = []string{"Tier", "DeletionProtection", "KubeAPIServerConfig", "KubeApiServerConfig.EventTTL", "KubeApiServerConfig.ServiceNodePortRange", "KubeApiServerConfig.ServiceNodePortRange.MaxPort", "KubeApiServerConfig.ServiceNodePortRange.MinPort", "KubeControllerManagerConfig", "HorizontalPodAutoscalerControllerConfig", "HorizontalPodAutoscalerSyncPeriod", "KubeSchedulerConfig", "NodeResourcesFit", "ScoringStrategy", "Resources", "Type", "ResourcesVpcConfig.ControlPlaneEgressMode"}
+var lateInitializeFieldNames = []string{"Tier", "DeletionProtection", "KubeAPIServerConfig", "KubeApiServerConfig.EventTTL", "KubeApiServerConfig.ServiceNodePortRange", "KubeApiServerConfig.ServiceNodePortRange.MaxPort", "KubeApiServerConfig.ServiceNodePortRange.MinPort", "KubeControllerManagerConfig", "HorizontalPodAutoscalerControllerConfig", "HorizontalPodAutoscalerSyncPeriod", "PodGcControllerConfig", "TerminatedPodGcThreshold", "KubeSchedulerConfig", "NodeResourcesFit", "ScoringStrategy", "Resources", "Type", "ResourcesVpcConfig.ControlPlaneEgressMode"}
 
 // resourceManager is responsible for providing a consistent way to perform
 // CRUD operations in a backend AWS service API for Book custom resources.
@@ -323,6 +323,18 @@ func (rm *resourceManager) lateInitializeFromReadOneOutput(
 		if observedKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig != nil && latestKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig != nil {
 			if observedKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod != nil && latestKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod == nil {
 				latestKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod = observedKo.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod
+			}
+		}
+	}
+	if observedKo.Spec.KubeControllerManagerConfig != nil && latestKo.Spec.KubeControllerManagerConfig != nil {
+		if observedKo.Spec.KubeControllerManagerConfig.PodGcControllerConfig != nil && latestKo.Spec.KubeControllerManagerConfig.PodGcControllerConfig == nil {
+			latestKo.Spec.KubeControllerManagerConfig.PodGcControllerConfig = observedKo.Spec.KubeControllerManagerConfig.PodGcControllerConfig
+		}
+	}
+	if observedKo.Spec.KubeControllerManagerConfig != nil && latestKo.Spec.KubeControllerManagerConfig != nil {
+		if observedKo.Spec.KubeControllerManagerConfig.PodGcControllerConfig != nil && latestKo.Spec.KubeControllerManagerConfig.PodGcControllerConfig != nil {
+			if observedKo.Spec.KubeControllerManagerConfig.PodGcControllerConfig.TerminatedPodGcThreshold != nil && latestKo.Spec.KubeControllerManagerConfig.PodGcControllerConfig.TerminatedPodGcThreshold == nil {
+				latestKo.Spec.KubeControllerManagerConfig.PodGcControllerConfig.TerminatedPodGcThreshold = observedKo.Spec.KubeControllerManagerConfig.PodGcControllerConfig.TerminatedPodGcThreshold
 			}
 		}
 	}
