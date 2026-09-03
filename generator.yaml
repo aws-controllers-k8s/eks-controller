@@ -680,6 +680,11 @@ resources:
 ignore:
   resource_names:
   - EksAnywhereSubscription
+  # The v1.95.1 SDK model adds a new CertificateAuthority API
+  # (Create/Delete/Describe/List/Activate). It is a distinct resource that needs
+  # its own reconciliation and e2e coverage; ignore it to keep this SDK bump
+  # mechanical until a dedicated change wires it up.
+  - CertificateAuthority
   field_paths:
   - CreateAccessEntryInput.ClientRequestToken
   - AssociateIdentityProviderConfigInput.ClientRequestToken
@@ -709,3 +714,15 @@ ignore:
   - CreateNodegroupInput.WarmPoolConfig
   - CreateNodegroupOutput.Nodegroup.WarmPoolConfig
   - DescribeNodegroupOutput.Nodegroup.WarmPoolConfig
+  # The v1.95.1 SDK model adds PodGcControllerConfig (terminatedPodGcThreshold)
+  # under the already-exposed KubeControllerManagerConfig. Ignore it here to keep
+  # this SDK bump mechanical; a dedicated change un-ignores it and adds
+  # late-initialize + e2e coverage.
+  - CreateClusterInput.KubeControllerManagerConfig.PodGcControllerConfig
+  - CreateClusterOutput.Cluster.KubeControllerManagerConfig.PodGcControllerConfig
+  - DescribeClusterOutput.Cluster.KubeControllerManagerConfig.PodGcControllerConfig
+  # v1.95.1 adds Certificate.Active (ActiveCertificateAuthority) on the read-only
+  # Cluster.certificateAuthority field - part of the same CertificateAuthority
+  # feature. Ignore it here to keep the bump mechanical.
+  - CreateClusterOutput.Cluster.CertificateAuthority.Active
+  - DescribeClusterOutput.Cluster.CertificateAuthority.Active

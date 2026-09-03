@@ -95,6 +95,12 @@ type AccessScope struct {
 	Type       *string   `json:"type,omitempty"`
 }
 
+// Identifies the certificate authority that is currently signing certificates
+// for the cluster.
+type ActiveCertificateAuthority struct {
+	ID *string `json:"id,omitempty"`
+}
+
 // The summary information about the Amazon EKS add-on compatibility for the
 // next Kubernetes version for an insight check in the UPGRADE_READINESS category.
 type AddonCompatibilityDetail struct {
@@ -398,6 +404,39 @@ type Capability_SDK struct {
 // An object representing the certificate-authority-data for your cluster.
 type Certificate struct {
 	Data *string `json:"data,omitempty"`
+}
+
+// An object representing a certificate authority (CA) for an Amazon EKS cluster.
+type CertificateAuthority struct {
+	ActivatedAt       *metav1.Time `json:"activatedAt,omitempty"`
+	CreatedAt         *metav1.Time `json:"createdAt,omitempty"`
+	Data              *string      `json:"data,omitempty"`
+	ID                *string      `json:"id,omitempty"`
+	RollbackAvailable *bool        `json:"rollbackAvailable,omitempty"`
+}
+
+// The scheduled events during which Amazon EKS may automatically activate a
+// certificate authority, computed from its validity period. These events help
+// ensure that a cluster's signing certificate authority is rotated before its
+// certificate expires.
+type CertificateAuthorityScheduledEvents struct {
+	FinalAutoActivation *metav1.Time `json:"finalAutoActivation,omitempty"`
+	FirstAutoActivation *metav1.Time `json:"firstAutoActivation,omitempty"`
+}
+
+// Summary information about a certificate authority (CA) for an Amazon EKS
+// cluster, returned by ListCertificateAuthorities (https://docs.aws.amazon.com/eks/latest/APIReference/API_ListCertificateAuthorities.html)
+// and the certificate-authority write operations.
+type CertificateAuthoritySummary struct {
+	ActivatedAt *metav1.Time `json:"activatedAt,omitempty"`
+	CreatedAt   *metav1.Time `json:"createdAt,omitempty"`
+	ID          *string      `json:"id,omitempty"`
+}
+
+// The validity period of a certificate authority's certificate.
+type CertificateAuthorityValidity struct {
+	NotAfter  *metav1.Time `json:"notAfter,omitempty"`
+	NotBefore *metav1.Time `json:"notBefore,omitempty"`
 }
 
 // Details about clients using the deprecated resources.
@@ -810,6 +849,17 @@ type InsightSummary struct {
 // The criteria to use for the insights.
 type InsightsFilter struct {
 	KubernetesVersions []*string `json:"kubernetesVersions,omitempty"`
+}
+
+// Constraints for an integer parameter specifying allowed range.
+type IntegerConstraints struct {
+	Max *int64 `json:"max,omitempty"`
+	Min *int64 `json:"min,omitempty"`
+}
+
+// An integer parameter configuration with default value and constraints.
+type IntegerParameterConfig struct {
+	DefaultValue *int64 `json:"defaultValue,omitempty"`
 }
 
 // An integer range constraint specifying minimum and maximum allowed values.

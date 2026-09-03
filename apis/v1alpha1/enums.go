@@ -151,6 +151,37 @@ const (
 	Category_UPGRADE_READINESS  Category = "UPGRADE_READINESS"
 )
 
+type CertificateAuthorityActivatedBy string
+
+const (
+	CertificateAuthorityActivatedBy_CUSTOMER CertificateAuthorityActivatedBy = "CUSTOMER"
+	CertificateAuthorityActivatedBy_EKS      CertificateAuthorityActivatedBy = "EKS"
+)
+
+type CertificateAuthorityCreatedBy string
+
+const (
+	CertificateAuthorityCreatedBy_CUSTOMER CertificateAuthorityCreatedBy = "CUSTOMER"
+	CertificateAuthorityCreatedBy_EKS      CertificateAuthorityCreatedBy = "EKS"
+)
+
+type CertificateAuthorityDistributionStatus string
+
+const (
+	CertificateAuthorityDistributionStatus_COMPLETE    CertificateAuthorityDistributionStatus = "COMPLETE"
+	CertificateAuthorityDistributionStatus_DELETING    CertificateAuthorityDistributionStatus = "DELETING"
+	CertificateAuthorityDistributionStatus_FAILED      CertificateAuthorityDistributionStatus = "FAILED"
+	CertificateAuthorityDistributionStatus_IN_PROGRESS CertificateAuthorityDistributionStatus = "IN_PROGRESS"
+)
+
+type CertificateAuthoritySigningStatus string
+
+const (
+	CertificateAuthoritySigningStatus_ACTIVATING CertificateAuthoritySigningStatus = "ACTIVATING"
+	CertificateAuthoritySigningStatus_IN_USE     CertificateAuthoritySigningStatus = "IN_USE"
+	CertificateAuthoritySigningStatus_NOT_USED   CertificateAuthoritySigningStatus = "NOT_USED"
+)
+
 type ClusterIssueCode string
 
 const (
@@ -447,8 +478,10 @@ const (
 type UpdateParamType string
 
 const (
+	UpdateParamType_ActiveCertificateAuthority       UpdateParamType = "ActiveCertificateAuthority"
 	UpdateParamType_AddonVersion                     UpdateParamType = "AddonVersion"
 	UpdateParamType_AuthenticationMode               UpdateParamType = "AuthenticationMode"
+	UpdateParamType_CertificateAuthorityId           UpdateParamType = "CertificateAuthorityId"
 	UpdateParamType_ClusterLogging                   UpdateParamType = "ClusterLogging"
 	UpdateParamType_ComputeConfig                    UpdateParamType = "ComputeConfig"
 	UpdateParamType_ConfigurationValues              UpdateParamType = "ConfigurationValues"
@@ -486,10 +519,12 @@ const (
 	UpdateParamType_RoleMappingsToRemove             UpdateParamType = "RoleMappingsToRemove"
 	UpdateParamType_SecurityGroups                   UpdateParamType = "SecurityGroups"
 	UpdateParamType_ServiceAccountRoleArn            UpdateParamType = "ServiceAccountRoleArn"
+	UpdateParamType_SigningStatus                    UpdateParamType = "SigningStatus"
 	UpdateParamType_StorageConfig                    UpdateParamType = "StorageConfig"
 	UpdateParamType_Subnets                          UpdateParamType = "Subnets"
 	UpdateParamType_TaintsToAdd                      UpdateParamType = "TaintsToAdd"
 	UpdateParamType_TaintsToRemove                   UpdateParamType = "TaintsToRemove"
+	UpdateParamType_TrustedCertificateAuthorities    UpdateParamType = "TrustedCertificateAuthorities"
 	UpdateParamType_UpdateStrategy                   UpdateParamType = "UpdateStrategy"
 	UpdateParamType_UpdatedTier                      UpdateParamType = "UpdatedTier"
 	UpdateParamType_UpgradePolicy                    UpdateParamType = "UpgradePolicy"
@@ -521,6 +556,7 @@ const (
 	UpdateType_AssociateIdentityProviderConfig    UpdateType = "AssociateIdentityProviderConfig"
 	UpdateType_AutoModeUpdate                     UpdateType = "AutoModeUpdate"
 	UpdateType_CapabilityUpdate                   UpdateType = "CapabilityUpdate"
+	UpdateType_CertificateAuthorityUpdate         UpdateType = "CertificateAuthorityUpdate"
 	UpdateType_ConfigUpdate                       UpdateType = "ConfigUpdate"
 	UpdateType_ControlPlaneComponentConfigUpdate  UpdateType = "ControlPlaneComponentConfigUpdate"
 	UpdateType_ControlPlaneEgressUpdate           UpdateType = "ControlPlaneEgressUpdate"
