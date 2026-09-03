@@ -271,6 +271,14 @@ func (rm *resourceManager) sdkFind(
 			}
 			f15.HorizontalPodAutoscalerControllerConfig = f15f0
 		}
+		if resp.Cluster.KubeControllerManagerConfig.PodGcControllerConfig != nil {
+			f15f1 := &svcapitypes.PodGcControllerConfigRequest{}
+			if resp.Cluster.KubeControllerManagerConfig.PodGcControllerConfig.TerminatedPodGcThreshold != nil {
+				terminatedPodGcThresholdCopy := int64(*resp.Cluster.KubeControllerManagerConfig.PodGcControllerConfig.TerminatedPodGcThreshold)
+				f15f1.TerminatedPodGcThreshold = &terminatedPodGcThresholdCopy
+			}
+			f15.PodGcControllerConfig = f15f1
+		}
 		ko.Spec.KubeControllerManagerConfig = f15
 	} else {
 		ko.Spec.KubeControllerManagerConfig = nil
@@ -736,6 +744,14 @@ func (rm *resourceManager) sdkCreate(
 			}
 			f15.HorizontalPodAutoscalerControllerConfig = f15f0
 		}
+		if resp.Cluster.KubeControllerManagerConfig.PodGcControllerConfig != nil {
+			f15f1 := &svcapitypes.PodGcControllerConfigRequest{}
+			if resp.Cluster.KubeControllerManagerConfig.PodGcControllerConfig.TerminatedPodGcThreshold != nil {
+				terminatedPodGcThresholdCopy := int64(*resp.Cluster.KubeControllerManagerConfig.PodGcControllerConfig.TerminatedPodGcThreshold)
+				f15f1.TerminatedPodGcThreshold = &terminatedPodGcThresholdCopy
+			}
+			f15.PodGcControllerConfig = f15f1
+		}
 		ko.Spec.KubeControllerManagerConfig = f15
 	} else {
 		ko.Spec.KubeControllerManagerConfig = nil
@@ -1071,6 +1087,18 @@ func (rm *resourceManager) newCreateRequestPayload(
 				f8f0.HorizontalPodAutoscalerSyncPeriod = r.ko.Spec.KubeControllerManagerConfig.HorizontalPodAutoscalerControllerConfig.HorizontalPodAutoscalerSyncPeriod
 			}
 			f8.HorizontalPodAutoscalerControllerConfig = f8f0
+		}
+		if r.ko.Spec.KubeControllerManagerConfig.PodGcControllerConfig != nil {
+			f8f1 := &svcsdktypes.PodGcControllerConfigRequest{}
+			if r.ko.Spec.KubeControllerManagerConfig.PodGcControllerConfig.TerminatedPodGcThreshold != nil {
+				terminatedPodGcThresholdCopy0 := *r.ko.Spec.KubeControllerManagerConfig.PodGcControllerConfig.TerminatedPodGcThreshold
+				if terminatedPodGcThresholdCopy0 > math.MaxInt32 || terminatedPodGcThresholdCopy0 < math.MinInt32 {
+					return nil, fmt.Errorf("error: field terminatedPodGcThreshold is of type int32")
+				}
+				terminatedPodGcThresholdCopy := int32(terminatedPodGcThresholdCopy0)
+				f8f1.TerminatedPodGcThreshold = &terminatedPodGcThresholdCopy
+			}
+			f8.PodGcControllerConfig = f8f1
 		}
 		res.KubeControllerManagerConfig = f8
 	}

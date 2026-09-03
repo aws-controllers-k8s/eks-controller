@@ -27,6 +27,10 @@ spec:
   kubeControllerManagerConfig:
     horizontalPodAutoscalerControllerConfig:
       horizontalPodAutoscalerSyncPeriod: "$HPA_SYNC_PERIOD"
+    # terminatedPodGcThreshold is valid only on PCP (Provisioned Control Plane)
+    # clusters and must be in the range 10000-12500.
+    podGcControllerConfig:
+      terminatedPodGcThreshold: $TERMINATED_POD_GC_THRESHOLD
   kubeSchedulerConfig:
     nodeResourcesFit:
       scoringStrategy:

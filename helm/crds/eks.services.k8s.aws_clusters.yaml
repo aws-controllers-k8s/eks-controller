@@ -176,6 +176,18 @@ spec:
                       horizontalPodAutoscalerSyncPeriod:
                         type: string
                     type: object
+                  podGcControllerConfig:
+                    description: |-
+                      The pod garbage collection controller configuration for the Kubernetes controller
+                      manager.
+                    properties:
+                      terminatedPodGcThreshold:
+                        description: |-
+                          The threshold for the number of terminated pods before garbage collection
+                          starts.
+                        format: int64
+                        type: integer
+                    type: object
                 type: object
               kubeSchedulerConfig:
                 description: The Kubernetes scheduler configuration for the new cluster.
