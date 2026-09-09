@@ -66,14 +66,13 @@ type CapabilitySpec struct {
 	Tags    map[string]*string                       `json:"tags,omitempty"`
 	// The type of capability to create. Valid values are:
 	//
-	//   - ACK – Amazon Web Services Controllers for Kubernetes (ACK), which
-	//     lets you manage resources directly from Kubernetes.
+	//    * ACK – Amazon Web Services Controllers for Kubernetes (ACK), which
+	//    lets you manage resources directly from Kubernetes.
 	//
-	//   - ARGOCD – Argo CD for GitOps-based continuous delivery.
+	//    * ARGOCD – Argo CD for GitOps-based continuous delivery.
 	//
-	//   - KRO – Kube Resource Orchestrator (KRO) for composing and managing
-	//     custom Kubernetes resources.
-	//
+	//    * KRO – Kube Resource Orchestrator (KRO) for composing and managing
+	//    custom Kubernetes resources.
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Value is immutable once set"
 	// +kubebuilder:validation:Required
 	Type *string `json:"type"`

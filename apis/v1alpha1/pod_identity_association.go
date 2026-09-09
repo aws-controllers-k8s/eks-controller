@@ -63,12 +63,12 @@ type PodIdentityAssociationSpec struct {
 	//
 	// Important considerations
 	//
-	//   - Session tags: When using this policy, disableSessionTags must be set
-	//     to true.
+	//    * Session tags: When using this policy, disableSessionTags must be set
+	//    to true.
 	//
-	//   - Target role permissions: If you specify both a TargetRoleArn and a policy,
-	//     the policy restrictions apply only to the target role's permissions, not
-	//     to the initial role used for assuming the target role.
+	//    * Target role permissions: If you specify both a TargetRoleArn and a policy,
+	//    the policy restrictions apply only to the target role's permissions, not
+	//    to the initial role used for assuming the target role.
 	Policy *string `json:"policy,omitempty"`
 	// The Amazon Resource Name (ARN) of the IAM role to associate with the service
 	// account. The EKS Pod Identity agent manages credentials to assume this role
@@ -85,26 +85,26 @@ type PodIdentityAssociationSpec struct {
 	//
 	// The following basic restrictions apply to tags:
 	//
-	//   - Maximum number of tags per resource – 50
+	//    * Maximum number of tags per resource – 50
 	//
-	//   - For each resource, each tag key must be unique, and each tag key can
-	//     have only one value.
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
 	//
-	//   - Maximum key length – 128 Unicode characters in UTF-8
+	//    * Maximum key length – 128 Unicode characters in UTF-8
 	//
-	//   - Maximum value length – 256 Unicode characters in UTF-8
+	//    * Maximum value length – 256 Unicode characters in UTF-8
 	//
-	//   - If your tagging schema is used across multiple services and resources,
-	//     remember that other services may have restrictions on allowed characters.
-	//     Generally allowed characters are: letters, numbers, and spaces representable
-	//     in UTF-8, and the following characters: + - = . _ : / @.
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
 	//
-	//   - Tag keys and values are case-sensitive.
+	//    * Tag keys and values are case-sensitive.
 	//
-	//   - Do not use aws:, AWS:, or any upper or lowercase combination of such
-	//     as a prefix for either keys or values as it is reserved for Amazon Web
-	//     Services use. You cannot edit or delete tag keys or values with this prefix.
-	//     Tags with this prefix do not count against your tags per resource limit.
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for Amazon Web
+	//    Services use. You cannot edit or delete tag keys or values with this prefix.
+	//    Tags with this prefix do not count against your tags per resource limit.
 	Tags map[string]*string `json:"tags,omitempty"`
 	// The Amazon Resource Name (ARN) of the target IAM role to associate with the
 	// service account. This role is assumed by using the EKS Pod Identity association

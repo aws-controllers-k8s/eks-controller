@@ -154,6 +154,17 @@ func newResourceDelta(
 				}
 			}
 		}
+		if ackcompare.HasNilDifference(a.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig, b.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig) {
+			delta.Add("Spec.KubeControllerManagerConfig.PodGCControllerConfig", a.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig, b.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig)
+		} else if a.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig != nil && b.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig != nil {
+			if ackcompare.HasNilDifference(a.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig.TerminatedPodGCThreshold, b.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig.TerminatedPodGCThreshold) {
+				delta.Add("Spec.KubeControllerManagerConfig.PodGCControllerConfig.TerminatedPodGCThreshold", a.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig.TerminatedPodGCThreshold, b.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig.TerminatedPodGCThreshold)
+			} else if a.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig.TerminatedPodGCThreshold != nil && b.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig.TerminatedPodGCThreshold != nil {
+				if *a.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig.TerminatedPodGCThreshold != *b.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig.TerminatedPodGCThreshold {
+					delta.Add("Spec.KubeControllerManagerConfig.PodGCControllerConfig.TerminatedPodGCThreshold", a.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig.TerminatedPodGCThreshold, b.ko.Spec.KubeControllerManagerConfig.PodGCControllerConfig.TerminatedPodGCThreshold)
+				}
+			}
+		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.KubeSchedulerConfig, b.ko.Spec.KubeSchedulerConfig) {
 		delta.Add("Spec.KubeSchedulerConfig", a.ko.Spec.KubeSchedulerConfig, b.ko.Spec.KubeSchedulerConfig)
