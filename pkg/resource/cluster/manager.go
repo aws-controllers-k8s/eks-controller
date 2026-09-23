@@ -252,18 +252,8 @@ func (rm *resourceManager) incompleteLateInitialization(
 	res acktypes.AWSResource,
 ) bool {
 	ko := rm.concreteResource(res).ko.DeepCopy()
-	if ko.Spec.ControlPlaneScalingConfig != nil {
-		if ko.Spec.ControlPlaneScalingConfig.Tier == nil {
-			return true
-		}
-	}
 	if ko.Spec.DeletionProtection == nil {
 		return true
-	}
-	if ko.Spec.ResourcesVPCConfig != nil {
-		if ko.Spec.ResourcesVPCConfig.ControlPlaneEgressMode == nil {
-			return true
-		}
 	}
 	return false
 }

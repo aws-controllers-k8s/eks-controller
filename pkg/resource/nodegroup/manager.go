@@ -50,7 +50,7 @@ var (
 // +kubebuilder:rbac:groups=eks.services.k8s.aws,resources=nodegroups,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=eks.services.k8s.aws,resources=nodegroups/status,verbs=get;update;patch
 
-var lateInitializeFieldNames = []string{}
+var lateInitializeFieldNames = []string{"AMIType", "CapacityType", "DiskSize", "InstanceTypes", "UpdateConfig", "MaxUnavailable", "MaxUnavailablePercentage"}
 
 // resourceManager is responsible for providing a consistent way to perform
 // CRUD operations in a backend AWS service API for Book custom resources.
@@ -260,7 +260,34 @@ func (rm *resourceManager) lateInitializeFromReadOneOutput(
 	observed acktypes.AWSResource,
 	latest acktypes.AWSResource,
 ) acktypes.AWSResource {
-	return latest
+	observedKo := rm.concreteResource(observed).ko.DeepCopy()
+	latestKo := rm.concreteResource(latest).ko.DeepCopy()
+	if observedKo.Spec.AMIType != nil && latestKo.Spec.AMIType == nil {
+		latestKo.Spec.AMIType = observedKo.Spec.AMIType
+	}
+	if observedKo.Spec.CapacityType != nil && latestKo.Spec.CapacityType == nil {
+		latestKo.Spec.CapacityType = observedKo.Spec.CapacityType
+	}
+	if observedKo.Spec.DiskSize != nil && latestKo.Spec.DiskSize == nil {
+		latestKo.Spec.DiskSize = observedKo.Spec.DiskSize
+	}
+	if observedKo.Spec.InstanceTypes != nil && latestKo.Spec.InstanceTypes == nil {
+		latestKo.Spec.InstanceTypes = observedKo.Spec.InstanceTypes
+	}
+	if observedKo.Spec.UpdateConfig != nil && latestKo.Spec.UpdateConfig == nil {
+		latestKo.Spec.UpdateConfig = observedKo.Spec.UpdateConfig
+	}
+	if observedKo.Spec.UpdateConfig != nil && latestKo.Spec.UpdateConfig != nil {
+		if observedKo.Spec.UpdateConfig.MaxUnavailable != nil && latestKo.Spec.UpdateConfig.MaxUnavailable == nil {
+			latestKo.Spec.UpdateConfig.MaxUnavailable = observedKo.Spec.UpdateConfig.MaxUnavailable
+		}
+	}
+	if observedKo.Spec.UpdateConfig != nil && latestKo.Spec.UpdateConfig != nil {
+		if observedKo.Spec.UpdateConfig.MaxUnavailablePercentage != nil && latestKo.Spec.UpdateConfig.MaxUnavailablePercentage == nil {
+			latestKo.Spec.UpdateConfig.MaxUnavailablePercentage = observedKo.Spec.UpdateConfig.MaxUnavailablePercentage
+		}
+	}
+	return &resource{latestKo}
 }
 
 // IsSynced returns true if the resource is synced.

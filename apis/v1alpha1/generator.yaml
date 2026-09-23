@@ -197,10 +197,17 @@ resources:
         late_initialize: {}
         compare:
           pre_delete_include: true
+      # EKS omits both of these from DescribeCluster on clusters and regions
+      # that predate the feature. Without skip_incomplete_check that leaves
+      # incompleteLateInitialization permanently true -- and resourcesVPCConfig
+      # is required, so the egress-mode check has no nil parent to short-circuit
+      # it -- which requeues the cluster every 5s and never reports Synced.
       ControlPlaneScalingConfig.Tier:
-        late_initialize: {}
+        late_initialize:
+          skip_incomplete_check: {}
       ResourcesVpcConfig.ControlPlaneEgressMode:
-        late_initialize: {}
+        late_initialize:
+          skip_incomplete_check: {}
       # Control plane component config fields. The backend injects tier defaults
       # into these on the read path, so late_initialize prevents the controller
       # from treating those defaults as drift and reconciling forever. Each
@@ -403,8 +410,14 @@ resources:
           resource: Role
           path: Status.ACKResourceMetadata.ARN
         is_immutable: true
+      # DescribeNodegroup always reports these, even when the user omitted them
+      # and let EKS pick the default, so absent-vs-default reads as permanent
+      # drift. None of them can be updated in place, so adopt the observed
+      # value into the spec instead of trying to reconcile it.
       DiskSize:
         is_immutable: true
+        late_initialize:
+          skip_incomplete_check: {}
       RemoteAccess:
         is_immutable: true
       RemoteAccess.SourceSecurityGroups:
@@ -420,8 +433,27 @@ resources:
         is_immutable: true
       AmiType:
         is_immutable: true
+        late_initialize:
+          skip_incomplete_check: {}
       InstanceTypes:
         is_immutable: true
+        late_initialize:
+          skip_incomplete_check: {}
+      CapacityType:
+        late_initialize:
+          skip_incomplete_check: {}
+      # Declared at every level so a partial spec (e.g. only
+      # maxUnavailablePercentage set) still adopts the server default for its
+      # sibling instead of drifting.
+      UpdateConfig:
+        late_initialize:
+          skip_incomplete_check: {}
+      UpdateConfig.MaxUnavailable:
+        late_initialize:
+          skip_incomplete_check: {}
+      UpdateConfig.MaxUnavailablePercentage:
+        late_initialize:
+          skip_incomplete_check: {}
       Taints:
         compare:
           is_ignored: true
