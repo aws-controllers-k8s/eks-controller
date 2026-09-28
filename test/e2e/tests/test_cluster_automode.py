@@ -150,6 +150,62 @@ class TestAutoModeCluster:
         wait_for_cluster_active(eks_client, cluster_name)
         time.sleep(CHECK_STATUS_WAIT_SECONDS)
 
+    def test_disable_auto_mode_converges(self, eks_client, auto_mode_cluster):
+        (ref, cr) = auto_mode_cluster
+        cluster_name = cr["spec"]["name"]
+
+        wait_for_cluster_active(eks_client, cluster_name)
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=30)
+
+        k8s.patch_custom_resource(ref, {
+            "spec": {
+                "computeConfig": {"enabled": False},
+                "storageConfig": {"blockStorage": {"enabled": False}},
+                "kubernetesNetworkConfig": {"elasticLoadBalancing": {"enabled": False}},
+            }
+        })
+
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "False", wait_periods=5)
+
+        wait_for_cluster_active(eks_client, cluster_name)
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=10)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        logging.info(f"post-disable describe_cluster: {aws_res['cluster'].get('computeConfig')}")
+        assert aws_res["cluster"]["computeConfig"]["enabled"] is False
+
+        cr = k8s.get_resource(ref)
+        assert cr["spec"]["computeConfig"].get("nodePools")
+        assert cr["spec"]["computeConfig"].get("nodeRoleARN")
+
+        time.sleep(CHECK_STATUS_WAIT_SECONDS)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        cr = k8s.get_resource(ref)
+        terminal = [c for c in cr["status"].get("conditions", [])
+                    if c["type"] == "ACK.Terminal" and c["status"] == "True"]
+        assert terminal == [], f"unexpected terminal condition: {terminal}"
+
+        k8s.patch_custom_resource(ref, {
+            "spec": {
+                "computeConfig": {"enabled": True},
+                "storageConfig": {"blockStorage": {"enabled": True}},
+                "kubernetesNetworkConfig": {"elasticLoadBalancing": {"enabled": True}},
+            }
+        })
+
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "False", wait_periods=5)
+
+        wait_for_cluster_active(eks_client, cluster_name)
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=10)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        assert aws_res["cluster"]["computeConfig"]["enabled"] is True
+        assert aws_res["cluster"]["storageConfig"]["blockStorage"]["enabled"] is True
+        assert aws_res["cluster"]["kubernetesNetworkConfig"]["elasticLoadBalancing"]["enabled"] is True
+
     def test_finalizer_retained_during_deletion(self, auto_mode_cluster):
         """Validates that the controller retains the finalizer while the
         cluster CR is in DELETING state and only removes it once the
