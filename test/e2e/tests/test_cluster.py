@@ -828,6 +828,84 @@ class TestCluster:
         time.sleep(CHECK_STATUS_WAIT_SECONDS)
         get_and_assert_status(ref, 'ACTIVE', True)
 
+    def test_cluster_auto_mode_defaults_no_drift(self, eks_client, simple_cluster):
+        (ref, cr) = simple_cluster
+
+        cluster_name = cr["spec"]["name"]
+        wait_for_cluster_active(eks_client, cluster_name)
+
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=30)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        aws_res = eks_client.describe_cluster(name=cluster_name)
+        logging.info(f"non auto mode describe_cluster: computeConfig="
+                     f"{aws_res['cluster'].get('computeConfig')} storageConfig="
+                     f"{aws_res['cluster'].get('storageConfig')} knc="
+                     f"{aws_res['cluster'].get('kubernetesNetworkConfig')}")
+        assert aws_res["cluster"]["kubernetesNetworkConfig"]["elasticLoadBalancing"]["enabled"] is False
+        assert aws_res["cluster"].get("computeConfig", {}).get("enabled") is not True
+        assert aws_res["cluster"].get("storageConfig", {}).get("blockStorage", {}).get("enabled") is not True
+
+        cr = k8s.get_resource(ref)
+        assert cr["spec"].get("computeConfig") is None
+        assert cr["spec"].get("storageConfig") is None
+
+        time.sleep(CHECK_STATUS_WAIT_SECONDS)
+        get_and_assert_status(ref, 'ACTIVE', True)
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=3)
+
+        updates = eks_client.list_updates(name=cluster_name)["updateIds"]
+        assert updates == [], f"controller issued unexpected cluster updates: {updates}"
+
+    def test_cluster_auto_mode_disabled_explicitly_no_update(self, eks_client, simple_cluster):
+        (ref, cr) = simple_cluster
+
+        cluster_name = cr["spec"]["name"]
+        wait_for_cluster_active(eks_client, cluster_name)
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=30)
+
+        k8s.patch_custom_resource(ref, {
+            "spec": {
+                "computeConfig": {"enabled": False},
+                "storageConfig": {"blockStorage": {"enabled": False}},
+                "kubernetesNetworkConfig": {"elasticLoadBalancing": {"enabled": False}},
+            }
+        })
+
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=30)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        time.sleep(CHECK_STATUS_WAIT_SECONDS)
+        get_and_assert_status(ref, 'ACTIVE', True)
+
+        cr = k8s.get_resource(ref)
+        terminal = [c for c in cr["status"].get("conditions", [])
+                    if c["type"] == "ACK.Terminal" and c["status"] == "True"]
+        assert terminal == [], f"unexpected terminal condition: {terminal}"
+
+        updates = eks_client.list_updates(name=cluster_name)["updateIds"]
+        assert updates == [], f"controller issued unexpected cluster updates: {updates}"
+
+    def test_cluster_auto_mode_create_only_network_config_is_terminal(self, eks_client, simple_cluster):
+        (ref, cr) = simple_cluster
+
+        cluster_name = cr["spec"]["name"]
+        wait_for_cluster_active(eks_client, cluster_name)
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=30)
+
+        observed = eks_client.describe_cluster(name=cluster_name)["cluster"]
+        other_family = "ipv6" if observed["kubernetesNetworkConfig"]["ipFamily"] == "ipv4" else "ipv4"
+
+        k8s.patch_custom_resource(ref, {
+            "spec": {"kubernetesNetworkConfig": {"ipFamily": other_family}}
+        })
+
+        assert k8s.wait_on_condition(ref, "ACK.Terminal", "True", wait_periods=10)
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "False", wait_periods=10)
+
+        updates = eks_client.list_updates(name=cluster_name)["updateIds"]
+        assert updates == [], f"controller issued unexpected cluster updates: {updates}"
+
     def test_cluster_component_config_partial_late_initialize(self, eks_client, partial_component_config_cluster):
         # This cluster sets ONLY kubeAPIServerConfig.eventTTL. The EKS backend
         # fills tier defaults for every omitted field and returns the complete

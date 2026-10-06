@@ -41,7 +41,7 @@ func newResourceDelta(
 		delta.Add("", a, b)
 		return delta
 	}
-	customPreCompare(a, b)
+	customPreCompare(delta, a, b)
 
 	if ackcompare.HasNilDifference(a.ko.Spec.AccessConfig, b.ko.Spec.AccessConfig) {
 		delta.Add("Spec.AccessConfig", a.ko.Spec.AccessConfig, b.ko.Spec.AccessConfig)
@@ -59,31 +59,6 @@ func newResourceDelta(
 	} else if a.ko.Spec.ClientRequestToken != nil && b.ko.Spec.ClientRequestToken != nil {
 		if *a.ko.Spec.ClientRequestToken != *b.ko.Spec.ClientRequestToken {
 			delta.Add("Spec.ClientRequestToken", a.ko.Spec.ClientRequestToken, b.ko.Spec.ClientRequestToken)
-		}
-	}
-	if ackcompare.HasNilDifference(a.ko.Spec.ComputeConfig, b.ko.Spec.ComputeConfig) {
-		delta.Add("Spec.ComputeConfig", a.ko.Spec.ComputeConfig, b.ko.Spec.ComputeConfig)
-	} else if a.ko.Spec.ComputeConfig != nil && b.ko.Spec.ComputeConfig != nil {
-		if ackcompare.HasNilDifference(a.ko.Spec.ComputeConfig.Enabled, b.ko.Spec.ComputeConfig.Enabled) {
-			delta.Add("Spec.ComputeConfig.Enabled", a.ko.Spec.ComputeConfig.Enabled, b.ko.Spec.ComputeConfig.Enabled)
-		} else if a.ko.Spec.ComputeConfig.Enabled != nil && b.ko.Spec.ComputeConfig.Enabled != nil {
-			if *a.ko.Spec.ComputeConfig.Enabled != *b.ko.Spec.ComputeConfig.Enabled {
-				delta.Add("Spec.ComputeConfig.Enabled", a.ko.Spec.ComputeConfig.Enabled, b.ko.Spec.ComputeConfig.Enabled)
-			}
-		}
-		if len(a.ko.Spec.ComputeConfig.NodePools) != len(b.ko.Spec.ComputeConfig.NodePools) {
-			delta.Add("Spec.ComputeConfig.NodePools", a.ko.Spec.ComputeConfig.NodePools, b.ko.Spec.ComputeConfig.NodePools)
-		} else if len(a.ko.Spec.ComputeConfig.NodePools) > 0 {
-			if !ackcompare.SliceStringPEqual(a.ko.Spec.ComputeConfig.NodePools, b.ko.Spec.ComputeConfig.NodePools) {
-				delta.Add("Spec.ComputeConfig.NodePools", a.ko.Spec.ComputeConfig.NodePools, b.ko.Spec.ComputeConfig.NodePools)
-			}
-		}
-		if ackcompare.HasNilDifference(a.ko.Spec.ComputeConfig.NodeRoleARN, b.ko.Spec.ComputeConfig.NodeRoleARN) {
-			delta.Add("Spec.ComputeConfig.NodeRoleARN", a.ko.Spec.ComputeConfig.NodeRoleARN, b.ko.Spec.ComputeConfig.NodeRoleARN)
-		} else if a.ko.Spec.ComputeConfig.NodeRoleARN != nil && b.ko.Spec.ComputeConfig.NodeRoleARN != nil {
-			if *a.ko.Spec.ComputeConfig.NodeRoleARN != *b.ko.Spec.ComputeConfig.NodeRoleARN {
-				delta.Add("Spec.ComputeConfig.NodeRoleARN", a.ko.Spec.ComputeConfig.NodeRoleARN, b.ko.Spec.ComputeConfig.NodeRoleARN)
-			}
 		}
 	}
 	if ackcompare.HasNilDifference(a.ko.Spec.ControlPlaneScalingConfig, b.ko.Spec.ControlPlaneScalingConfig) {
@@ -189,35 +164,6 @@ func newResourceDelta(
 						delta.Add("Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type", a.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type, b.ko.Spec.KubeSchedulerConfig.NodeResourcesFit.ScoringStrategy.Type)
 					}
 				}
-			}
-		}
-	}
-	if ackcompare.HasNilDifference(a.ko.Spec.KubernetesNetworkConfig, b.ko.Spec.KubernetesNetworkConfig) {
-		delta.Add("Spec.KubernetesNetworkConfig", a.ko.Spec.KubernetesNetworkConfig, b.ko.Spec.KubernetesNetworkConfig)
-	} else if a.ko.Spec.KubernetesNetworkConfig != nil && b.ko.Spec.KubernetesNetworkConfig != nil {
-		if ackcompare.HasNilDifference(a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing, b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing) {
-			delta.Add("Spec.KubernetesNetworkConfig.ElasticLoadBalancing", a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing, b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing)
-		} else if a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing != nil && b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing != nil {
-			if ackcompare.HasNilDifference(a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled, b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled) {
-				delta.Add("Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled", a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled, b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled)
-			} else if a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled != nil && b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled != nil {
-				if *a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled != *b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled {
-					delta.Add("Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled", a.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled, b.ko.Spec.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled)
-				}
-			}
-		}
-		if ackcompare.HasNilDifference(a.ko.Spec.KubernetesNetworkConfig.IPFamily, b.ko.Spec.KubernetesNetworkConfig.IPFamily) {
-			delta.Add("Spec.KubernetesNetworkConfig.IPFamily", a.ko.Spec.KubernetesNetworkConfig.IPFamily, b.ko.Spec.KubernetesNetworkConfig.IPFamily)
-		} else if a.ko.Spec.KubernetesNetworkConfig.IPFamily != nil && b.ko.Spec.KubernetesNetworkConfig.IPFamily != nil {
-			if *a.ko.Spec.KubernetesNetworkConfig.IPFamily != *b.ko.Spec.KubernetesNetworkConfig.IPFamily {
-				delta.Add("Spec.KubernetesNetworkConfig.IPFamily", a.ko.Spec.KubernetesNetworkConfig.IPFamily, b.ko.Spec.KubernetesNetworkConfig.IPFamily)
-			}
-		}
-		if ackcompare.HasNilDifference(a.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR, b.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR) {
-			delta.Add("Spec.KubernetesNetworkConfig.ServiceIPv4CIDR", a.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR, b.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR)
-		} else if a.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR != nil && b.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR != nil {
-			if *a.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR != *b.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR {
-				delta.Add("Spec.KubernetesNetworkConfig.ServiceIPv4CIDR", a.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR, b.ko.Spec.KubernetesNetworkConfig.ServiceIPv4CIDR)
 			}
 		}
 	}
@@ -341,21 +287,6 @@ func newResourceDelta(
 	}
 	if !equality.Semantic.Equalities.DeepEqual(a.ko.Spec.RoleRef, b.ko.Spec.RoleRef) {
 		delta.Add("Spec.RoleRef", a.ko.Spec.RoleRef, b.ko.Spec.RoleRef)
-	}
-	if ackcompare.HasNilDifference(a.ko.Spec.StorageConfig, b.ko.Spec.StorageConfig) {
-		delta.Add("Spec.StorageConfig", a.ko.Spec.StorageConfig, b.ko.Spec.StorageConfig)
-	} else if a.ko.Spec.StorageConfig != nil && b.ko.Spec.StorageConfig != nil {
-		if ackcompare.HasNilDifference(a.ko.Spec.StorageConfig.BlockStorage, b.ko.Spec.StorageConfig.BlockStorage) {
-			delta.Add("Spec.StorageConfig.BlockStorage", a.ko.Spec.StorageConfig.BlockStorage, b.ko.Spec.StorageConfig.BlockStorage)
-		} else if a.ko.Spec.StorageConfig.BlockStorage != nil && b.ko.Spec.StorageConfig.BlockStorage != nil {
-			if ackcompare.HasNilDifference(a.ko.Spec.StorageConfig.BlockStorage.Enabled, b.ko.Spec.StorageConfig.BlockStorage.Enabled) {
-				delta.Add("Spec.StorageConfig.BlockStorage.Enabled", a.ko.Spec.StorageConfig.BlockStorage.Enabled, b.ko.Spec.StorageConfig.BlockStorage.Enabled)
-			} else if a.ko.Spec.StorageConfig.BlockStorage.Enabled != nil && b.ko.Spec.StorageConfig.BlockStorage.Enabled != nil {
-				if *a.ko.Spec.StorageConfig.BlockStorage.Enabled != *b.ko.Spec.StorageConfig.BlockStorage.Enabled {
-					delta.Add("Spec.StorageConfig.BlockStorage.Enabled", a.ko.Spec.StorageConfig.BlockStorage.Enabled, b.ko.Spec.StorageConfig.BlockStorage.Enabled)
-				}
-			}
-		}
 	}
 	desiredACKTags, _ := convertToOrderedACKTags(a.ko.Spec.Tags)
 	latestACKTags, _ := convertToOrderedACKTags(b.ko.Spec.Tags)

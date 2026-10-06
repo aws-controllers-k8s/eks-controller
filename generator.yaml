@@ -257,6 +257,15 @@ resources:
       KubeControllerManagerConfig.PodGCControllerConfig.TerminatedPodGCThreshold:
         late_initialize:
           skip_incomplete_check: {}
+      ComputeConfig:
+        compare:
+          is_ignored: true
+      StorageConfig:
+        compare:
+          is_ignored: true
+      KubernetesNetworkConfig:
+        compare:
+          is_ignored: true
     exceptions:
       errors:
         404:
@@ -275,7 +284,7 @@ resources:
         - ValidationError
     hooks:
       delta_pre_compare:
-        code: customPreCompare(a, b)
+        code: customPreCompare(delta, a, b)
       sdk_create_post_set_output:
         template_path: hooks/cluster/sdk_create_post_set_output.go.tpl
       sdk_read_one_post_set_output:
