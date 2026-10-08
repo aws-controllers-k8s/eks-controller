@@ -119,11 +119,8 @@ func (rm *resourceManager) resolveReferenceForClusterName(
 		if arr.Name == nil || *arr.Name == "" {
 			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: ClusterRef")
 		}
-		namespace, err := ackrt.ResolveCrossNamespaceReference(
-			ctx,
+		namespace, _, err := ackrt.ValidateCrossNamespaceReference(
 			rm.cfg.EnableCrossNamespace,
-			&ko.Status.Conditions,
-			ackrt.CrossNamespaceRefKindResource,
 			ko.ObjectMeta.GetNamespace(),
 			arr.Namespace,
 			*arr.Name,
@@ -210,11 +207,8 @@ func (rm *resourceManager) resolveReferenceForRoleARN(
 		if arr.Name == nil || *arr.Name == "" {
 			return hasReferences, fmt.Errorf("provided resource reference is nil or empty: RoleRef")
 		}
-		namespace, err := ackrt.ResolveCrossNamespaceReference(
-			ctx,
+		namespace, _, err := ackrt.ValidateCrossNamespaceReference(
 			rm.cfg.EnableCrossNamespace,
-			&ko.Status.Conditions,
-			ackrt.CrossNamespaceRefKindResource,
 			ko.ObjectMeta.GetNamespace(),
 			arr.Namespace,
 			*arr.Name,
