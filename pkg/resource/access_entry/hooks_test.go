@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
 func Test_computeAccessPoliciesDelta(t *testing.T) {
