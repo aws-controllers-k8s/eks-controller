@@ -850,6 +850,12 @@ class TestCluster:
         assert cr["spec"].get("computeConfig") is None
         assert cr["spec"].get("storageConfig") is None
 
+        k8s.patch_custom_resource(ref, {"spec": {
+            "deletionProtection": None,
+            "controlPlaneScalingConfig": None,
+        }})
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
         time.sleep(CHECK_STATUS_WAIT_SECONDS)
         get_and_assert_status(ref, 'ACTIVE', True)
         assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=3)

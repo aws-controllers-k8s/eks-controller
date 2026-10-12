@@ -554,7 +554,9 @@ func (rm *resourceManager) customUpdate(
 	}
 
 	// Handle controlPlaneScalingConfig updates
-	if delta.DifferentAt("Spec.ControlPlaneScalingConfig") {
+	if delta.DifferentAt("Spec.ControlPlaneScalingConfig") &&
+		desired.ko.Spec.ControlPlaneScalingConfig != nil &&
+		desired.ko.Spec.ControlPlaneScalingConfig.Tier != nil {
 		if err := rm.updateControlPlaneScalingConfig(ctx, desired); err != nil {
 			awsErr, ok := extractAWSError(err)
 
@@ -588,7 +590,7 @@ func (rm *resourceManager) customUpdate(
 	}
 
 	// Handle deletionProtection updates
-	if delta.DifferentAt("Spec.DeletionProtection") {
+	if delta.DifferentAt("Spec.DeletionProtection") && desired.ko.Spec.DeletionProtection != nil {
 		if err := rm.updateDeletionProtection(ctx, desired); err != nil {
 			awsErr, ok := extractAWSError(err)
 
