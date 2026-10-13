@@ -197,6 +197,9 @@ resources:
         late_initialize: {}
         compare:
           pre_delete_include: true
+      ControlPlaneScalingConfig:
+        late_initialize:
+          skip_incomplete_check: {}
       ControlPlaneScalingConfig.Tier:
         late_initialize: {}
       ResourcesVpcConfig.ControlPlaneEgressMode:

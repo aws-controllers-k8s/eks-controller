@@ -50,7 +50,7 @@ var (
 // +kubebuilder:rbac:groups=eks.services.k8s.aws,resources=clusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=eks.services.k8s.aws,resources=clusters/status,verbs=get;update;patch
 
-var lateInitializeFieldNames = []string{"Tier", "DeletionProtection", "KubeAPIServerConfig", "KubeApiServerConfig.EventTTL", "KubeApiServerConfig.ServiceNodePortRange", "KubeApiServerConfig.ServiceNodePortRange.MaxPort", "KubeApiServerConfig.ServiceNodePortRange.MinPort", "KubeControllerManagerConfig", "HorizontalPodAutoscalerControllerConfig", "HorizontalPodAutoscalerSyncPeriod", "PodGCControllerConfig", "TerminatedPodGCThreshold", "KubeSchedulerConfig", "NodeResourcesFit", "ScoringStrategy", "Resources", "Type", "ResourcesVpcConfig.ControlPlaneEgressMode"}
+var lateInitializeFieldNames = []string{"ControlPlaneScalingConfig", "Tier", "DeletionProtection", "KubeAPIServerConfig", "KubeApiServerConfig.EventTTL", "KubeApiServerConfig.ServiceNodePortRange", "KubeApiServerConfig.ServiceNodePortRange.MaxPort", "KubeApiServerConfig.ServiceNodePortRange.MinPort", "KubeControllerManagerConfig", "HorizontalPodAutoscalerControllerConfig", "HorizontalPodAutoscalerSyncPeriod", "PodGCControllerConfig", "TerminatedPodGCThreshold", "KubeSchedulerConfig", "NodeResourcesFit", "ScoringStrategy", "Resources", "Type", "ResourcesVpcConfig.ControlPlaneEgressMode"}
 
 // resourceManager is responsible for providing a consistent way to perform
 // CRUD operations in a backend AWS service API for Book custom resources.
@@ -276,6 +276,9 @@ func (rm *resourceManager) lateInitializeFromReadOneOutput(
 ) acktypes.AWSResource {
 	observedKo := rm.concreteResource(observed).ko.DeepCopy()
 	latestKo := rm.concreteResource(latest).ko.DeepCopy()
+	if observedKo.Spec.ControlPlaneScalingConfig != nil && latestKo.Spec.ControlPlaneScalingConfig == nil {
+		latestKo.Spec.ControlPlaneScalingConfig = observedKo.Spec.ControlPlaneScalingConfig
+	}
 	if observedKo.Spec.ControlPlaneScalingConfig != nil && latestKo.Spec.ControlPlaneScalingConfig != nil {
 		if observedKo.Spec.ControlPlaneScalingConfig.Tier != nil && latestKo.Spec.ControlPlaneScalingConfig.Tier == nil {
 			latestKo.Spec.ControlPlaneScalingConfig.Tier = observedKo.Spec.ControlPlaneScalingConfig.Tier
