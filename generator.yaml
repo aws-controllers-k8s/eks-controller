@@ -202,6 +202,12 @@ resources:
           skip_incomplete_check: {}
       ControlPlaneScalingConfig.Tier:
         late_initialize: {}
+      UpgradePolicy:
+        late_initialize:
+          skip_incomplete_check: {}
+      UpgradePolicy.SupportType:
+        late_initialize:
+          skip_incomplete_check: {}
       ResourcesVpcConfig.ControlPlaneEgressMode:
         late_initialize: {}
       # Control plane component config fields. The backend injects tier defaults

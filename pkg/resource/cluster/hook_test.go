@@ -14,6 +14,7 @@
 package cluster
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -323,4 +324,54 @@ func TestAutoModeTupleDeclared(t *testing.T) {
 	assert.False(t, autoModeTupleDeclared(clusterWithAutoMode(compute(aws.Bool(true)), storage(aws.Bool(true)), nil)))
 	assert.False(t, autoModeTupleDeclared(clusterWithAutoMode(compute(nil), storage(aws.Bool(true)), aws.Bool(true))))
 	assert.False(t, autoModeTupleDeclared(clusterWithAutoMode(compute(aws.Bool(true)), &v1alpha1.StorageConfigRequest{}, aws.Bool(true))))
+}
+
+func clusterWithUpgradePolicy(p *v1alpha1.UpgradePolicyRequest) *resource {
+	r := clusterWithAutoMode(nil, nil, nil)
+	r.ko.Spec.UpgradePolicy = p
+	return r
+}
+
+func clusterWithComponentConfigs() *resource {
+	r := clusterWithAutoMode(nil, nil, nil)
+	r.ko.Spec.KubeAPIServerConfig = &v1alpha1.KubeAPIServerConfigRequest{EventTTL: aws.String("1h")}
+	r.ko.Spec.KubeSchedulerConfig = &v1alpha1.KubeSchedulerConfigRequest{}
+	r.ko.Spec.KubeControllerManagerConfig = &v1alpha1.KubeControllerManagerConfigRequest{}
+	return r
+}
+
+func TestCustomUpdateSkipsUndeclaredServerDefaults(t *testing.T) {
+	tests := []struct {
+		name    string
+		desired *resource
+		latest  *resource
+		path    string
+	}{
+		{
+			"upgradePolicy declared without supportType",
+			clusterWithUpgradePolicy(&v1alpha1.UpgradePolicyRequest{}),
+			clusterWithUpgradePolicy(&v1alpha1.UpgradePolicyRequest{SupportType: aws.String("EXTENDED")}),
+			"Spec.UpgradePolicy",
+		},
+		{
+			"component configs omitted, AWS reports the tier defaults",
+			clusterWithAutoMode(nil, nil, nil),
+			clusterWithComponentConfigs(),
+			"Spec.KubeAPIServerConfig",
+		},
+	}
+	// sdkapi is nil, so an UpdateClusterConfig call built from these specs panics the test.
+	rm := &resourceManager{}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.latest.ko.Status.Status = aws.String(StatusActive)
+			delta := newResourceDelta(tt.desired, tt.latest)
+			require.True(t, delta.DifferentAt(tt.path), "differences: %v", delta.Differences)
+
+			updated, err := rm.customUpdate(context.Background(), tt.desired, tt.latest, delta)
+
+			require.NoError(t, err)
+			require.NotNil(t, updated)
+		})
+	}
 }

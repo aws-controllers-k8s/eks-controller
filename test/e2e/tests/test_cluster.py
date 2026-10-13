@@ -853,6 +853,7 @@ class TestCluster:
         k8s.patch_custom_resource(ref, {"spec": {
             "deletionProtection": None,
             "controlPlaneScalingConfig": None,
+            "upgradePolicy": {"supportType": None},
         }})
         time.sleep(MODIFY_WAIT_AFTER_SECONDS)
 
