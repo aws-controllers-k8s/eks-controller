@@ -431,7 +431,9 @@ func (rm *resourceManager) customUpdate(
 	}
 
 	// Handle upgrade policy updates
-	if delta.DifferentAt("Spec.UpgradePolicy") {
+	if delta.DifferentAt("Spec.UpgradePolicy") &&
+		desired.ko.Spec.UpgradePolicy != nil &&
+		desired.ko.Spec.UpgradePolicy.SupportType != nil {
 		if err := rm.updateClusterUpgradePolicy(ctx, desired); err != nil {
 			awsErr, ok := extractAWSError(err)
 
@@ -573,9 +575,9 @@ func (rm *resourceManager) customUpdate(
 	// Handle Kubernetes control plane component config updates. These three
 	// configs (kube-apiserver, kube-scheduler, kube-controller-manager) are a
 	// single logical unit sent in one UpdateClusterConfig call.
-	if delta.DifferentAt("Spec.KubeAPIServerConfig") ||
-		delta.DifferentAt("Spec.KubeSchedulerConfig") ||
-		delta.DifferentAt("Spec.KubeControllerManagerConfig") {
+	if (delta.DifferentAt("Spec.KubeAPIServerConfig") && desired.ko.Spec.KubeAPIServerConfig != nil) ||
+		(delta.DifferentAt("Spec.KubeSchedulerConfig") && desired.ko.Spec.KubeSchedulerConfig != nil) ||
+		(delta.DifferentAt("Spec.KubeControllerManagerConfig") && desired.ko.Spec.KubeControllerManagerConfig != nil) {
 		if err := rm.updateComponentConfig(ctx, desired, delta); err != nil {
 			awsErr, ok := extractAWSError(err)
 

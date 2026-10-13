@@ -50,7 +50,7 @@ var (
 // +kubebuilder:rbac:groups=eks.services.k8s.aws,resources=clusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=eks.services.k8s.aws,resources=clusters/status,verbs=get;update;patch
 
-var lateInitializeFieldNames = []string{"ControlPlaneScalingConfig", "Tier", "DeletionProtection", "KubeAPIServerConfig", "KubeApiServerConfig.EventTTL", "KubeApiServerConfig.ServiceNodePortRange", "KubeApiServerConfig.ServiceNodePortRange.MaxPort", "KubeApiServerConfig.ServiceNodePortRange.MinPort", "KubeControllerManagerConfig", "HorizontalPodAutoscalerControllerConfig", "HorizontalPodAutoscalerSyncPeriod", "PodGCControllerConfig", "TerminatedPodGCThreshold", "KubeSchedulerConfig", "NodeResourcesFit", "ScoringStrategy", "Resources", "Type", "ResourcesVpcConfig.ControlPlaneEgressMode"}
+var lateInitializeFieldNames = []string{"ControlPlaneScalingConfig", "Tier", "DeletionProtection", "KubeAPIServerConfig", "KubeApiServerConfig.EventTTL", "KubeApiServerConfig.ServiceNodePortRange", "KubeApiServerConfig.ServiceNodePortRange.MaxPort", "KubeApiServerConfig.ServiceNodePortRange.MinPort", "KubeControllerManagerConfig", "HorizontalPodAutoscalerControllerConfig", "HorizontalPodAutoscalerSyncPeriod", "PodGCControllerConfig", "TerminatedPodGCThreshold", "KubeSchedulerConfig", "NodeResourcesFit", "ScoringStrategy", "Resources", "Type", "ResourcesVpcConfig.ControlPlaneEgressMode", "UpgradePolicy", "SupportType"}
 
 // resourceManager is responsible for providing a consistent way to perform
 // CRUD operations in a backend AWS service API for Book custom resources.
@@ -377,6 +377,14 @@ func (rm *resourceManager) lateInitializeFromReadOneOutput(
 	if observedKo.Spec.ResourcesVPCConfig != nil && latestKo.Spec.ResourcesVPCConfig != nil {
 		if observedKo.Spec.ResourcesVPCConfig.ControlPlaneEgressMode != nil && latestKo.Spec.ResourcesVPCConfig.ControlPlaneEgressMode == nil {
 			latestKo.Spec.ResourcesVPCConfig.ControlPlaneEgressMode = observedKo.Spec.ResourcesVPCConfig.ControlPlaneEgressMode
+		}
+	}
+	if observedKo.Spec.UpgradePolicy != nil && latestKo.Spec.UpgradePolicy == nil {
+		latestKo.Spec.UpgradePolicy = observedKo.Spec.UpgradePolicy
+	}
+	if observedKo.Spec.UpgradePolicy != nil && latestKo.Spec.UpgradePolicy != nil {
+		if observedKo.Spec.UpgradePolicy.SupportType != nil && latestKo.Spec.UpgradePolicy.SupportType == nil {
+			latestKo.Spec.UpgradePolicy.SupportType = observedKo.Spec.UpgradePolicy.SupportType
 		}
 	}
 	return &resource{latestKo}
