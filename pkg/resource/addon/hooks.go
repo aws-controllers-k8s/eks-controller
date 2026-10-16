@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
@@ -129,7 +130,7 @@ func returnAddonUpdating(r *resource) (*resource, error) {
 	return r, ackrequeue.NeededAfter(
 		fmt.Errorf("addon in '%s' state, cannot be modified until '%s'",
 			StatusUpdating, StatusActive),
-		15,
+		15*time.Second,
 	)
 }
 
@@ -229,6 +230,12 @@ func addonHasFailedStatus(r *resource) bool {
 
 // customPreCompare is a custom pre-compare function that compares the PodIdentityAssociations field
 func customPreCompare(delta *ackcompare.Delta, desired, latest *resource) {
+	// A spec that leaves addonVersion unset keeps whatever version EKS reports,
+	// the same way a create without it does.
+	if desired.ko.Spec.AddonVersion != nil &&
+		(latest.ko.Spec.AddonVersion == nil || *desired.ko.Spec.AddonVersion != *latest.ko.Spec.AddonVersion) {
+		delta.Add("Spec.AddonVersion", desired.ko.Spec.AddonVersion, latest.ko.Spec.AddonVersion)
+	}
 	if !equalPodIdentityAssociations(desired.ko.Spec.PodIdentityAssociations, latest.ko.Spec.PodIdentityAssociations) {
 		delta.Add("Spec.PodIdentityAssociations", desired.ko.Spec.PodIdentityAssociations, latest.ko.Spec.PodIdentityAssociations)
 	}
