@@ -14,7 +14,11 @@
 package addon
 
 import (
+	"errors"
 	"testing"
+	"time"
+
+	ackrequeue "github.com/aws-controllers-k8s/runtime/pkg/requeue"
 
 	"github.com/aws-controllers-k8s/eks-controller/apis/v1alpha1"
 )
@@ -176,4 +180,43 @@ func TestFormatPodIdentityAssociation(t *testing.T) {
 
 func ptr[T any](v T) *T {
 	return &v
+}
+
+func TestNewResourceDeltaAddonVersion(t *testing.T) {
+	tests := []struct {
+		name          string
+		desired       *string
+		latest        *string
+		wantDifferent bool
+	}{
+		{"unset spec keeps the observed version", nil, ptr("v1.13.2-eksbuild.3"), false},
+		{"equal versions", ptr("v1.13.2-eksbuild.3"), ptr("v1.13.2-eksbuild.3"), false},
+		{"different versions", ptr("v1.13.2-eksbuild.3"), ptr("v1.13.1-eksbuild.1"), true},
+		{"nothing observed", ptr("v1.13.2-eksbuild.3"), nil, true},
+		{"both unset", nil, nil, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			desired := &resource{ko: &v1alpha1.Addon{Spec: v1alpha1.AddonSpec{AddonVersion: tt.desired}}}
+			latest := &resource{ko: &v1alpha1.Addon{Spec: v1alpha1.AddonSpec{AddonVersion: tt.latest}}}
+			delta := newResourceDelta(desired, latest)
+			if got := delta.DifferentAt("Spec.AddonVersion"); got != tt.wantDifferent {
+				t.Errorf("DifferentAt(Spec.AddonVersion) = %v, want %v", got, tt.wantDifferent)
+			}
+			if desired.ko.Spec.AddonVersion != tt.desired || latest.ko.Spec.AddonVersion != tt.latest {
+				t.Errorf("the compare hook must not rewrite desired or latest")
+			}
+		})
+	}
+}
+
+func TestReturnAddonUpdatingRequeuesAfterSeconds(t *testing.T) {
+	_, err := returnAddonUpdating(&resource{ko: &v1alpha1.Addon{}})
+	var requeueErr *ackrequeue.RequeueNeededAfter
+	if !errors.As(err, &requeueErr) {
+		t.Fatalf("returnAddonUpdating() error = %T, want *ackrequeue.RequeueNeededAfter", err)
+	}
+	if got := requeueErr.Duration(); got != 15*time.Second {
+		t.Errorf("requeue duration = %v, want %v", got, 15*time.Second)
+	}
 }

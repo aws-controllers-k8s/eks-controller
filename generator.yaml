@@ -27,6 +27,11 @@ resources:
       sdk_update_post_set_output:
         template_path: hooks/addons/sdk_update_post_set_output.go.tpl
     fields:
+      AddonVersion:
+        late_initialize:
+          skip_incomplete_check: {}
+        compare:
+          is_ignored: true
       ClusterName:
         references:
           resource: Cluster
