@@ -95,6 +95,21 @@ type AccessScope struct {
 	Type       *string   `json:"type,omitempty"`
 }
 
+// Configuration settings for an ACK (Amazon Web Services Controllers for Kubernetes)
+// capability. This includes whether controllers can resolve cross-namespace
+// resource references and which ACK service controllers are disabled.
+type AckConfigRequest struct {
+	DisabledServices     []*string `json:"disabledServices,omitempty"`
+	EnableCrossNamespace *bool     `json:"enableCrossNamespace,omitempty"`
+}
+
+// The response object containing configuration details for an ACK (Amazon Web
+// Services Controllers for Kubernetes) capability.
+type AckConfigResponse struct {
+	DisabledServices     []*string `json:"disabledServices,omitempty"`
+	EnableCrossNamespace *bool     `json:"enableCrossNamespace,omitempty"`
+}
+
 // Identifies the certificate authority that is currently signing certificates
 // for the cluster.
 type ActiveCertificateAuthority struct {
@@ -230,8 +245,9 @@ type ArgoCDConfigRequest struct {
 	// Configuration for integrating Argo CD with IAM Identity CenterIAM; Identity
 	// Center. This allows you to use your organization's identity provider for
 	// authentication to Argo CD.
-	AWSIDC    *ArgoCDAWSIDCConfigRequest `json:"awsIDC,omitempty"`
-	Namespace *string                    `json:"namespace,omitempty"`
+	AWSIDC         *ArgoCDAWSIDCConfigRequest `json:"awsIDC,omitempty"`
+	EndpointPrefix *string                    `json:"endpointPrefix,omitempty"`
+	Namespace      *string                    `json:"namespace,omitempty"`
 	// Configuration for network access to the Argo CD capability's managed API
 	// server endpoint. When VPC endpoint IDs are specified, public access is blocked
 	// and the Argo CD server is only accessible through the specified VPC endpoints.
@@ -244,8 +260,9 @@ type ArgoCDConfigRequest struct {
 type ArgoCDConfigResponse struct {
 	// The response object containing IAM Identity CenterIAM; Identity Center configuration
 	// details for an Argo CD capability.
-	AWSIDC    *ArgoCDAWSIDCConfigResponse `json:"awsIDC,omitempty"`
-	Namespace *string                     `json:"namespace,omitempty"`
+	AWSIDC         *ArgoCDAWSIDCConfigResponse `json:"awsIDC,omitempty"`
+	EndpointPrefix *string                     `json:"endpointPrefix,omitempty"`
+	Namespace      *string                     `json:"namespace,omitempty"`
 	// The response object containing network access configuration for the Argo
 	// CD capability's managed API server endpoint. If VPC endpoint IDs are present,
 	// public access is blocked and the Argo CD server is only accessible through
@@ -318,6 +335,10 @@ type Cancellation struct {
 // Configuration settings for a capability. The structure of this object varies
 // depending on the capability type.
 type CapabilityConfigurationRequest struct {
+	// Configuration settings for an ACK (Amazon Web Services Controllers for Kubernetes)
+	// capability. This includes whether controllers can resolve cross-namespace
+	// resource references and which ACK service controllers are disabled.
+	Ack *AckConfigRequest `json:"ack,omitempty"`
 	// Configuration settings for an Argo CD capability. This includes the Kubernetes
 	// namespace, IAM Identity CenterIAM; Identity Center integration, RBAC role
 	// mappings, and network access configuration.
@@ -326,6 +347,9 @@ type CapabilityConfigurationRequest struct {
 
 // The response object containing capability configuration details.
 type CapabilityConfigurationResponse struct {
+	// The response object containing configuration details for an ACK (Amazon Web
+	// Services Controllers for Kubernetes) capability.
+	Ack *AckConfigResponse `json:"ack,omitempty"`
 	// The response object containing Argo CD configuration details, including the
 	// server URL that you use to access the Argo CD web interface and API.
 	ArgoCD *ArgoCDConfigResponse `json:"argoCD,omitempty"`
@@ -1481,6 +1505,13 @@ type UpdateAccessConfigRequest struct {
 	AuthenticationMode *string `json:"authenticationMode,omitempty"`
 }
 
+// Configuration updates for an ACK (Amazon Web Services Controllers for Kubernetes)
+// capability. You only need to specify the fields that you want to update.
+type UpdateAckConfig struct {
+	DisabledServices     []*string `json:"disabledServices,omitempty"`
+	EnableCrossNamespace *bool     `json:"enableCrossNamespace,omitempty"`
+}
+
 // Configuration updates for an Argo CD capability. You only need to specify
 // the fields you want to update.
 type UpdateArgoCDConfig struct {
@@ -1496,6 +1527,9 @@ type UpdateArgoCDConfig struct {
 // Configuration updates for a capability. The structure varies depending on
 // the capability type.
 type UpdateCapabilityConfiguration struct {
+	// Configuration updates for an ACK (Amazon Web Services Controllers for Kubernetes)
+	// capability. You only need to specify the fields that you want to update.
+	Ack *UpdateAckConfig `json:"ack,omitempty"`
 	// Configuration updates for an Argo CD capability. You only need to specify
 	// the fields you want to update.
 	ArgoCD *UpdateArgoCDConfig `json:"argoCD,omitempty"`

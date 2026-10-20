@@ -55,6 +55,24 @@ func newResourceDelta(
 	if ackcompare.HasNilDifference(a.ko.Spec.Configuration, b.ko.Spec.Configuration) {
 		delta.Add("Spec.Configuration", a.ko.Spec.Configuration, b.ko.Spec.Configuration)
 	} else if a.ko.Spec.Configuration != nil && b.ko.Spec.Configuration != nil {
+		if ackcompare.HasNilDifference(a.ko.Spec.Configuration.Ack, b.ko.Spec.Configuration.Ack) {
+			delta.Add("Spec.Configuration.Ack", a.ko.Spec.Configuration.Ack, b.ko.Spec.Configuration.Ack)
+		} else if a.ko.Spec.Configuration.Ack != nil && b.ko.Spec.Configuration.Ack != nil {
+			if len(a.ko.Spec.Configuration.Ack.DisabledServices) != len(b.ko.Spec.Configuration.Ack.DisabledServices) {
+				delta.Add("Spec.Configuration.Ack.DisabledServices", a.ko.Spec.Configuration.Ack.DisabledServices, b.ko.Spec.Configuration.Ack.DisabledServices)
+			} else if len(a.ko.Spec.Configuration.Ack.DisabledServices) > 0 {
+				if !ackcompare.SliceStringPEqual(a.ko.Spec.Configuration.Ack.DisabledServices, b.ko.Spec.Configuration.Ack.DisabledServices) {
+					delta.Add("Spec.Configuration.Ack.DisabledServices", a.ko.Spec.Configuration.Ack.DisabledServices, b.ko.Spec.Configuration.Ack.DisabledServices)
+				}
+			}
+			if ackcompare.HasNilDifference(a.ko.Spec.Configuration.Ack.EnableCrossNamespace, b.ko.Spec.Configuration.Ack.EnableCrossNamespace) {
+				delta.Add("Spec.Configuration.Ack.EnableCrossNamespace", a.ko.Spec.Configuration.Ack.EnableCrossNamespace, b.ko.Spec.Configuration.Ack.EnableCrossNamespace)
+			} else if a.ko.Spec.Configuration.Ack.EnableCrossNamespace != nil && b.ko.Spec.Configuration.Ack.EnableCrossNamespace != nil {
+				if *a.ko.Spec.Configuration.Ack.EnableCrossNamespace != *b.ko.Spec.Configuration.Ack.EnableCrossNamespace {
+					delta.Add("Spec.Configuration.Ack.EnableCrossNamespace", a.ko.Spec.Configuration.Ack.EnableCrossNamespace, b.ko.Spec.Configuration.Ack.EnableCrossNamespace)
+				}
+			}
+		}
 		if ackcompare.HasNilDifference(a.ko.Spec.Configuration.ArgoCD, b.ko.Spec.Configuration.ArgoCD) {
 			delta.Add("Spec.Configuration.ArgoCD", a.ko.Spec.Configuration.ArgoCD, b.ko.Spec.Configuration.ArgoCD)
 		} else if a.ko.Spec.Configuration.ArgoCD != nil && b.ko.Spec.Configuration.ArgoCD != nil {
@@ -74,6 +92,13 @@ func newResourceDelta(
 					if *a.ko.Spec.Configuration.ArgoCD.AWSIDC.IDCRegion != *b.ko.Spec.Configuration.ArgoCD.AWSIDC.IDCRegion {
 						delta.Add("Spec.Configuration.ArgoCD.AWSIDC.IDCRegion", a.ko.Spec.Configuration.ArgoCD.AWSIDC.IDCRegion, b.ko.Spec.Configuration.ArgoCD.AWSIDC.IDCRegion)
 					}
+				}
+			}
+			if ackcompare.HasNilDifference(a.ko.Spec.Configuration.ArgoCD.EndpointPrefix, b.ko.Spec.Configuration.ArgoCD.EndpointPrefix) {
+				delta.Add("Spec.Configuration.ArgoCD.EndpointPrefix", a.ko.Spec.Configuration.ArgoCD.EndpointPrefix, b.ko.Spec.Configuration.ArgoCD.EndpointPrefix)
+			} else if a.ko.Spec.Configuration.ArgoCD.EndpointPrefix != nil && b.ko.Spec.Configuration.ArgoCD.EndpointPrefix != nil {
+				if *a.ko.Spec.Configuration.ArgoCD.EndpointPrefix != *b.ko.Spec.Configuration.ArgoCD.EndpointPrefix {
+					delta.Add("Spec.Configuration.ArgoCD.EndpointPrefix", a.ko.Spec.Configuration.ArgoCD.EndpointPrefix, b.ko.Spec.Configuration.ArgoCD.EndpointPrefix)
 				}
 			}
 			if ackcompare.HasNilDifference(a.ko.Spec.Configuration.ArgoCD.Namespace, b.ko.Spec.Configuration.ArgoCD.Namespace) {

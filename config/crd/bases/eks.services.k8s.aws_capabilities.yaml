@@ -74,6 +74,19 @@ spec:
                   configure IAM Identity CenterIAM; Identity Center integration, RBAC role
                   mappings, and network access settings.
                 properties:
+                  ack:
+                    description: |-
+                      Configuration settings for an ACK (Amazon Web Services Controllers for Kubernetes)
+                      capability. This includes whether controllers can resolve cross-namespace
+                      resource references and which ACK service controllers are disabled.
+                    properties:
+                      disabledServices:
+                        items:
+                          type: string
+                        type: array
+                      enableCrossNamespace:
+                        type: boolean
+                    type: object
                   argoCD:
                     description: |-
                       Configuration settings for an Argo CD capability. This includes the Kubernetes
@@ -91,6 +104,8 @@ spec:
                           idcRegion:
                             type: string
                         type: object
+                      endpointPrefix:
+                        type: string
                       namespace:
                         type: string
                       networkAccess:

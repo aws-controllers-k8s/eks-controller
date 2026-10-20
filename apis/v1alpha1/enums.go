@@ -488,6 +488,8 @@ const (
 	UpdateParamType_ControlPlaneEgressMode           UpdateParamType = "ControlPlaneEgressMode"
 	UpdateParamType_DeletionProtection               UpdateParamType = "DeletionProtection"
 	UpdateParamType_DesiredSize                      UpdateParamType = "DesiredSize"
+	UpdateParamType_DisabledServices                 UpdateParamType = "DisabledServices"
+	UpdateParamType_EnableCrossNamespace             UpdateParamType = "EnableCrossNamespace"
 	UpdateParamType_EncryptionConfig                 UpdateParamType = "EncryptionConfig"
 	UpdateParamType_EndpointPrivateAccess            UpdateParamType = "EndpointPrivateAccess"
 	UpdateParamType_EndpointPublicAccess             UpdateParamType = "EndpointPublicAccess"
