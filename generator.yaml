@@ -644,6 +644,8 @@ resources:
         - CREATE_FAILED
         - DELETE_FAILED
     hooks:
+      sdk_create_pre_build_request:
+        template_path: hooks/capability/sdk_create_pre_build_request.go.tpl
       sdk_update_pre_build_request:
         template_path: hooks/capability/sdk_update_pre_build_request.go.tpl
       sdk_update_post_build_request:
@@ -679,6 +681,21 @@ resources:
         set:
         - ignore: all
           method: Update
+      # DescribeCapability reports the ack block EKS resolved for an ACK
+      # capability, including enableCrossNamespace=false when it was never set.
+      # A spec that declares the block but omits a field would otherwise fire a
+      # delta on every resync that UpdateCapability cannot satisfy. Late
+      # initializing the fields also keeps an adopted capability's existing
+      # configuration from being overwritten by a partially declared block.
+      Configuration.Ack:
+        late_initialize:
+          skip_incomplete_check: {}
+      Configuration.Ack.EnableCrossNamespace:
+        late_initialize:
+          skip_incomplete_check: {}
+      Configuration.Ack.DisabledServices:
+        late_initialize:
+          skip_incomplete_check: {}
       Type:
         is_immutable: true
         go_tag: json:"type"

@@ -8,3 +8,8 @@ spec:
   roleARN: $CAPABILITY_ROLE_ARN
   type: ACK
   deletePropagationPolicy: RETAIN
+  configuration:
+    ack:
+      enableCrossNamespace: true
+      disabledServices:
+        - s3
