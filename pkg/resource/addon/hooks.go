@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	ackcompare "github.com/aws-controllers-k8s/runtime/pkg/compare"
 	ackcondition "github.com/aws-controllers-k8s/runtime/pkg/condition"
@@ -129,7 +130,7 @@ func returnAddonUpdating(r *resource) (*resource, error) {
 	return r, ackrequeue.NeededAfter(
 		fmt.Errorf("addon in '%s' state, cannot be modified until '%s'",
 			StatusUpdating, StatusActive),
-		15,
+		15*time.Second,
 	)
 }
 
@@ -225,6 +226,20 @@ func addonHasFailedStatus(r *resource) bool {
 	}
 	cs := *r.ko.Status.Status
 	return cs == StatusCreateFailed || cs == StatusUpdateFailed
+}
+
+// adoptObservedAddonVersion returns desired carrying the version EKS reports
+// when the spec leaves addonVersion unset and nothing but tags and the version
+// differs. The runtime then writes the version into the spec, the way a create
+// without a version ends up, and no UpdateAddon is sent. It returns nil when
+// the update has to go to the API.
+func adoptObservedAddonVersion(desired, latest *resource, delta *ackcompare.Delta) *resource {
+	if desired.ko.Spec.AddonVersion != nil || delta.DifferentExcept("Spec.Tags", "Spec.AddonVersion") {
+		return nil
+	}
+	ko := desired.ko.DeepCopy()
+	ko.Spec.AddonVersion = latest.ko.Spec.AddonVersion
+	return &resource{ko}
 }
 
 // customPreCompare is a custom pre-compare function that compares the PodIdentityAssociations field

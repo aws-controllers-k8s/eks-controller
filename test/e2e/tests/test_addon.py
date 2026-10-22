@@ -33,6 +33,8 @@ from .test_pod_identity_association import PIA_ROLE
 RESOURCE_PLURAL = 'addons'
 
 CREATE_WAIT_AFTER_SECONDS = 10
+MODIFY_WAIT_AFTER_SECONDS = 10
+LOOP_CHECK_WAIT_AFTER_SECONDS = 45
 
 def wait_for_addon_active(eks_client, cluster_name, addon_name):
     waiter = eks_client.get_waiter('addon_active')
@@ -135,6 +137,25 @@ class TestAddon:
             assert aws_res["addon"]["addonArn"] is not None
         except eks_client.exceptions.ResourceNotFoundException:
             pytest.fail(f"Could not find Addon '{cr_name}' in EKS")
+
+        # Removing addonVersion from the spec must not drive an UpdateAddon on
+        # every reconcile; the observed version is adopted and written back.
+        modified_at = aws_res["addon"]["modifiedAt"]
+        k8s.patch_custom_resource(ref, {"spec": {"addonVersion": None}})
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        assert k8s.wait_on_condition(ref, "ACK.ResourceSynced", "True", wait_periods=5)
+        cr = k8s.get_resource(ref)
+        assert cr["spec"]["addonVersion"] == aws_res["addon"]["addonVersion"]
+
+        # Longer than the 30s requeue: an UpdateAddon in the loop would advance modifiedAt.
+        time.sleep(LOOP_CHECK_WAIT_AFTER_SECONDS)
+        aws_res = eks_client.describe_addon(
+            clusterName=cluster_name,
+            addonName=addon_name
+        )
+        assert aws_res["addon"]["status"] == "ACTIVE"
+        assert aws_res["addon"]["modifiedAt"] == modified_at
 
         assert_tagging_functionality(ref, cr["status"]["ackResourceMetadata"]["arn"])
 
