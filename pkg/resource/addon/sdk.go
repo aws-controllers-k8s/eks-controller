@@ -472,6 +472,9 @@ func (rm *resourceManager) sdkUpdate(
 	if !delta.DifferentExcept("Spec.Tags") {
 		return desired, nil
 	}
+	if adopted := adoptObservedAddonVersion(desired, latest, delta); adopted != nil {
+		return adopted, nil
+	}
 	input, err := rm.newUpdateRequestPayload(ctx, desired, delta)
 	if err != nil {
 		return nil, err

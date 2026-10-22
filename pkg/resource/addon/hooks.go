@@ -228,14 +228,22 @@ func addonHasFailedStatus(r *resource) bool {
 	return cs == StatusCreateFailed || cs == StatusUpdateFailed
 }
 
+// adoptObservedAddonVersion returns desired carrying the version EKS reports
+// when the spec leaves addonVersion unset and nothing but tags and the version
+// differs. The runtime then writes the version into the spec, the way a create
+// without a version ends up, and no UpdateAddon is sent. It returns nil when
+// the update has to go to the API.
+func adoptObservedAddonVersion(desired, latest *resource, delta *ackcompare.Delta) *resource {
+	if desired.ko.Spec.AddonVersion != nil || delta.DifferentExcept("Spec.Tags", "Spec.AddonVersion") {
+		return nil
+	}
+	ko := desired.ko.DeepCopy()
+	ko.Spec.AddonVersion = latest.ko.Spec.AddonVersion
+	return &resource{ko}
+}
+
 // customPreCompare is a custom pre-compare function that compares the PodIdentityAssociations field
 func customPreCompare(delta *ackcompare.Delta, desired, latest *resource) {
-	// A spec that leaves addonVersion unset keeps whatever version EKS reports,
-	// the same way a create without it does.
-	if desired.ko.Spec.AddonVersion != nil &&
-		(latest.ko.Spec.AddonVersion == nil || *desired.ko.Spec.AddonVersion != *latest.ko.Spec.AddonVersion) {
-		delta.Add("Spec.AddonVersion", desired.ko.Spec.AddonVersion, latest.ko.Spec.AddonVersion)
-	}
 	if !equalPodIdentityAssociations(desired.ko.Spec.PodIdentityAssociations, latest.ko.Spec.PodIdentityAssociations) {
 		delta.Add("Spec.PodIdentityAssociations", desired.ko.Spec.PodIdentityAssociations, latest.ko.Spec.PodIdentityAssociations)
 	}

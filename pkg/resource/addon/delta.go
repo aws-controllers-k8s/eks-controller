@@ -43,6 +43,13 @@ func newResourceDelta(
 	}
 	customPreCompare(delta, a, b)
 
+	if ackcompare.HasNilDifference(a.ko.Spec.AddonVersion, b.ko.Spec.AddonVersion) {
+		delta.Add("Spec.AddonVersion", a.ko.Spec.AddonVersion, b.ko.Spec.AddonVersion)
+	} else if a.ko.Spec.AddonVersion != nil && b.ko.Spec.AddonVersion != nil {
+		if *a.ko.Spec.AddonVersion != *b.ko.Spec.AddonVersion {
+			delta.Add("Spec.AddonVersion", a.ko.Spec.AddonVersion, b.ko.Spec.AddonVersion)
+		}
+	}
 	if ackcompare.HasNilDifference(a.ko.Spec.ClientRequestToken, b.ko.Spec.ClientRequestToken) {
 		delta.Add("Spec.ClientRequestToken", a.ko.Spec.ClientRequestToken, b.ko.Spec.ClientRequestToken)
 	} else if a.ko.Spec.ClientRequestToken != nil && b.ko.Spec.ClientRequestToken != nil {

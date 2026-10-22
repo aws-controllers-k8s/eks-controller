@@ -182,29 +182,53 @@ func ptr[T any](v T) *T {
 	return &v
 }
 
-func TestNewResourceDeltaAddonVersion(t *testing.T) {
+func addonResource(version *string, configurationValues *string, tags map[string]*string) *resource {
+	return &resource{ko: &v1alpha1.Addon{Spec: v1alpha1.AddonSpec{
+		AddonVersion:        version,
+		ConfigurationValues: configurationValues,
+		Tags:                tags,
+	}}}
+}
+
+// The generated delta still flags an unset spec version against the observed
+// one, so the update path runs and can adopt the version instead of sending it.
+func TestNewResourceDeltaFlagsUnsetAddonVersion(t *testing.T) {
+	delta := newResourceDelta(addonResource(nil, nil, nil), addonResource(ptr("v1.13.2-eksbuild.3"), nil, nil))
+	if !delta.DifferentAt("Spec.AddonVersion") {
+		t.Fatalf("expected a Spec.AddonVersion difference, got %v", delta.Differences)
+	}
+}
+
+func TestAdoptObservedAddonVersion(t *testing.T) {
+	observed := ptr("v1.13.2-eksbuild.3")
 	tests := []struct {
-		name          string
-		desired       *string
-		latest        *string
-		wantDifferent bool
+		name    string
+		desired *resource
+		latest  *resource
+		adopted bool
 	}{
-		{"unset spec keeps the observed version", nil, ptr("v1.13.2-eksbuild.3"), false},
-		{"equal versions", ptr("v1.13.2-eksbuild.3"), ptr("v1.13.2-eksbuild.3"), false},
-		{"different versions", ptr("v1.13.2-eksbuild.3"), ptr("v1.13.1-eksbuild.1"), true},
-		{"nothing observed", ptr("v1.13.2-eksbuild.3"), nil, true},
-		{"both unset", nil, nil, false},
+		{"unset version is adopted", addonResource(nil, nil, nil), addonResource(observed, nil, nil), true},
+		{"unset version with a tag change is adopted", addonResource(nil, nil, map[string]*string{"k": ptr("v")}), addonResource(observed, nil, nil), true},
+		{"unset version with another change goes to the API", addonResource(nil, ptr("{}"), nil), addonResource(observed, ptr("{\"a\":1}"), nil), false},
+		{"a set version that differs goes to the API", addonResource(ptr("v1.13.1-eksbuild.1"), nil, nil), addonResource(observed, nil, nil), false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			desired := &resource{ko: &v1alpha1.Addon{Spec: v1alpha1.AddonSpec{AddonVersion: tt.desired}}}
-			latest := &resource{ko: &v1alpha1.Addon{Spec: v1alpha1.AddonSpec{AddonVersion: tt.latest}}}
-			delta := newResourceDelta(desired, latest)
-			if got := delta.DifferentAt("Spec.AddonVersion"); got != tt.wantDifferent {
-				t.Errorf("DifferentAt(Spec.AddonVersion) = %v, want %v", got, tt.wantDifferent)
+			delta := newResourceDelta(tt.desired, tt.latest)
+			got := adoptObservedAddonVersion(tt.desired, tt.latest, delta)
+			if (got != nil) != tt.adopted {
+				t.Fatalf("adoptObservedAddonVersion() = %v, want adopted=%v", got, tt.adopted)
 			}
-			if desired.ko.Spec.AddonVersion != tt.desired || latest.ko.Spec.AddonVersion != tt.latest {
-				t.Errorf("the compare hook must not rewrite desired or latest")
+			if tt.desired.ko.Spec.AddonVersion != nil && tt.desired.ko.Spec.AddonVersion != tt.desired.ko.Spec.AddonVersion {
+				t.Errorf("desired must not be rewritten")
+			}
+			if got != nil {
+				if got.ko.Spec.AddonVersion == nil || *got.ko.Spec.AddonVersion != *observed {
+					t.Errorf("adopted version = %v, want %s", got.ko.Spec.AddonVersion, *observed)
+				}
+				if tt.desired.ko.Spec.AddonVersion != nil {
+					t.Errorf("desired was rewritten in place")
+				}
 			}
 		})
 	}

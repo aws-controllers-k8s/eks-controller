@@ -26,3 +26,6 @@
     if !delta.DifferentExcept("Spec.Tags"){
         return desired, nil
     }
+	if adopted := adoptObservedAddonVersion(desired, latest, delta); adopted != nil {
+		return adopted, nil
+	}
