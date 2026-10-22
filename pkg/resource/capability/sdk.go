@@ -109,54 +109,67 @@ func (rm *resourceManager) sdkFind(
 	}
 	if resp.Capability.Configuration != nil {
 		f3 := &svcapitypes.CapabilityConfigurationRequest{}
+		if resp.Capability.Configuration.Ack != nil {
+			f3f0 := &svcapitypes.AckConfigRequest{}
+			if resp.Capability.Configuration.Ack.DisabledServices != nil {
+				f3f0.DisabledServices = aws.StringSlice(resp.Capability.Configuration.Ack.DisabledServices)
+			}
+			if resp.Capability.Configuration.Ack.EnableCrossNamespace != nil {
+				f3f0.EnableCrossNamespace = resp.Capability.Configuration.Ack.EnableCrossNamespace
+			}
+			f3.Ack = f3f0
+		}
 		if resp.Capability.Configuration.ArgoCd != nil {
-			f3f0 := &svcapitypes.ArgoCDConfigRequest{}
+			f3f1 := &svcapitypes.ArgoCDConfigRequest{}
 			if resp.Capability.Configuration.ArgoCd.AwsIdc != nil {
-				f3f0f0 := &svcapitypes.ArgoCDAWSIDCConfigRequest{}
+				f3f1f0 := &svcapitypes.ArgoCDAWSIDCConfigRequest{}
 				if resp.Capability.Configuration.ArgoCd.AwsIdc.IdcInstanceArn != nil {
-					f3f0f0.IDCInstanceARN = resp.Capability.Configuration.ArgoCd.AwsIdc.IdcInstanceArn
+					f3f1f0.IDCInstanceARN = resp.Capability.Configuration.ArgoCd.AwsIdc.IdcInstanceArn
 				}
 				if resp.Capability.Configuration.ArgoCd.AwsIdc.IdcRegion != nil {
-					f3f0f0.IDCRegion = resp.Capability.Configuration.ArgoCd.AwsIdc.IdcRegion
+					f3f1f0.IDCRegion = resp.Capability.Configuration.ArgoCd.AwsIdc.IdcRegion
 				}
-				f3f0.AWSIDC = f3f0f0
+				f3f1.AWSIDC = f3f1f0
+			}
+			if resp.Capability.Configuration.ArgoCd.EndpointPrefix != nil {
+				f3f1.EndpointPrefix = resp.Capability.Configuration.ArgoCd.EndpointPrefix
 			}
 			if resp.Capability.Configuration.ArgoCd.Namespace != nil {
-				f3f0.Namespace = resp.Capability.Configuration.ArgoCd.Namespace
+				f3f1.Namespace = resp.Capability.Configuration.ArgoCd.Namespace
 			}
 			if resp.Capability.Configuration.ArgoCd.NetworkAccess != nil {
-				f3f0f2 := &svcapitypes.ArgoCDNetworkAccessConfigRequest{}
+				f3f1f3 := &svcapitypes.ArgoCDNetworkAccessConfigRequest{}
 				if resp.Capability.Configuration.ArgoCd.NetworkAccess.VpceIds != nil {
-					f3f0f2.VPCEIDs = aws.StringSlice(resp.Capability.Configuration.ArgoCd.NetworkAccess.VpceIds)
+					f3f1f3.VPCEIDs = aws.StringSlice(resp.Capability.Configuration.ArgoCd.NetworkAccess.VpceIds)
 				}
-				f3f0.NetworkAccess = f3f0f2
+				f3f1.NetworkAccess = f3f1f3
 			}
 			if resp.Capability.Configuration.ArgoCd.RbacRoleMappings != nil {
-				f3f0f3 := []*svcapitypes.ArgoCDRoleMapping{}
-				for _, f3f0f3iter := range resp.Capability.Configuration.ArgoCd.RbacRoleMappings {
-					f3f0f3elem := &svcapitypes.ArgoCDRoleMapping{}
-					if f3f0f3iter.Identities != nil {
-						f3f0f3elemf0 := []*svcapitypes.SsoIdentity{}
-						for _, f3f0f3elemf0iter := range f3f0f3iter.Identities {
-							f3f0f3elemf0elem := &svcapitypes.SsoIdentity{}
-							if f3f0f3elemf0iter.Id != nil {
-								f3f0f3elemf0elem.ID = f3f0f3elemf0iter.Id
+				f3f1f4 := []*svcapitypes.ArgoCDRoleMapping{}
+				for _, f3f1f4iter := range resp.Capability.Configuration.ArgoCd.RbacRoleMappings {
+					f3f1f4elem := &svcapitypes.ArgoCDRoleMapping{}
+					if f3f1f4iter.Identities != nil {
+						f3f1f4elemf0 := []*svcapitypes.SsoIdentity{}
+						for _, f3f1f4elemf0iter := range f3f1f4iter.Identities {
+							f3f1f4elemf0elem := &svcapitypes.SsoIdentity{}
+							if f3f1f4elemf0iter.Id != nil {
+								f3f1f4elemf0elem.ID = f3f1f4elemf0iter.Id
 							}
-							if f3f0f3elemf0iter.Type != "" {
-								f3f0f3elemf0elem.Type = aws.String(string(f3f0f3elemf0iter.Type))
+							if f3f1f4elemf0iter.Type != "" {
+								f3f1f4elemf0elem.Type = aws.String(string(f3f1f4elemf0iter.Type))
 							}
-							f3f0f3elemf0 = append(f3f0f3elemf0, f3f0f3elemf0elem)
+							f3f1f4elemf0 = append(f3f1f4elemf0, f3f1f4elemf0elem)
 						}
-						f3f0f3elem.Identities = f3f0f3elemf0
+						f3f1f4elem.Identities = f3f1f4elemf0
 					}
-					if f3f0f3iter.Role != "" {
-						f3f0f3elem.Role = aws.String(string(f3f0f3iter.Role))
+					if f3f1f4iter.Role != "" {
+						f3f1f4elem.Role = aws.String(string(f3f1f4iter.Role))
 					}
-					f3f0f3 = append(f3f0f3, f3f0f3elem)
+					f3f1f4 = append(f3f1f4, f3f1f4elem)
 				}
-				f3f0.RbacRoleMappings = f3f0f3
+				f3f1.RbacRoleMappings = f3f1f4
 			}
-			f3.ArgoCD = f3f0
+			f3.ArgoCD = f3f1
 		}
 		ko.Spec.Configuration = f3
 	} else {
@@ -266,6 +279,10 @@ func (rm *resourceManager) sdkCreate(
 	defer func() {
 		exit(err)
 	}()
+	if err := validateConfiguration(desired); err != nil {
+		return nil, err
+	}
+
 	input, err := rm.newCreateRequestPayload(ctx, desired)
 	if err != nil {
 		return nil, err
@@ -301,54 +318,67 @@ func (rm *resourceManager) sdkCreate(
 	}
 	if resp.Capability.Configuration != nil {
 		f3 := &svcapitypes.CapabilityConfigurationRequest{}
+		if resp.Capability.Configuration.Ack != nil {
+			f3f0 := &svcapitypes.AckConfigRequest{}
+			if resp.Capability.Configuration.Ack.DisabledServices != nil {
+				f3f0.DisabledServices = aws.StringSlice(resp.Capability.Configuration.Ack.DisabledServices)
+			}
+			if resp.Capability.Configuration.Ack.EnableCrossNamespace != nil {
+				f3f0.EnableCrossNamespace = resp.Capability.Configuration.Ack.EnableCrossNamespace
+			}
+			f3.Ack = f3f0
+		}
 		if resp.Capability.Configuration.ArgoCd != nil {
-			f3f0 := &svcapitypes.ArgoCDConfigRequest{}
+			f3f1 := &svcapitypes.ArgoCDConfigRequest{}
 			if resp.Capability.Configuration.ArgoCd.AwsIdc != nil {
-				f3f0f0 := &svcapitypes.ArgoCDAWSIDCConfigRequest{}
+				f3f1f0 := &svcapitypes.ArgoCDAWSIDCConfigRequest{}
 				if resp.Capability.Configuration.ArgoCd.AwsIdc.IdcInstanceArn != nil {
-					f3f0f0.IDCInstanceARN = resp.Capability.Configuration.ArgoCd.AwsIdc.IdcInstanceArn
+					f3f1f0.IDCInstanceARN = resp.Capability.Configuration.ArgoCd.AwsIdc.IdcInstanceArn
 				}
 				if resp.Capability.Configuration.ArgoCd.AwsIdc.IdcRegion != nil {
-					f3f0f0.IDCRegion = resp.Capability.Configuration.ArgoCd.AwsIdc.IdcRegion
+					f3f1f0.IDCRegion = resp.Capability.Configuration.ArgoCd.AwsIdc.IdcRegion
 				}
-				f3f0.AWSIDC = f3f0f0
+				f3f1.AWSIDC = f3f1f0
+			}
+			if resp.Capability.Configuration.ArgoCd.EndpointPrefix != nil {
+				f3f1.EndpointPrefix = resp.Capability.Configuration.ArgoCd.EndpointPrefix
 			}
 			if resp.Capability.Configuration.ArgoCd.Namespace != nil {
-				f3f0.Namespace = resp.Capability.Configuration.ArgoCd.Namespace
+				f3f1.Namespace = resp.Capability.Configuration.ArgoCd.Namespace
 			}
 			if resp.Capability.Configuration.ArgoCd.NetworkAccess != nil {
-				f3f0f2 := &svcapitypes.ArgoCDNetworkAccessConfigRequest{}
+				f3f1f3 := &svcapitypes.ArgoCDNetworkAccessConfigRequest{}
 				if resp.Capability.Configuration.ArgoCd.NetworkAccess.VpceIds != nil {
-					f3f0f2.VPCEIDs = aws.StringSlice(resp.Capability.Configuration.ArgoCd.NetworkAccess.VpceIds)
+					f3f1f3.VPCEIDs = aws.StringSlice(resp.Capability.Configuration.ArgoCd.NetworkAccess.VpceIds)
 				}
-				f3f0.NetworkAccess = f3f0f2
+				f3f1.NetworkAccess = f3f1f3
 			}
 			if resp.Capability.Configuration.ArgoCd.RbacRoleMappings != nil {
-				f3f0f3 := []*svcapitypes.ArgoCDRoleMapping{}
-				for _, f3f0f3iter := range resp.Capability.Configuration.ArgoCd.RbacRoleMappings {
-					f3f0f3elem := &svcapitypes.ArgoCDRoleMapping{}
-					if f3f0f3iter.Identities != nil {
-						f3f0f3elemf0 := []*svcapitypes.SsoIdentity{}
-						for _, f3f0f3elemf0iter := range f3f0f3iter.Identities {
-							f3f0f3elemf0elem := &svcapitypes.SsoIdentity{}
-							if f3f0f3elemf0iter.Id != nil {
-								f3f0f3elemf0elem.ID = f3f0f3elemf0iter.Id
+				f3f1f4 := []*svcapitypes.ArgoCDRoleMapping{}
+				for _, f3f1f4iter := range resp.Capability.Configuration.ArgoCd.RbacRoleMappings {
+					f3f1f4elem := &svcapitypes.ArgoCDRoleMapping{}
+					if f3f1f4iter.Identities != nil {
+						f3f1f4elemf0 := []*svcapitypes.SsoIdentity{}
+						for _, f3f1f4elemf0iter := range f3f1f4iter.Identities {
+							f3f1f4elemf0elem := &svcapitypes.SsoIdentity{}
+							if f3f1f4elemf0iter.Id != nil {
+								f3f1f4elemf0elem.ID = f3f1f4elemf0iter.Id
 							}
-							if f3f0f3elemf0iter.Type != "" {
-								f3f0f3elemf0elem.Type = aws.String(string(f3f0f3elemf0iter.Type))
+							if f3f1f4elemf0iter.Type != "" {
+								f3f1f4elemf0elem.Type = aws.String(string(f3f1f4elemf0iter.Type))
 							}
-							f3f0f3elemf0 = append(f3f0f3elemf0, f3f0f3elemf0elem)
+							f3f1f4elemf0 = append(f3f1f4elemf0, f3f1f4elemf0elem)
 						}
-						f3f0f3elem.Identities = f3f0f3elemf0
+						f3f1f4elem.Identities = f3f1f4elemf0
 					}
-					if f3f0f3iter.Role != "" {
-						f3f0f3elem.Role = aws.String(string(f3f0f3iter.Role))
+					if f3f1f4iter.Role != "" {
+						f3f1f4elem.Role = aws.String(string(f3f1f4iter.Role))
 					}
-					f3f0f3 = append(f3f0f3, f3f0f3elem)
+					f3f1f4 = append(f3f1f4, f3f1f4elem)
 				}
-				f3f0.RbacRoleMappings = f3f0f3
+				f3f1.RbacRoleMappings = f3f1f4
 			}
-			f3.ArgoCD = f3f0
+			f3.ArgoCD = f3f1
 		}
 		ko.Spec.Configuration = f3
 	} else {
@@ -448,54 +478,67 @@ func (rm *resourceManager) newCreateRequestPayload(
 	}
 	if r.ko.Spec.Configuration != nil {
 		f2 := &svcsdktypes.CapabilityConfigurationRequest{}
+		if r.ko.Spec.Configuration.Ack != nil {
+			f2f0 := &svcsdktypes.AckConfigRequest{}
+			if r.ko.Spec.Configuration.Ack.DisabledServices != nil {
+				f2f0.DisabledServices = aws.ToStringSlice(r.ko.Spec.Configuration.Ack.DisabledServices)
+			}
+			if r.ko.Spec.Configuration.Ack.EnableCrossNamespace != nil {
+				f2f0.EnableCrossNamespace = r.ko.Spec.Configuration.Ack.EnableCrossNamespace
+			}
+			f2.Ack = f2f0
+		}
 		if r.ko.Spec.Configuration.ArgoCD != nil {
-			f2f0 := &svcsdktypes.ArgoCdConfigRequest{}
+			f2f1 := &svcsdktypes.ArgoCdConfigRequest{}
 			if r.ko.Spec.Configuration.ArgoCD.AWSIDC != nil {
-				f2f0f0 := &svcsdktypes.ArgoCdAwsIdcConfigRequest{}
+				f2f1f0 := &svcsdktypes.ArgoCdAwsIdcConfigRequest{}
 				if r.ko.Spec.Configuration.ArgoCD.AWSIDC.IDCInstanceARN != nil {
-					f2f0f0.IdcInstanceArn = r.ko.Spec.Configuration.ArgoCD.AWSIDC.IDCInstanceARN
+					f2f1f0.IdcInstanceArn = r.ko.Spec.Configuration.ArgoCD.AWSIDC.IDCInstanceARN
 				}
 				if r.ko.Spec.Configuration.ArgoCD.AWSIDC.IDCRegion != nil {
-					f2f0f0.IdcRegion = r.ko.Spec.Configuration.ArgoCD.AWSIDC.IDCRegion
+					f2f1f0.IdcRegion = r.ko.Spec.Configuration.ArgoCD.AWSIDC.IDCRegion
 				}
-				f2f0.AwsIdc = f2f0f0
+				f2f1.AwsIdc = f2f1f0
+			}
+			if r.ko.Spec.Configuration.ArgoCD.EndpointPrefix != nil {
+				f2f1.EndpointPrefix = r.ko.Spec.Configuration.ArgoCD.EndpointPrefix
 			}
 			if r.ko.Spec.Configuration.ArgoCD.Namespace != nil {
-				f2f0.Namespace = r.ko.Spec.Configuration.ArgoCD.Namespace
+				f2f1.Namespace = r.ko.Spec.Configuration.ArgoCD.Namespace
 			}
 			if r.ko.Spec.Configuration.ArgoCD.NetworkAccess != nil {
-				f2f0f2 := &svcsdktypes.ArgoCdNetworkAccessConfigRequest{}
+				f2f1f3 := &svcsdktypes.ArgoCdNetworkAccessConfigRequest{}
 				if r.ko.Spec.Configuration.ArgoCD.NetworkAccess.VPCEIDs != nil {
-					f2f0f2.VpceIds = aws.ToStringSlice(r.ko.Spec.Configuration.ArgoCD.NetworkAccess.VPCEIDs)
+					f2f1f3.VpceIds = aws.ToStringSlice(r.ko.Spec.Configuration.ArgoCD.NetworkAccess.VPCEIDs)
 				}
-				f2f0.NetworkAccess = f2f0f2
+				f2f1.NetworkAccess = f2f1f3
 			}
 			if r.ko.Spec.Configuration.ArgoCD.RbacRoleMappings != nil {
-				f2f0f3 := []svcsdktypes.ArgoCdRoleMapping{}
-				for _, f2f0f3iter := range r.ko.Spec.Configuration.ArgoCD.RbacRoleMappings {
-					f2f0f3elem := &svcsdktypes.ArgoCdRoleMapping{}
-					if f2f0f3iter.Identities != nil {
-						f2f0f3elemf0 := []svcsdktypes.SsoIdentity{}
-						for _, f2f0f3elemf0iter := range f2f0f3iter.Identities {
-							f2f0f3elemf0elem := &svcsdktypes.SsoIdentity{}
-							if f2f0f3elemf0iter.ID != nil {
-								f2f0f3elemf0elem.Id = f2f0f3elemf0iter.ID
+				f2f1f4 := []svcsdktypes.ArgoCdRoleMapping{}
+				for _, f2f1f4iter := range r.ko.Spec.Configuration.ArgoCD.RbacRoleMappings {
+					f2f1f4elem := &svcsdktypes.ArgoCdRoleMapping{}
+					if f2f1f4iter.Identities != nil {
+						f2f1f4elemf0 := []svcsdktypes.SsoIdentity{}
+						for _, f2f1f4elemf0iter := range f2f1f4iter.Identities {
+							f2f1f4elemf0elem := &svcsdktypes.SsoIdentity{}
+							if f2f1f4elemf0iter.ID != nil {
+								f2f1f4elemf0elem.Id = f2f1f4elemf0iter.ID
 							}
-							if f2f0f3elemf0iter.Type != nil {
-								f2f0f3elemf0elem.Type = svcsdktypes.SsoIdentityType(*f2f0f3elemf0iter.Type)
+							if f2f1f4elemf0iter.Type != nil {
+								f2f1f4elemf0elem.Type = svcsdktypes.SsoIdentityType(*f2f1f4elemf0iter.Type)
 							}
-							f2f0f3elemf0 = append(f2f0f3elemf0, *f2f0f3elemf0elem)
+							f2f1f4elemf0 = append(f2f1f4elemf0, *f2f1f4elemf0elem)
 						}
-						f2f0f3elem.Identities = f2f0f3elemf0
+						f2f1f4elem.Identities = f2f1f4elemf0
 					}
-					if f2f0f3iter.Role != nil {
-						f2f0f3elem.Role = svcsdktypes.ArgoCdRole(*f2f0f3iter.Role)
+					if f2f1f4iter.Role != nil {
+						f2f1f4elem.Role = svcsdktypes.ArgoCdRole(*f2f1f4iter.Role)
 					}
-					f2f0f3 = append(f2f0f3, *f2f0f3elem)
+					f2f1f4 = append(f2f1f4, *f2f1f4elem)
 				}
-				f2f0.RbacRoleMappings = f2f0f3
+				f2f1.RbacRoleMappings = f2f1f4
 			}
-			f2.ArgoCd = f2f0
+			f2.ArgoCd = f2f1
 		}
 		res.Configuration = f2
 	}
@@ -528,6 +571,17 @@ func (rm *resourceManager) sdkUpdate(
 	defer func() {
 		exit(err)
 	}()
+	if err := validateConfiguration(desired); err != nil {
+		return nil, err
+	}
+	// EKS rejects an update while it is still creating, updating or deleting
+	// the capability. Requeue instead of spending the call on a
+	// ResourceInUseException, and report the state the resource is waiting on.
+	if capabilityInFlight(latest) {
+		msg := "Capability is in '" + *latest.ko.Status.Status + "' status"
+		ackcondition.SetSynced(latest, corev1.ConditionFalse, &msg, nil)
+		return latest, requeueWaitUntilCanModify(latest)
+	}
 	if delta.DifferentAt("Spec.Tags") {
 		err := syncTags(
 			ctx, rm.sdkapi, rm.metrics,
@@ -539,6 +593,13 @@ func (rm *resourceManager) sdkUpdate(
 		}
 	}
 	if !delta.DifferentExcept("Spec.Tags") {
+		return desired, nil
+	}
+	// A configuration the spec never declared is unmanaged. DescribeCapability
+	// reports the configuration block EKS resolved for the capability type, so
+	// an undeclared configuration always reads back as a difference, and
+	// UpdateCapability has nothing to send for it.
+	if desired.ko.Spec.Configuration == nil && !differsOutsideConfiguration(delta) {
 		return desired, nil
 	}
 	input, err := rm.newUpdateRequestPayload(ctx, desired, delta)

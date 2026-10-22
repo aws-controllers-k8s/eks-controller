@@ -39,6 +39,50 @@ MODIFY_WAIT_AFTER_SECONDS = 10
 # Time to wait after the capability has changed status, for the CR to update
 CHECK_STATUS_WAIT_SECONDS = 10
 
+# Number of status checks to allow before giving up on the Synced condition.
+# The capability is already ACTIVE in EKS by the time the test body runs, so
+# this only has to cover the reconcile that observes it.
+SYNCED_WAIT_PERIODS = 12
+
+# Budget for the capability to reach ACTIVE in EKS. An ACK capability installs
+# a controller and its CRDs into the cluster, which is the slowest of the
+# capability types; it usually takes a few minutes.
+CAPABILITY_ACTIVE_TIMEOUT_SECONDS = 900
+CAPABILITY_ACTIVE_POLL_SECONDS = 15
+
+CAPABILITY_TRANSIENT_STATUSES = ("CREATING", "UPDATING")
+
+def wait_for_capability_active(eks_client, cluster_name, capability_name):
+    """Poll DescribeCapability until the capability settles on ACTIVE.
+
+    There is no botocore waiter for capabilities. Waiting here rather than on
+    the CR's Synced condition keeps the two concerns apart: this establishes
+    that EKS finished its work, and the test then asserts that ACK observed
+    it.
+    """
+    deadline = time.time() + CAPABILITY_ACTIVE_TIMEOUT_SECONDS
+    capability = {}
+    while time.time() < deadline:
+        capability = eks_client.describe_capability(
+            clusterName=cluster_name,
+            capabilityName=capability_name,
+        )["capability"]
+        if capability["status"] not in CAPABILITY_TRANSIENT_STATUSES:
+            break
+        time.sleep(CAPABILITY_ACTIVE_POLL_SECONDS)
+
+    status = capability.get("status")
+    # An install that cannot finish, for instance because a CRD it ships
+    # conflicts with one already on the cluster, sits in CREATING with the
+    # reason in health.issues rather than moving to CREATE_FAILED. Report the
+    # issues or the timeout says nothing about why.
+    issues = capability.get("health", {}).get("issues", [])
+    assert status == "ACTIVE", (
+        f"Capability '{capability_name}' did not reach ACTIVE within "
+        f"{CAPABILITY_ACTIVE_TIMEOUT_SECONDS}s, last status '{status}', "
+        f"health issues: {issues}"
+    )
+
 @pytest.fixture
 def simple_capability(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceReference, Dict]:
     (ref, cr) = simple_cluster
@@ -72,10 +116,15 @@ def simple_capability(eks_client, simple_cluster) -> Tuple[k8s.CustomResourceRef
 
     time.sleep(CREATE_WAIT_AFTER_SECONDS)
 
-    yield (ref, cr)
-
-    _, deleted = k8s.delete_custom_resource(ref, 3, 10)
-    assert deleted
+    # The wait sits inside the try so that a capability which never reaches
+    # ACTIVE is still deleted. Leaving it behind blocks the cluster fixture's
+    # own teardown.
+    try:
+        wait_for_capability_active(eks_client, cluster_name, capability_name)
+        yield (ref, cr)
+    finally:
+        _, deleted = k8s.delete_custom_resource(ref, 3, 10)
+        assert deleted
 
 @service_marker
 class TestCapability:
@@ -99,6 +148,52 @@ class TestCapability:
         except eks_client.exceptions.ResourceNotFoundException:
             pytest.fail(f"Could not find Capability '{cr_name}' in EKS")
 
-        k8s.wait_on_condition(ref, condition.CONDITION_TYPE_RESOURCE_SYNCED, "True", wait_periods=5, period_length=CHECK_STATUS_WAIT_SECONDS)
+        assert k8s.wait_on_condition(ref, condition.CONDITION_TYPE_RESOURCE_SYNCED, "True", wait_periods=SYNCED_WAIT_PERIODS, period_length=CHECK_STATUS_WAIT_SECONDS)
+
+        # The ACK configuration declared at create time reaches EKS. Read it
+        # back after the capability is synced rather than reusing the response
+        # from above, which was captured before the wait.
+        aws_res = eks_client.describe_capability(
+            clusterName=cluster_name,
+            capabilityName=capability_name
+        )
+        assert aws_res["capability"]["configuration"]["ack"]["enableCrossNamespace"] is True
+        assert aws_res["capability"]["configuration"]["ack"]["disabledServices"] == ["s3"]
+
+        cr = k8s.get_resource(ref)
+        assert cr["spec"]["configuration"]["ack"]["enableCrossNamespace"] is True
+        assert cr["spec"]["configuration"]["ack"]["disabledServices"] == ["s3"]
+
+        # Updating the ACK configuration replaces disabledServices rather than
+        # merging it, and carries the cross-namespace flag through
+        updates = {
+            "spec": {
+                "configuration": {
+                    "ack": {
+                        "enableCrossNamespace": False,
+                        "disabledServices": ["ec2"],
+                    }
+                }
+            }
+        }
+        k8s.patch_custom_resource(ref, updates)
+        time.sleep(MODIFY_WAIT_AFTER_SECONDS)
+
+        # The update puts the capability back into UPDATING, which takes as
+        # long as EKS needs to reconfigure the installed controller.
+        wait_for_capability_active(eks_client, cluster_name, capability_name)
+
+        assert k8s.wait_on_condition(ref, condition.CONDITION_TYPE_RESOURCE_SYNCED, "True", wait_periods=SYNCED_WAIT_PERIODS, period_length=CHECK_STATUS_WAIT_SECONDS)
+
+        aws_res = eks_client.describe_capability(
+            clusterName=cluster_name,
+            capabilityName=capability_name
+        )
+        assert aws_res["capability"]["configuration"]["ack"]["enableCrossNamespace"] is False
+        assert aws_res["capability"]["configuration"]["ack"]["disabledServices"] == ["ec2"]
+
+        cr = k8s.get_resource(ref)
+        assert cr["spec"]["configuration"]["ack"]["enableCrossNamespace"] is False
+        assert cr["spec"]["configuration"]["ack"]["disabledServices"] == ["ec2"]
 
         assert_tagging_functionality(ref, cr["status"]["ackResourceMetadata"]["arn"])
